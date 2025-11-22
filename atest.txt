@@ -1,0 +1,25 @@
+(+
+  (+
+    (+
+      (+
+        (+
+          (+
+            (+
+              (+
+                (sin (* (2 nil nil) (x nil nil)) (0 nil nil))
+                (cos (* (2 nil nil) (x nil nil)) (0 nil nil))
+              )
+              (tg (* (2 nil nil) (x nil nil)) (0 nil nil))
+            )
+            (ctg (* (2 nil nil) (x nil nil)) (0 nil nil))
+          )
+          (sh (* (2 nil nil) (x nil nil)) (0 nil nil))
+        )
+        (ch (* (2 nil nil) (x nil nil)) (0 nil nil))
+      )
+      (ln (* (2 nil nil) (x nil nil)) (0 nil nil))
+    )
+    (th (* (2 nil nil) (x nil nil)) (0 nil nil))
+  )
+  (cth (* (2 nil nil) (x nil nil)) (0 nil nil))
+)
