@@ -6,4 +6,6 @@
 
 TreeErr_t CalcTreeExpression(Forest_t* forest, size_t num_of_tree, double* result);
 
+void TreeOptimize(TreeNode_t* node);
+
 #endif //CALCUL_TREE_H

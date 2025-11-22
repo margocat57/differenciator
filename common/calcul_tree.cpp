@@ -123,6 +123,40 @@ static void CalcExpWithConst(TreeNode_t* node, double* result){
 static void CalcExpWithVar(metki* mtk, TreeNode_t* node, double* result){
     *result = mtk->var_info[node->data.var_code].value;
 }
+//---------------------------------------------------------------------------
+// Optimization
+
+static void TreeOptimizeConst(TreeNode_t* node, bool* is_optimized);
+
+void TreeOptimize(TreeNode_t* node){
+    bool is_optimized_const = false;
+    do{
+        is_optimized_const = false; 
+        TreeOptimizeConst(node, &is_optimized_const);
+    }while(is_optimized_const); 
+}
+
+static void TreeOptimizeConst(TreeNode_t* node, bool* is_optimized){
+    if(node->left){
+        TreeOptimizeConst(node->left, is_optimized);
+    }
+    if(node->right){
+        TreeOptimizeConst(node->right, is_optimized);
+    }
+    if(node->left && node->right && node->left->type == CONST && node->right->type == CONST && node->type == OPERATOR){
+        size_t arr_num_of_elem = sizeof(FUNC_FOR_OPERATORS) / sizeof(operators_func);
+        if(node->data.op >= arr_num_of_elem){
+            return;
+        }
+        FUNC_FOR_OPERATORS[node->data.op].function_calc(&(node->data.const_value), &(node->left->data.const_value), &(node->right->data.const_value));
+        NodeDtor(node->left);
+        NodeDtor(node->right);
+        node->type = CONST;
+        node->left = NULL;
+        node->right = NULL;
+        *is_optimized = true;
+    }
+}
 
 //-----------------------------------------------------------------------------
 // Undef dsl

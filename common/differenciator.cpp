@@ -38,6 +38,7 @@ TreeNode_t* Differenciate(TreeNode_t* node, const size_t var_id, FILE* file, met
 static TreeNode_t* Diff##Op(TreeNode_t* node, const size_t var_id, FILE* file, metki* mtk){ \
     assert(node); \
     TreeNode_t* result = Result; \
+    TreeOptimize(result); \
     LatexDump(file, node, result, mtk, msg); \
     return result; \
 }
