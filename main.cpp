@@ -1,14 +1,8 @@
-#include "data_struct/tree.h"
-#include "input_and_output/input_output.h"
-#include "common/metki.h"
-#include "data_struct/tree_func.h"
-#include "dump/graphviz_dump.h"
-#include "common/differenciator.h"
-#include "data_struct/forest.h"
+#include "dump/matan_book.h"
 
 int main(){
-    Forest_t* forest = MakeDiffForest("atest.txt");
-    CreateDiffTree("diff.tex", "x", forest);
+    Forest_t* forest = MakeDiffForest("atest.txt");;
+    MatanBook(forest, "diff.tex");
     ForestDtor(forest);
 }
 

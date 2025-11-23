@@ -39,10 +39,13 @@ common/calcul_tree.o: common/calcul_tree.cpp
 dump/latex_dump.o: dump/latex_dump.cpp
 	$(COMP) -c $< -o $@ $(CFLAGS)
 
+dump/matan_book.o: dump/matan_book.cpp
+	$(COMP) -c $< -o $@ $(CFLAGS)
+
 data_struct/forest.o: data_struct/forest.cpp
 	$(COMP) -c $< -o $@ $(CFLAGS)
 
-diff: main.o common/differenciator.o dump/graphviz_dump.o data_struct/tree_func.o input_and_output/input_output.o common/metki.o common/calcul_tree.o dump/latex_dump.o data_struct/forest.o
+diff: main.o common/differenciator.o dump/graphviz_dump.o data_struct/tree_func.o input_and_output/input_output.o common/metki.o common/calcul_tree.o dump/latex_dump.o data_struct/forest.o dump/matan_book.o
 	$(COMP) -o $@ $^ $(LDFLAGS)
 
 # $@ имя цели

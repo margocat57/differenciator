@@ -128,9 +128,8 @@ static size_t FindVarByName(const char* var_name, metki* mtk);
 void EndLatexDump(FILE* latex_file);
 
 // цикл - сканфим какую производную хотим посчитать и ее считаем
-void CreateDiffTree(const char* file_name, const char* var_name, Forest_t* forest){
-    assert(file_name);
-    FILE* latex_dump = StartLatexDump(file_name);
+void CreateDiffTree(const char* var_name, Forest_t* forest, FILE* latex_dump){
+    assert(latex_dump);
     size_t n = 0;
     printf("Which derivative do you want to calculate?\n");
     scanf("%zu", &n);
@@ -145,8 +144,6 @@ void CreateDiffTree(const char* file_name, const char* var_name, Forest_t* fores
 
     // пока не работает - почему то ругается что нет \end
     // system("pdflatex -interaction=nonstopmode diff.tex");
-
-    EndLatexDump(latex_dump);
 }
 
 static size_t FindVarByName(const char* var_name, metki* mtk){

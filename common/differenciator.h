@@ -5,6 +5,6 @@
 #include "../data_struct/forest.h"
 
 
-void CreateDiffTree(const char* file_name, const char* var_name, Forest_t* forest);
+void CreateDiffTree(const char* var_name, Forest_t* forest, FILE* latex_dump);
 
 #endif //DIFFERENCIATOR_H

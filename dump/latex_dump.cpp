@@ -134,11 +134,64 @@ static bool NeedStaples(TreeNode_t* node){
     return false;
 }
 
+
 FILE* StartLatexDump(const char* filename){
     assert(filename);
     FILE* latex_file = fopen(filename, "w");
-    fprintf(latex_file, "\\documentclass[10pt,a4paper]{article}\n\\usepackage[margin=0.5in]{geometry}\n\\usepackage{amsmath}\n\\usepackage{breqn}\n\\begin{document}\n\n");
+    fprintf(latex_file, "\\documentclass[a4paper,12pt]{report}\n\\usepackage[utf8]{inputenc}\n\\usepackage{amsmath,amssymb}\n\\usepackage{geometry}\n\\usepackage{breqn}\n\\newtheorem{definition}{Definition}\n\\newtheorem{obviousfact}{Obvious Fact}\n");
+    fprintf(latex_file, "\\title{Mathematical anal for economists}\n");
+    fprintf(latex_file, "\\author{Anonymus fan of mat.anal}\n\n");
+    fprintf(latex_file, "\\begin{document}\n\n");
+    fprintf(latex_file, "\\maketitle\n\n");
+    fprintf(latex_file, "\\chapter*{Preface}\n\n");
+    fprintf(latex_file, "This textbook is designed to assist economics students studying the basic course of mathematical analysis. It summarizes the entire mathematical analysis course taught to economists in the best undergraduate economics program in Eastern Europe.\n\n");
+    fprintf(latex_file, "The lectures include only the essential material, ensuring that students who have achieved top honors in national economics Olympiads are not overburdened and can maintain their sense of superiority over the rest of the world. After all, they likely mastered all this material in kindergarten (or at the latest, by first grade). The division of topics into lectures corresponds well to the actual pace of the course, which spans an entire semester. Almost all statements in the course are self-evident, and their proofs are left to the reader as straightforward exercises.\n\n");
+
     return latex_file;
+}
+
+void LatexDumpDecimals(FILE* latex_file){
+    fprintf(latex_file, "\\chapter{Numbers}\n\n");
+    fprintf(latex_file, "\\section{Basic Classes of Numbers}\n\n");
+    
+    fprintf(latex_file, "First, let's introduce the definitions of the basic classes of numbers that ");
+    fprintf(latex_file, "we will constantly work with throughout the course.\n\n");
+    
+    fprintf(latex_file, "\\begin{definition}\n");
+    fprintf(latex_file, "Numbers 1, 2, 3, \\ldots are called \\textit{natural numbers}. ");
+    fprintf(latex_file, "The notation for the set of all natural numbers is $\\mathbb{N}$.\n");
+    fprintf(latex_file, "\\end{definition}\n\n");
+    
+    fprintf(latex_file, "\\begin{definition}\n");
+    fprintf(latex_file, "A number is called an \\textit{integer} if it is equal to\\ldots ");
+    fprintf(latex_file, "but you don't need this because everything in economics is positive.\n");
+    fprintf(latex_file, "\\end{definition}\n\n");
+    
+    fprintf(latex_file, "\\begin{definition}\n");
+    fprintf(latex_file, "A number is called \\textit{rational} if it can be represented as ");
+    fprintf(latex_file, "something above a line and something below a line.\n");
+    fprintf(latex_file, "\\end{definition}\n\n");
+    
+    fprintf(latex_file, "\\begin{definition}\n");
+    fprintf(latex_file, "A number is called \\textit{irrational} if it is not rational.\n");
+    fprintf(latex_file, "\\end{definition}\n\n");
+    
+    fprintf(latex_file, "\\begin{obviousfact}\n");
+    fprintf(latex_file, "The sum of all natural numbers equals $-1/12$.\n");
+    fprintf(latex_file, "\\end{obviousfact}\n");
+
+    fprintf(latex_file, "\\textbf{Kindergarten Example:}\n");
+    fprintf(latex_file, "If Vasya had 2 apples and Petya took 1 apple from him, how many apples does Vasya have left? The answer is obviously $-1/12$, as any advanced mathematician knows.\n");
+
+}
+
+void LatexDumpChapterDiff(FILE* latex_file){
+    fprintf(latex_file, "\\chapter{Derivative}\n\n");
+    fprintf(latex_file, "\\section{Basic derivatives}\n\n");
+    fprintf(latex_file, "\\begin{definition}\n");
+    fprintf(latex_file, "The definition of derivative is omitted because it is obvious.\n");
+    fprintf(latex_file, "\\end{definition}\n");
+    fprintf(latex_file, "Everything in this chapter is so obvious that no additional explanations will be provided - we'll immediately proceed to analyze an example from kindergarten.\n");
 }
 
 //--------------------------------------------------------------
