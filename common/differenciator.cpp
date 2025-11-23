@@ -11,6 +11,7 @@
 
 TreeNode_t* Differenciate(TreeNode_t* node, const size_t var_id, FILE* file, metki* mtk);
 
+void ConnectWithParents(TreeNode_t* node);
 //----------------------------------------------------------
 // DSL define
 
@@ -38,7 +39,8 @@ TreeNode_t* Differenciate(TreeNode_t* node, const size_t var_id, FILE* file, met
 static TreeNode_t* Diff##Op(TreeNode_t* node, const size_t var_id, FILE* file, metki* mtk){ \
     assert(node); \
     TreeNode_t* result = Result; \
-    TreeOptimize(result); \
+    ConnectWithParents(result); \
+    TreeOptimize(&result); \
     LatexDump(file, node, result, mtk, msg); \
     return result; \
 }
@@ -84,6 +86,8 @@ static TreeNode_t* DiffDeg(TreeNode_t* node, const size_t var_id, FILE* file, me
     else if(is_type_not_num(L) && is_type_not_num(R)){
         result = MUL_(DEG_(CL_, CR_), ADD_(MUL_(DR_, LN_(CL_)), DIV_(MUL_(DL_, CR_), CL_)));
     }
+    ConnectWithParents(result);
+    TreeOptimize(&result); 
     LatexDump(file, node, result, mtk, "By the obvious theorem:\n");
     return result;
 }
@@ -121,8 +125,6 @@ TreeNode_t* Differenciate(TreeNode_t* node, const size_t var_id, FILE* file, met
 
 static size_t FindVarByName(const char* var_name, metki* mtk);
 
-void ConnectWithParents(TreeNode_t* node);
-
 void EndLatexDump(FILE* latex_file);
 
 // цикл - сканфим какую производную хотим посчитать и ее считаем
@@ -137,7 +139,6 @@ void CreateDiffTree(const char* file_name, const char* var_name, Forest_t* fores
         TreeHead_t* head_new = TreeCtor();
         LatexDump(latex_dump, forest->head_arr[idx]->root, NULL, forest->mtk, "\\textbf{Let's calculate a simple derivative:}\n");
         head_new->root = Differenciate(forest->head_arr[idx]->root, FindVarByName(var_name, forest->mtk), latex_dump, forest->mtk); 
-        ConnectWithParents(head_new->root);
         ForestAddElem(head_new, forest);
         tree_dump_func(head_new->root, head_new, "diff tree dump", __FILE__, __func__, __LINE__, forest->mtk);
     }

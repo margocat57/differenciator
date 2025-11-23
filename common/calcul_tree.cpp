@@ -128,12 +128,15 @@ static void CalcExpWithVar(metki* mtk, TreeNode_t* node, double* result){
 
 static void TreeOptimizeConst(TreeNode_t* node, bool* is_optimized);
 
-void TreeOptimize(TreeNode_t* node){
-    bool is_optimized_const = false;
+static void TreeOptimizeNeutral(TreeNode_t** result, TreeNode_t* node, bool* is_optimized);
+
+void TreeOptimize(TreeNode_t** node){
+    bool is_optimized = false;
     do{
-        is_optimized_const = false; 
-        TreeOptimizeConst(node, &is_optimized_const);
-    }while(is_optimized_const); 
+        is_optimized = false; 
+        TreeOptimizeConst(*node, &is_optimized);
+        TreeOptimizeNeutral(node, *node, &is_optimized);
+    }while(is_optimized); 
 }
 
 static void TreeOptimizeConst(TreeNode_t* node, bool* is_optimized){
@@ -158,6 +161,108 @@ static void TreeOptimizeConst(TreeNode_t* node, bool* is_optimized){
     }
 }
 
+//--------------------------------------------------------------------------
+// Optimizing neutrals
+
+#define IS_ZERO(node) ((node) && (node)->type == CONST && (node)->data.const_value == 0)
+#define IS_ONE(node) ((node) && (node)->type == CONST && (node)->data.const_value == 01)
+
+static void ChangeKidParrentConn(TreeNode_t** result, TreeNode_t* node_for_change, TreeNode_t* new_node, bool* is_optimized);
+
+static void TreeOptimizeNeutralAddSub(TreeNode_t** result, TreeNode_t* node, bool* is_optimized);
+
+static void TreeOptimizeNeutralMul(TreeNode_t** result, TreeNode_t* node, bool* is_optimized);
+
+static void TreeOptimizeNeutralDiv(TreeNode_t** result, TreeNode_t* node, bool* is_optimized);
+
+static void TreeOptimizeNeutralDeg(TreeNode_t** result, TreeNode_t* node, bool* is_optimized);
+
+static void TreeOptimizeNeutral(TreeNode_t** result, TreeNode_t* node, bool* is_optimized){
+    if(node->left){
+        TreeOptimizeNeutral(result, node->left, is_optimized);
+    }
+    if(node->right){
+        TreeOptimizeNeutral(result, node->right, is_optimized);
+    }
+
+    if(node->type == OPERATOR){
+        switch(node->data.op){
+            case OP_ADD: case OP_SUB: TreeOptimizeNeutralAddSub(result, node, is_optimized); break;
+            case OP_MUL:              TreeOptimizeNeutralMul(result, node, is_optimized);    break;
+            case OP_DIV:              TreeOptimizeNeutralDiv(result, node, is_optimized);    break;
+            case OP_DEG:              TreeOptimizeNeutralDeg(result, node, is_optimized);    break;
+        }
+    }
+
+}
+
+static void ChangeKidParrentConn(TreeNode_t** result, TreeNode_t* node_for_change, TreeNode_t* new_node, bool* is_optimized){
+    if(node_for_change->parent){
+        if(node_for_change == node_for_change->parent->left){
+            node_for_change->parent->left = new_node;
+        }
+        else{
+            node_for_change->parent->right = new_node;
+        }
+    }
+    else{
+        *result = new_node;
+    }
+    NodeDtor(node_for_change);
+    *is_optimized = true;
+}
+
+static void TreeOptimizeNeutralAddSub(TreeNode_t** result, TreeNode_t* node, bool* is_optimized){
+    if(IS_ZERO(node->left)){
+        TreeDelNodeRecur(node->left);
+        ChangeKidParrentConn(result, node, node->right, is_optimized); 
+    }
+    else if(IS_ZERO(node->right)){
+        TreeDelNodeRecur(node->right);
+        ChangeKidParrentConn(result, node, node->left, is_optimized);
+    }
+}
+
+static void TreeOptimizeNeutralMul(TreeNode_t** result, TreeNode_t* node, bool* is_optimized){
+    if(IS_ZERO(node->left) || IS_ONE(node->right)){
+        TreeDelNodeRecur(node->right);
+        ChangeKidParrentConn(result, node, node->left, is_optimized);
+    }
+    else if(IS_ZERO(node->right) || IS_ONE(node->left)){
+        TreeDelNodeRecur(node->left);
+        ChangeKidParrentConn(result, node, node->right, is_optimized);
+    }
+}
+
+static void TreeOptimizeNeutralDiv(TreeNode_t** result, TreeNode_t* node, bool* is_optimized){
+    if(IS_ZERO(node->left) && !IS_ZERO(node->right)){
+        TreeDelNodeRecur(node->right);
+        ChangeKidParrentConn(result, node, node->left, is_optimized);
+    }
+    else if(IS_ONE(node->right)){
+        TreeDelNodeRecur(node->left);
+        ChangeKidParrentConn(result, node, node->right, is_optimized);
+    }
+}
+
+static void TreeOptimizeNeutralDeg(TreeNode_t** result, TreeNode_t* node, bool* is_optimized){
+    if((IS_ZERO(node->left) && !IS_ZERO(node->right)) || IS_ONE(node->left)){
+        TreeDelNodeRecur(node->right);
+        ChangeKidParrentConn(result, node, node->left, is_optimized);
+    }
+    else if(IS_ZERO(node->right) && !IS_ZERO(node->left)){
+        node->right->data.const_value += 1;
+        TreeDelNodeRecur(node->left);
+        ChangeKidParrentConn(result, node, node->right, is_optimized);
+    }
+    else if(IS_ONE(node->right)){
+        TreeDelNodeRecur(node->right);
+        ChangeKidParrentConn(result, node, node->left, is_optimized);
+    }
+}
+
+#undef IS_ZERO
+#undef IS_ONE
 //-----------------------------------------------------------------------------
 // Undef dsl
 #undef RES_L

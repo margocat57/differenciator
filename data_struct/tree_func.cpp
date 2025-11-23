@@ -62,14 +62,14 @@ TreeNode_t* NodeCopy(TreeNode_t* node){
 //----------------------------------------------------------------------------------
 // Verifying (recursive algorithm for verifying subtree)
 
-TreeErr_t TreeNodeVerify(const TreeNode_t *node, const TreeHead_t* head);
+TreeErr_t TreeNodeVerify(const TreeNode_t *node);
 
 TreeErr_t TreeVerify(const TreeHead_t* head){
-    return TreeNodeVerify(head->root, head);
+    return TreeNodeVerify(head->root);
 }
 
-TreeErr_t TreeNodeVerify(const TreeNode_t *node, const TreeHead_t* head){
-    if(!node || !head){
+TreeErr_t TreeNodeVerify(const TreeNode_t *node){
+    if(!node){
         fprintf(stderr, "NULL node ptr\n");
         return NULL_NODE_PTR;
     }
@@ -78,12 +78,6 @@ TreeErr_t TreeNodeVerify(const TreeNode_t *node, const TreeHead_t* head){
         return INCORRECT_SIGN;
     }
 
-    if((node != head->root && (node->parent->left != node && node->parent->right != node)) 
-        || (node == head->root && node->parent != NULL)){
-        // tree_dump_func(node, head, "Incorr connection between parent(%p) and child(%p) nodes\n", __FILE__, __func__, __LINE__, head->mtk, node->parent, node);
-        fprintf(stderr, "Incorr connection between parent(%p) and child(%p) nodes\n", node->parent, node);
-        return INCORR_CONNECT_PARENT_CHILD;
-    }
     if(node->left && node != node->left->parent){
         // tree_dump_func(node, head, "Incorr connection between parent(%p) and LEFT child(%p) nodes\n", __FILE__, __func__, __LINE__, head->mtk, node, node->left);
         fprintf(stderr, "Incorr connection between parent(%p) and LEFT child(%p) nodes\n", node, node->left);
@@ -98,12 +92,12 @@ TreeErr_t TreeNodeVerify(const TreeNode_t *node, const TreeHead_t* head){
 
     if(node->left){
         TreeErr_t err = NO_MISTAKE_T;
-        DEBUG_TREE(err = TreeNodeVerify(node->left, head);)
+        DEBUG_TREE(err = TreeNodeVerify(node->left);)
         if(err) return err;
     }
     if(node->right){
         TreeErr_t err = NO_MISTAKE_T;
-        DEBUG_TREE(err = TreeNodeVerify(node->right, head);)
+        DEBUG_TREE(err = TreeNodeVerify(node->right);)
         if(err) return err;
     }
 
@@ -178,7 +172,7 @@ TreeErr_t TreeDel(TreeHead_t* head){
     DEBUG_TREE(err = TreeVerify(head);)
     if(err) return err;
 
-    CHECK_AND_RET_TREEERR(TreeDelNodeRecur(head->root, head))
+    CHECK_AND_RET_TREEERR(TreeDelNodeRecur(head->root))
 
     memset(head, 0, sizeof(TreeHead_t));
     free(head);
@@ -186,27 +180,18 @@ TreeErr_t TreeDel(TreeHead_t* head){
     return err;
 }
 
-TreeErr_t TreeDelNodeRecur(TreeNode_t* node, TreeHead_t* head){
+TreeErr_t TreeDelNodeRecur(TreeNode_t* node){
     TreeErr_t err = NO_MISTAKE_T;
-    DEBUG_TREE(err = TreeNodeVerify(node, head);)
+    DEBUG_TREE(err = TreeNodeVerify(node);)
     if(err) return err;
 
     TreeNode_t* parent = node->parent;
 
     if(node->left){
-        CHECK_AND_RET_TREEERR(TreeDelNodeRecur(node->left, head))
+        CHECK_AND_RET_TREEERR(TreeDelNodeRecur(node->left))
     }
     if(node->right){
-        CHECK_AND_RET_TREEERR(TreeDelNodeRecur(node->right, head))
-    }
-
-    if(parent != NULL){
-        if(parent->left == node){
-            parent->left = NULL;
-        } 
-        if(parent->right == node){
-            parent->right = NULL;
-        }
+        CHECK_AND_RET_TREEERR(TreeDelNodeRecur(node->right))
     }
 
     NodeDtor(node);

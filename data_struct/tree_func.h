@@ -14,7 +14,7 @@ TreeErr_t PrintNode(const TreeNode_t* node, const TreeHead_t* head, FILE* dot_fi
 
 TreeErr_t TreeDel(TreeHead_t* head);
 
-TreeErr_t TreeDelNodeRecur(TreeNode_t* node, TreeHead_t* head);
+TreeErr_t TreeDelNodeRecur(TreeNode_t* node);
 
 void NodeDtor(TreeNode_t* node);
 
