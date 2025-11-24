@@ -145,7 +145,10 @@ static bool NeedStaples(TreeNode_t* node){
     }
     int node_priority = FUNC_FOR_OPERATORS[node->data.op].priority;
     int node_parent_priority = FUNC_FOR_OPERATORS[node->parent->data.op].priority;
-    if (node_priority < node_parent_priority){
+    if(node_priority < node_parent_priority){
+        return true;
+    }
+    if(node->parent->data.op == OP_SUB){
         return true;
     }
     return false;
@@ -156,7 +159,7 @@ FILE* StartLatexDump(const char* filename){
     assert(filename);
     FILE* latex_file = fopen(filename, "w");
     fprintf(latex_file, "\\documentclass[a4paper,12pt]{report}\n\\usepackage[utf8]{inputenc}\n\\usepackage{amsmath,amssymb}\n\\usepackage{geometry}\n\\usepackage{breqn}\n\\newtheorem{definition}{Definition}\n\\newtheorem{obviousfact}{Obvious Fact}\n");
-    fprintf(latex_file, "\\title{Mathematical anal for economists}\n");
+    fprintf(latex_file, "\\title{MatematiCAL anal for economists}\n");
     fprintf(latex_file, "\\author{Anonymus fan of mat.anal}\n\n");
     fprintf(latex_file, "\\begin{document}\n\n");
     fprintf(latex_file, "\\maketitle\n\n");
@@ -168,6 +171,7 @@ FILE* StartLatexDump(const char* filename){
 }
 
 void LatexDumpDecimals(FILE* latex_file){
+    assert(latex_file);
     fprintf(latex_file, "\\chapter{Numbers}\n\n");
     fprintf(latex_file, "\\section{Basic Classes of Numbers}\n\n");
     
@@ -203,6 +207,7 @@ void LatexDumpDecimals(FILE* latex_file){
 }
 
 void LatexDumpChapterDiff(FILE* latex_file){
+    assert(latex_file);
     fprintf(latex_file, "\\chapter{Derivative}\n\n");
     fprintf(latex_file, "\\section{Basic derivatives}\n\n");
     fprintf(latex_file, "\\begin{definition}\n");
@@ -212,6 +217,7 @@ void LatexDumpChapterDiff(FILE* latex_file){
 }
 
 void LatexDumpChapterTaylor(FILE* latex_file){
+    assert(latex_file);
     fprintf(latex_file, "\\chapter{Taylor}\n\n");
     fprintf(latex_file, "\\section{Taylor's formula with the remainder term (and why is it needed? Without it, everything is obvious)}\n\n");
     fprintf(latex_file, "\\begin{definition}\n");

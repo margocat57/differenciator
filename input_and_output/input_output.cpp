@@ -13,7 +13,7 @@
 #include "../dump/graphviz_dump.h"
 #include "../data_struct/forest.h"
 
-const size_t MAX_BUFFER_SIZE = 2048;
+const size_t MAX_BUFFER_SIZE = 50;
 
 struct op_name_and_num_of_symb{
     OPERATORS op;
@@ -111,7 +111,7 @@ static void buffer_free(char* buffer){
 //-----------------------------------------------------------------------------------------
 // Make akinator tree
 
-static TreeErr_t ReadNode(size_t* pos, TreeNode_t* node_parent, char* buffer, TreeNode_t** node_to_write, Forest_t* forest);
+static TreeErr_t ReadNode(size_t *pos, TreeNode_t *node_parent, char *buffer, TreeNode_t **node_to_write, metki *mtk);
 
 Forest_t* MakeDiffForest(const char *name_of_file){
     assert(name_of_file);
@@ -123,9 +123,9 @@ Forest_t* MakeDiffForest(const char *name_of_file){
     TreeHead_t* head = TreeCtor();
     Forest_t* forest = ForestCtor(10);
     size_t pos = 0;
-    ForestAddElem(head, forest);
-    if(ReadNode(&pos, NULL, buffer, &(forest->head_arr[forest->first_free_place - 1]->root), forest)){
+    if(ReadNode(&pos, NULL, buffer, &(head->root), forest->mtk)){
         free(head);
+        ForestDtor(forest);
         buffer_free(buffer);
         return NULL;
     }
@@ -133,39 +133,39 @@ Forest_t* MakeDiffForest(const char *name_of_file){
     if(TreeVerify(head)){
         fprintf(stderr, "File is not correct - can't work with created tree\n");
         free(head);
+        ForestDtor(forest);
         buffer_free(buffer);
         return NULL;
     }
     )
+    ForestAddElem(head, forest);
     buffer_free(buffer);
     return forest;
 }
 static TreeNode_t* DiffNodeCtor(char* buffer, size_t* pos, metki* mtk, TreeNode_t* node_parent);
 
-static TreeErr_t ReadNode(size_t* pos, TreeNode_t* node_parent, char* buffer, TreeNode_t** node_to_write, Forest_t* forest){
-    assert(pos);
-    assert(buffer);
-    assert(forest);
-    OPERATORS op = INCORR;
+static TreeErr_t ReadNode(size_t *pos, TreeNode_t *node_parent, char *buffer, TreeNode_t **node_to_write, metki *mtk)
+{
+    assert(pos); assert(buffer); assert(mtk);
 
     skip_space(buffer, pos);
     if(buffer[(*pos)] == '('){
         (*pos)++; //skip '('
         skip_space(buffer, pos);
-        TreeNode_t* node = DiffNodeCtor(buffer, pos, forest->mtk, node_parent);
+        TreeNode_t* node = DiffNodeCtor(buffer, pos, mtk, node_parent);
         skip_space(buffer, pos);
 
-        if(ReadNode(pos, node, buffer, &(node->left), forest)){
+        if(ReadNode(pos, node, buffer, &(node->left), mtk)){
             fprintf(stderr, "Incorr file\n");
             return INCORR_FILE;
         }
 
-        if(ReadNode(pos, node, buffer, &(node->right), forest)){
+        if(ReadNode(pos, node, buffer, &(node->right), mtk)){
             fprintf(stderr, "Incorr file\n");
             return INCORR_FILE;
         }
 
-        tree_dump_func(node, forest->head_arr[0], "After making left && right|%s", __FILE__, __func__, __LINE__, forest->mtk, buffer + (*pos));
+        tree_dump_func(node, "After making left && right|%s", __FILE__, __func__, __LINE__, mtk, buffer + (*pos));
 
         skip_space(buffer, pos);
         if(buffer[(*pos)] != ')'){
@@ -223,10 +223,14 @@ static TreeNode_t* DiffNodeCtor(char* buffer, size_t* pos, metki* mtk, TreeNode_
 }
 
 static void BufScanfWord(char* buffer, size_t* pos, char* dest){
-    assert(dest);
+    assert(buffer); assert(pos); assert(dest);
 
-    int symb_amt = 0;  
-    sscanf(buffer + *pos, "%s%n", dest, &symb_amt);
+    size_t symb_amt = strcspn(buffer + *pos, "(\r\v\f\n\t ");
+    if(symb_amt > MAX_BUFFER_SIZE - 1){
+        fprintf(stderr, "Can't read more symbols than buffer size %zu - will be read onnly buffer size\n", MAX_BUFFER_SIZE - 1);
+        symb_amt = MAX_BUFFER_SIZE - 1;
+    }
+    strncpy(dest, buffer + *pos, symb_amt);
     (*pos) += symb_amt;
 }
 

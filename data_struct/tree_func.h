@@ -10,7 +10,11 @@ TreeNode_t* NodeCtor(VALUE_TYPE type, TreeElem_t data, TreeNode_t* parent, TreeN
 
 TreeNode_t* NodeCopy(TreeNode_t* node);
 
-TreeErr_t PrintNode(const TreeNode_t* node, const TreeHead_t* head, FILE* dot_file, int* rank, metki* mtk);
+TreeErr_t PrintNode(const TreeNode_t* node, FILE* dot_file, int* rank, metki* mtk);
+
+TreeErr_t TreeVerify(const TreeHead_t *head);
+
+TreeErr_t TreeNodeVerify(const TreeNode_t *node);
 
 TreeErr_t TreeDel(TreeHead_t* head);
 

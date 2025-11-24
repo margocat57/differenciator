@@ -1,0 +1,13 @@
+(*
+  (/
+    (+
+      (+
+        (^(x nil nil) (2 nil nil))
+        (* (3 nil nil) (x nil nil))
+      )
+      (2 nil nil)
+    )
+    (- (x nil nil) (1 nil nil))
+  )
+  (1 nil nil)
+)

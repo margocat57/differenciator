@@ -6,6 +6,6 @@
 
 TreeErr_t CalcTreeExpression(Forest_t* forest, size_t num_of_tree, double* result, bool is_taylor);
 
-void TreeOptimize(TreeNode_t** node);
+TreeErr_t TreeOptimize(TreeNode_t **node);
 
 #endif //CALCUL_TREE_H

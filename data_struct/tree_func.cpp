@@ -62,8 +62,6 @@ TreeNode_t* NodeCopy(TreeNode_t* node){
 //----------------------------------------------------------------------------------
 // Verifying (recursive algorithm for verifying subtree)
 
-TreeErr_t TreeNodeVerify(const TreeNode_t *node);
-
 TreeErr_t TreeVerify(const TreeHead_t* head){
     return TreeNodeVerify(head->root);
 }
@@ -79,21 +77,26 @@ TreeErr_t TreeNodeVerify(const TreeNode_t *node){
     }
 
     if(node->left && node != node->left->parent){
-        // tree_dump_func(node, head, "Incorr connection between parent(%p) and LEFT child(%p) nodes\n", __FILE__, __func__, __LINE__, head->mtk, node, node->left);
         fprintf(stderr, "Incorr connection between parent(%p) and LEFT child(%p) nodes\n", node, node->left);
         return INCORR_LEFT_CONNECT;
     }
     if(node->right && node != node->right->parent){
-        // пока закоменчено - подумаю как сделать норм логику с лесом
-        // tree_dump_func(node, head, "Incorr connection between parent(%p) and RIGHT child(%p) nodes\n", __FILE__, __func__, __LINE__, head->mtk, node, node->right);
         fprintf(stderr, "Incorr connection between parent(%p) and RIGHT child(%p) nodes\n", node, node->right);
         return INCORR_RIGHT_CONNECT;
+    }
+    if(node->left && node->left == node->right){
+        fprintf(stderr, "LOOPED NODE - same connection for left and right");
+        return LOOPED_NODE;
+    }
+    if(node->type == OPERATOR && (node->data.op == OP_ADD || node->data.op == OP_SUB || node->data.op == OP_DIV || node->data.op == OP_MUL || node->data.op == OP_DEG) && (!node->left || !node->right)){
+        fprintf(stderr, "No element for binary operator");
+        return NO_ELEM_FOR_BINARY_OP;
     }
 
     if(node->left){
         TreeErr_t err = NO_MISTAKE_T;
         DEBUG_TREE(err = TreeNodeVerify(node->left);)
-        if(err) return err;
+        if (err) return err;
     }
     if(node->right){
         TreeErr_t err = NO_MISTAKE_T;
@@ -110,13 +113,13 @@ TreeErr_t TreeNodeVerify(const TreeNode_t *node){
 
 static void PrintNodeConnect(const TreeNode_t* node, const TreeNode_t* node_child, FILE* dot_file, int* rank);
 
-TreeErr_t PrintNode(const TreeNode_t* node, const TreeHead_t* head, FILE* dot_file, int* rank, metki* mtk){
+TreeErr_t PrintNode(const TreeNode_t* node, FILE* dot_file, int* rank, metki* mtk){
     assert(node);
     assert(rank);
 
     if(node->left){
         PrintNodeConnect(node, node->left, dot_file, rank);
-        CHECK_AND_RET_TREEERR(PrintNode(node->left, head, dot_file, rank, mtk))
+        CHECK_AND_RET_TREEERR(PrintNode(node->left, dot_file, rank, mtk))
     }
 
     if(node->type == OPERATOR){
@@ -137,7 +140,7 @@ TreeErr_t PrintNode(const TreeNode_t* node, const TreeHead_t* head, FILE* dot_fi
 
     if(node->right){
         PrintNodeConnect(node, node->right, dot_file, rank);
-        CHECK_AND_RET_TREEERR(PrintNode(node->right, head, dot_file, rank, mtk))
+        CHECK_AND_RET_TREEERR(PrintNode(node->right, dot_file, rank, mtk))
     }
     (*rank)--;
     return NO_MISTAKE_T;

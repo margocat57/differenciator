@@ -10,6 +10,6 @@ struct filenames_for_dump{
     char* svg_filename;
 };
 
-void tree_dump_func(const TreeNode_t* node, const TreeHead_t* head, const char* debug_msg, const char *file, const char *func, int line, metki* mtk, ...) __attribute__ ((format (printf, 4, 8)));
+void tree_dump_func(const TreeNode_t* node, const char* debug_msg, const char *file, const char *func, int line, metki* mtk, ...) __attribute__ ((format (printf, 3, 7)));
 
 #endif // GRAPHVIZ_DUMP_H

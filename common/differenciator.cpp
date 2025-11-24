@@ -9,7 +9,7 @@
 
 // Need to declare for dsl
 
-TreeNode_t* Differenciate(TreeNode_t* node, const size_t var_id, FILE* file, metki* mtk);
+static TreeNode_t* Differenciate(TreeNode_t* node, const size_t var_id, FILE* file, metki* mtk);
 
 void ConnectWithParents(TreeNode_t* node);
 //----------------------------------------------------------
@@ -36,20 +36,21 @@ void ConnectWithParents(TreeNode_t* node);
 #define R                       node->right
 #define VAR_NODE(var_id)        NodeCtor(VARIABLE, (TreeElem_t){.var_code = var_id}, NULL, NULL, NULL)
 
-#define DEF_OP(Op, Result, msg) \
-static TreeNode_t* Diff##Op(TreeNode_t* node, const size_t var_id, FILE* file, metki* mtk){ \
-    assert(node); \
-    TreeNode_t* result = Result; \
-    ConnectWithParents(result); \
-    TreeOptimize(&result); \
-    LatexDump(file, node, result, mtk, msg); \
-    return result; \
-}
+#define DEF_OP(Op, Result, msg)                                                                \
+    static TreeNode_t *Diff##Op(TreeNode_t *node, const size_t var_id, FILE *file, metki *mtk){                                                                                          \
+        assert(node);                                                                          \
+        TreeNode_t *result = Result;                                                           \
+        ConnectWithParents(result);                                                            \
+        TreeOptimize(&result);                                                                 \
+        LatexDump(file, node, result, mtk, msg);                                               \
+        return result;                                                                         \
+    }
+
 
 DEF_OP(Add, ADD_(DL_, DR_), "It is obvious that:\n")
 DEF_OP(Sub, SUB_(DL_, DR_), "It is easy to see:\n")
 DEF_OP(Mul, ADD_(MUL_(DL_, CR_), MUL_(CL_, DR_)), "Understanding this transformation is left to the reader as a simple exercise:\n")
-DEF_OP(Div, DIV_(SUB_(MUL_(DL_, CR_), MUL_(CL_, DR_) ), MUL_(node->right, node->right)) , "Should be known from school:\n")
+DEF_OP(Div, DIV_(SUB_(MUL_(DL_, CR_), MUL_(CL_, DR_)), DEG_(CR_, NUM_(2))), "Should be known from school:\n")
 DEF_OP(Cos, MUL_(DL_, MUL_(NUM_(-1), SIN_(CL_))), "According to the theorem (which number?) from paragraph ??:\n")
 DEF_OP(Sin, MUL_(DL_, COS_(CL_)), "It is common knowledge:\n")
 DEF_OP(Ln,  MUL_(DL_, DIV_(NUM_(1), CL_)), "As already shown earlier:\n")
@@ -120,49 +121,73 @@ const operators_func FUNC_FOR_OPERATORS[] = {
 //---------------------------------------------------------
 // Function that differencates and dumpes
 
-FILE* StartLatexDump(const char* filename);
+static TreeErr_t CreateDiffTree(const size_t var_id, Forest_t *forest, size_t idx, FILE *latex_dump);
 
-TreeNode_t* Differenciate(TreeNode_t* node, const size_t var_id, FILE* file, metki* mtk);
+static void AskAboutN(size_t *n);
+
+static size_t FindVarCodeToDiff(metki *mtk);
 
 static size_t FindVarByName(const char* var_name, metki* mtk);
 
-void EndLatexDump(FILE* latex_file);
+TreeErr_t CreateDiffForest(Forest_t *forest, FILE *latex_dump){
+    TreeErr_t err = NO_MISTAKE_T;
+    DEBUG_TREE(err = ForestVerify(forest);)
+    if (err) return err;
 
-// цикл - сканфим какую производную хотим посчитать и ее считаем
-void CreateDiffTree(const char* var_name, Forest_t* forest, FILE* latex_dump){
-    assert(latex_dump);
     size_t n = 0;
-    printf("Which derivative do you want to calculate?\n");
-    scanf("%zu", &n);
+    AskAboutN(&n);
 
-    for(size_t idx = 0; idx < n; idx++){
-        TreeHead_t* head_new = TreeCtor();
-        LatexDump(latex_dump, forest->head_arr[idx]->root, NULL, forest->mtk, "\\textbf{Let's calculate a simple derivative:}\n");
-        head_new->root = Differenciate(forest->head_arr[idx]->root, FindVarByName(var_name, forest->mtk), latex_dump, forest->mtk); 
-        ForestAddElem(head_new, forest);
-        tree_dump_func(head_new->root, head_new, "diff tree dump %zu", __FILE__, __func__, __LINE__, forest->mtk, idx);
+    size_t var_id = FindVarCodeToDiff(forest->mtk);
+    if(var_id == SIZE_MAX){
+        fprintf(stderr, "Incorr variable to differenciate");
+        return INCORR_VAR_TO_DIFF;
     }
 
-    // пока не работает - почему то ругается что нет \end
-    // system("pdflatex -interaction=nonstopmode diff.tex");
+    for(size_t idx = 0; idx < n; idx++){
+        CHECK_AND_RET_TREEERR(CreateDiffTree(var_id, forest, idx, latex_dump));
+    }
+
+    DEBUG_TREE(err = ForestVerify(forest);)
+    return err;
 }
 
-static size_t FindVarByName(const char* var_name, metki* mtk){
+static void AskAboutN(size_t *n){
+    assert(n);
+    printf("Which derivative do you want to calculate?\n");
+    scanf("%zu", n);
+}
+
+static size_t FindVarByName(const char *var_name, metki *mtk){
     assert(var_name);
     for(size_t metka_idx = 0; metka_idx < mtk->first_free; metka_idx++){
-        if(!strcmp(mtk->var_info[metka_idx].variable_name,var_name)){
+        if(!strcmp(mtk->var_info[metka_idx].variable_name, var_name)){
             return metka_idx;
         }
     }
     return SIZE_MAX;
 }
 
+static size_t FindVarCodeToDiff(metki* mtk){
+    char var_name[50] = {};
+    printf("For which variable find the derivative\n");
+    scanf("%49s", var_name);
+    return FindVarByName(var_name, mtk);
+}
+
+static TreeErr_t CreateDiffTree(const size_t var_id, Forest_t *forest, size_t idx, FILE *latex_dump){
+    TreeHead_t* head_new = TreeCtor();
+    LatexDump(latex_dump, forest->head_arr[idx]->root, NULL, forest->mtk, "\\textbf{Let's calculate a simple derivative:}\n");
+    head_new->root = Differenciate(forest->head_arr[idx]->root, var_id, latex_dump, forest->mtk);
+    CHECK_AND_RET_TREEERR(ForestAddElem(head_new, forest));
+    return NO_MISTAKE_T;
+}
 
 //--------------------------------------------------------------
 //--------------------------------------------------------------
 // differenciate
 
-TreeNode_t* Differenciate(TreeNode_t* node, const size_t var_id, FILE* file, metki* mtk){
+static TreeNode_t* Differenciate(TreeNode_t* node, const size_t var_id, FILE* file, metki* mtk){
+    assert(node); assert(file); assert(mtk);
     if(node->type == INCORR_VAL){
         return NULL;
     }
@@ -199,24 +224,47 @@ void ConnectWithParents(TreeNode_t* node){
 //---------------------------------------------------------------
 // Taylor - only for one variable(for two and more too complex)
 
-void CreateTaylorTree(Forest_t *forest_taylor, Forest_t* diff_forest, FILE* latex_dump){
-    double result = 0;
+static TreeErr_t CreateTaylorTree(size_t idx, Forest_t *forest_taylor, Forest_t *diff_forest, FILE *latex_dump);
+
+TreeErr_t CreateTaylorForest(Forest_t *forest_taylor, Forest_t *diff_forest, FILE *latex_dump){
+    assert(forest_taylor); assert(diff_forest); assert(latex_dump);
+
+    TreeErr_t err = NO_MISTAKE_T;
+    DEBUG_TREE(err = ForestVerify(diff_forest);)
+    DEBUG_TREE(err = ForestVerify(forest_taylor);)
+    if(err) return err;
+
     if(diff_forest->mtk->first_free != 1){
         fprintf(latex_dump, "\\textbf{Can't create Taylor for two and more var}\n");
+        return err;
     }
+
+    printf("At first the derivatives must be calcutated:\t");
+    fprintf(latex_dump, "{\\large \\At first the derivatives must be calcutated:}}\n");
+    CHECK_AND_RET_TREEERR(CreateDiffForest(diff_forest, latex_dump));
+
     metki_add_values(diff_forest->mtk);
-    for(size_t idx = 0; idx < diff_forest->first_free_place; idx++){
-        TreeHead_t * head_new = TreeCtor();
-        CalcTreeExpression(diff_forest, idx, &result, true);
-        head_new->root = MUL_(DIV_(NUM_(result), NUM_(tgammaf(idx + 1))), DEG_(SUB_(VAR_NODE(0), NUM_(diff_forest->mtk->var_info[0].value)), NUM_(idx)));
-        ConnectWithParents(head_new->root);
-        TreeOptimize(&(head_new->root));
-        ForestAddElem(head_new, forest_taylor);
+
+    for (size_t idx = 0; idx < diff_forest->first_free_place; idx++){
+        CHECK_AND_RET_TREEERR(CreateTaylorTree(idx, forest_taylor, diff_forest, latex_dump));
     }
     metki_del_values(diff_forest->mtk);
+
+    DEBUG_TREE(err = ForestVerify(diff_forest);)
+    DEBUG_TREE(err = ForestVerify(forest_taylor);)
+    return err;
 }
 
-
+static TreeErr_t CreateTaylorTree(size_t idx, Forest_t *forest_taylor, Forest_t *diff_forest, FILE *latex_dump){
+    double result = 0;
+    TreeHead_t * head_new = TreeCtor();
+    CHECK_AND_RET_TREEERR(CalcTreeExpression(diff_forest, idx, &result, true));
+    head_new->root = MUL_(DIV_(NUM_(result), NUM_(tgammaf(idx + 1))), DEG_(SUB_(VAR_NODE(0), NUM_(diff_forest->mtk->var_info[0].value)), NUM_(idx)));
+    ConnectWithParents(head_new->root);
+    CHECK_AND_RET_TREEERR(TreeOptimize(&(head_new->root)));
+    CHECK_AND_RET_TREEERR(ForestAddElem(head_new, forest_taylor));
+    return NO_MISTAKE_T;
+}
 
 //----------------------------------------------------------
 // DSL undef

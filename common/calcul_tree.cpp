@@ -22,15 +22,15 @@ DEF_OP(Sub, RES_L - RES_R);
 DEF_OP(Mul, RES_L * RES_R);
 DEF_OP(Div, (RES_R != 0) ? RES_L / RES_R : 0);
 DEF_OP(Deg, pow(RES_L, RES_R));
-DEF_OP(Cos, cos(RES_L + RES_R));
-DEF_OP(Sin, sin(RES_L + RES_R));
-DEF_OP(Ln,  logf(RES_L + RES_R));
-DEF_OP(Tg,  tan(RES_L + RES_R));
-DEF_OP(Ctg, (RES_R != 0) ? 1 / tan(RES_L + RES_R) : 0);
-DEF_OP(Sh,  sinh(RES_L + RES_R));
-DEF_OP(Ch,  cosh(RES_L + RES_R));
-DEF_OP(Th,  tanh(RES_L + RES_R));
-DEF_OP(Cth, (RES_R != 0) ? 1 / tanh(RES_L + RES_R) : 0);
+DEF_OP(Cos, cos(RES_L));
+DEF_OP(Sin, sin(RES_L));
+DEF_OP(Ln,  logf(RES_L));
+DEF_OP(Tg,  tan(RES_L));
+DEF_OP(Ctg, (tan(RES_L) != 0) ? 1 / tan(RES_L) : 0);
+DEF_OP(Sh,  sinh(RES_L));
+DEF_OP(Ch,  cosh(RES_L));
+DEF_OP(Th,  tanh(RES_L));
+DEF_OP(Cth, (tanh(RES_L) != 0) ? 1 / tanh(RES_L) : 0);
 
 struct operators_func{
     void(*function_calc)(double* result, double* left_result, double* right_result);
@@ -80,7 +80,7 @@ TreeErr_t CalcTreeExpression(Forest_t* forest, size_t num_of_tree, double* resul
 // Postfix tree calculating
 // After will be verifying
 
-static void CalcExpWithOperator(TreeNode_t* node, double* result, double* left_result, double* right_result);
+static TreeErr_t CalcExpWithOperator(TreeNode_t *node, double *result, double *left_result, double *right_result);
 
 static void CalcExpWithConst(TreeNode_t* node, double* result);
 
@@ -98,26 +98,27 @@ static TreeErr_t CalcTreeExpressionRecursive(metki* mtk, TreeNode_t* node, doubl
     }
 
     if(node->type == OPERATOR){
-        CalcTreeExpressionRecursive(mtk, node->left, &left_result);
-        CalcTreeExpressionRecursive(mtk, node->right, &right_result);
+        CHECK_AND_RET_TREEERR(CalcTreeExpressionRecursive(mtk, node->left, &left_result));
+        CHECK_AND_RET_TREEERR(CalcTreeExpressionRecursive(mtk, node->right, &right_result));
     }
     switch(node->type){
-        case OPERATOR: CalcExpWithOperator(node, result, &left_result, &right_result); break;
-        case CONST:    CalcExpWithConst(node, result);                                 break;
-        case VARIABLE: CalcExpWithVar(mtk, node, result);                              break;
+        case OPERATOR: CHECK_AND_RET_TREEERR(CalcExpWithOperator(node, result, &left_result, &right_result)); break;
+        case CONST:                          CalcExpWithConst(node, result);                                  break;
+        case VARIABLE:                       CalcExpWithVar(mtk, node, result);                               break;
         default: return INCORR_OPERATOR;
     }
     return NO_MISTAKE_T;
 }
 //--------------------------------------------------------------------------------
 
-static void CalcExpWithOperator(TreeNode_t* node, double* result, double* left_result, double* right_result){
+static TreeErr_t CalcExpWithOperator(TreeNode_t* node, double* result, double* left_result, double* right_result){
     assert(result); 
     size_t arr_num_of_elem = sizeof(FUNC_FOR_OPERATORS) / sizeof(operators_func);
     if(node->data.op >= arr_num_of_elem){
-        return;
+        return INCORR_OPERATOR;
     }
     FUNC_FOR_OPERATORS[node->data.op].function_calc(result, left_result, right_result);
+    return NO_MISTAKE_T;
 }
 
 static void CalcExpWithConst(TreeNode_t* node, double* result){
@@ -130,30 +131,34 @@ static void CalcExpWithVar(metki* mtk, TreeNode_t* node, double* result){
 //---------------------------------------------------------------------------
 // Optimization
 
-static void TreeOptimizeConst(TreeNode_t* node, bool* is_optimized);
+static TreeErr_t TreeOptimizeConst(TreeNode_t *node, bool *is_optimized);
 
-static void TreeOptimizeNeutral(TreeNode_t** result, TreeNode_t* node, bool* is_optimized);
+static TreeErr_t TreeOptimizeNeutral(TreeNode_t **result, TreeNode_t *node, bool *is_optimized);
 
-void TreeOptimize(TreeNode_t** node){
+TreeErr_t TreeOptimize(TreeNode_t **node){
+    assert(node);
     bool is_optimized = false;
     do{
         is_optimized = false; 
-        TreeOptimizeConst(*node, &is_optimized);
-        TreeOptimizeNeutral(node, *node, &is_optimized);
-    }while(is_optimized); 
+        CHECK_AND_RET_TREEERR(TreeOptimizeConst(*node, &is_optimized));
+        CHECK_AND_RET_TREEERR(TreeOptimizeNeutral(node, *node, &is_optimized));
+    }while(is_optimized);
+
+    return NO_MISTAKE_T;
 }
 
-static void TreeOptimizeConst(TreeNode_t* node, bool* is_optimized){
+static TreeErr_t TreeOptimizeConst(TreeNode_t *node, bool *is_optimized){
+    assert(node); assert(is_optimized);
     if(node->left){
-        TreeOptimizeConst(node->left, is_optimized);
+        CHECK_AND_RET_TREEERR(TreeOptimizeConst(node->left, is_optimized));
     }
     if(node->right){
-        TreeOptimizeConst(node->right, is_optimized);
+        CHECK_AND_RET_TREEERR(TreeOptimizeConst(node->right, is_optimized));
     }
     if(node->left && node->right && node->left->type == CONST && node->right->type == CONST && node->type == OPERATOR){
         size_t arr_num_of_elem = sizeof(FUNC_FOR_OPERATORS) / sizeof(operators_func);
         if(node->data.op >= arr_num_of_elem){
-            return;
+            return INCORR_OPERATOR;
         }
         FUNC_FOR_OPERATORS[node->data.op].function_calc(&(node->data.const_value), &(node->left->data.const_value), &(node->right->data.const_value));
         NodeDtor(node->left);
@@ -163,6 +168,7 @@ static void TreeOptimizeConst(TreeNode_t* node, bool* is_optimized){
         node->right = NULL;
         *is_optimized = true;
     }
+    return NO_MISTAKE_T;
 }
 
 //--------------------------------------------------------------------------
@@ -181,12 +187,12 @@ static void TreeOptimizeNeutralDiv(TreeNode_t** result, TreeNode_t* node, bool* 
 
 static void TreeOptimizeNeutralDeg(TreeNode_t** result, TreeNode_t* node, bool* is_optimized);
 
-static void TreeOptimizeNeutral(TreeNode_t** result, TreeNode_t* node, bool* is_optimized){
+static TreeErr_t TreeOptimizeNeutral(TreeNode_t **result, TreeNode_t *node, bool *is_optimized){
     if(node->left){
-        TreeOptimizeNeutral(result, node->left, is_optimized);
+        CHECK_AND_RET_TREEERR(TreeOptimizeNeutral(result, node->left, is_optimized));
     }
     if(node->right){
-        TreeOptimizeNeutral(result, node->right, is_optimized);
+        CHECK_AND_RET_TREEERR(TreeOptimizeNeutral(result, node->right, is_optimized));
     }
 
     if(node->type == OPERATOR){
@@ -195,9 +201,10 @@ static void TreeOptimizeNeutral(TreeNode_t** result, TreeNode_t* node, bool* is_
             case OP_MUL:              TreeOptimizeNeutralMul(result, node, is_optimized);    break;
             case OP_DIV:              TreeOptimizeNeutralDiv(result, node, is_optimized);    break;
             case OP_DEG:              TreeOptimizeNeutralDeg(result, node, is_optimized);    break;
+            default: return INCORR_OPERATOR;
         }
     }
-
+    return NO_MISTAKE_T;
 }
 
 static void ChangeKidParrentConn(TreeNode_t** result, TreeNode_t* node_for_change, TreeNode_t* new_node, bool* is_optimized){
@@ -218,7 +225,7 @@ static void ChangeKidParrentConn(TreeNode_t** result, TreeNode_t* node_for_chang
 }
 
 static void TreeOptimizeNeutralAddSub(TreeNode_t** result, TreeNode_t* node, bool* is_optimized){
-    if(IS_ZERO(node->left)){
+    if(IS_ZERO(node->left) && node->data.op != OP_SUB){
         TreeDelNodeRecur(node->left);
         ChangeKidParrentConn(result, node, node->right, is_optimized); 
     }

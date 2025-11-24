@@ -18,17 +18,17 @@ static filenames_for_dump filename_ctor();
 
 static int check_and_dump_system_work(int sys_res);
 
-static void generate_dot_file(const TreeNode_t* node, const TreeHead_t* head, const char* dot_filename, metki* mtk);
+static void generate_dot_file(const TreeNode_t* node, const char* dot_filename, metki* mtk);
 
 static void generate_svg_file(const filenames_for_dump* dump);
 
 static void tree_dump_html(const char* img, const char* debug_msg, const char *file, const char *func, int line, va_list args);  
 
-void tree_dump_func(const TreeNode_t* node, const TreeHead_t* head, const char* debug_msg, const char *file, const char *func,  int line, metki* mtk, ...){
+void tree_dump_func(const TreeNode_t* node, const char* debug_msg, const char *file, const char *func,  int line, metki* mtk, ...){
     assert(file);
 
     filenames_for_dump dump = filename_ctor();
-    generate_dot_file(node, head, dump.dot_filename, mtk);
+    generate_dot_file(node, dump.dot_filename, mtk);
     generate_svg_file(&dump);
     if(dump.svg_filename){
         va_list args = {};
@@ -110,7 +110,7 @@ static filenames_for_dump filename_ctor(){
     return dump;
 }
 
-static void generate_dot_file(const TreeNode_t* node, const TreeHead_t* head, const char* dot_filename, metki* mtk){
+static void generate_dot_file(const TreeNode_t* node, const char* dot_filename, metki* mtk){
     if(!dot_filename){
         fprintf(stderr, "NULL dot_filename pointer - can't work\n");
         return;
@@ -129,7 +129,7 @@ static void generate_dot_file(const TreeNode_t* node, const TreeHead_t* head, co
     fprintf(dot_file, " graph [bgcolor=\"#FFFAFA\", nodesep = 0.3, ranksep=0.8];\n");
 
     int rank = 1;
-    PrintNode(node, head, dot_file, &rank, mtk);
+    PrintNode(node, dot_file, &rank, mtk);
 
     fprintf(dot_file,"}\n");
     fclose(dot_file);
