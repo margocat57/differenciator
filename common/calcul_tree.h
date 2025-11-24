@@ -4,7 +4,7 @@
 #include "mistakes.h"
 #include "../data_struct/forest.h"
 
-TreeErr_t CalcTreeExpression(Forest_t* forest, size_t num_of_tree, double* result);
+TreeErr_t CalcTreeExpression(Forest_t* forest, size_t num_of_tree, double* result, bool is_taylor);
 
 void TreeOptimize(TreeNode_t** node);
 

@@ -1,0 +1,7 @@
+(*
+  (x nil nil)
+  (sin
+    (x nil nil)
+    (0 nil nil)
+  )
+)

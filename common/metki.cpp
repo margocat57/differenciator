@@ -58,7 +58,7 @@ size_t find_var_in_mtk_arr(metki* mtk, char* num_of_variable){
 void metki_add_values(metki* mtk){
     double value = 0;
     for(size_t idx = 0; idx < mtk->first_free; idx++){
-        printf("Input value for %s", mtk->var_info[idx].variable_name);
+        printf("Input value for %s\n", mtk->var_info[idx].variable_name);
         scanf("%lf", &value);
         mtk->var_info[idx].value = value;
     }

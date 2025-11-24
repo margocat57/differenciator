@@ -10,6 +10,6 @@
 #include "../common/differenciator.h"
 #include "../data_struct/forest.h"
 
-void MatanBook(Forest_t* forest, const char* book_fil);
+void MatanBook(Forest_t* forest_diff, Forest_t* forest_diff_taylor, Forest_t* forest_taylor, const char* book_file);
 
 #endif //MATAN_BOOK_H

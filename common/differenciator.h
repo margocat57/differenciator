@@ -7,4 +7,6 @@
 
 void CreateDiffTree(const char* var_name, Forest_t* forest, FILE* latex_dump);
 
+void CreateTaylorTree(Forest_t *forest_taylor, Forest_t* diff_forest, FILE* latex_dump);
+
 #endif //DIFFERENCIATOR_H

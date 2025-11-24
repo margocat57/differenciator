@@ -34,6 +34,7 @@ void ConnectWithParents(TreeNode_t* node);
 #define NUM_(num)               NodeCtor(CONST, (TreeElem_t){.const_value = num}, NULL, NULL, NULL)
 #define L                       node->left
 #define R                       node->right
+#define VAR_NODE(var_id)        NodeCtor(VARIABLE, (TreeElem_t){.var_code = var_id}, NULL, NULL, NULL)
 
 #define DEF_OP(Op, Result, msg) \
 static TreeNode_t* Diff##Op(TreeNode_t* node, const size_t var_id, FILE* file, metki* mtk){ \
@@ -139,7 +140,7 @@ void CreateDiffTree(const char* var_name, Forest_t* forest, FILE* latex_dump){
         LatexDump(latex_dump, forest->head_arr[idx]->root, NULL, forest->mtk, "\\textbf{Let's calculate a simple derivative:}\n");
         head_new->root = Differenciate(forest->head_arr[idx]->root, FindVarByName(var_name, forest->mtk), latex_dump, forest->mtk); 
         ForestAddElem(head_new, forest);
-        tree_dump_func(head_new->root, head_new, "diff tree dump", __FILE__, __func__, __LINE__, forest->mtk);
+        tree_dump_func(head_new->root, head_new, "diff tree dump %zu", __FILE__, __func__, __LINE__, forest->mtk, idx);
     }
 
     // пока не работает - почему то ругается что нет \end
@@ -195,6 +196,26 @@ void ConnectWithParents(TreeNode_t* node){
     }
 }
 
+//---------------------------------------------------------------
+// Taylor - only for one variable(for two and more too complex)
+
+void CreateTaylorTree(Forest_t *forest_taylor, Forest_t* diff_forest, FILE* latex_dump){
+    double result = 0;
+    if(diff_forest->mtk->first_free != 1){
+        fprintf(latex_dump, "\\textbf{Can't create Taylor for two and more var}\n");
+    }
+    metki_add_values(diff_forest->mtk);
+    for(size_t idx = 0; idx < diff_forest->first_free_place; idx++){
+        TreeHead_t * head_new = TreeCtor();
+        CalcTreeExpression(diff_forest, idx, &result, true);
+        head_new->root = MUL_(DIV_(NUM_(result), NUM_(tgammaf(idx + 1))), DEG_(SUB_(VAR_NODE(0), NUM_(diff_forest->mtk->var_info[0].value)), NUM_(idx)));
+        ConnectWithParents(head_new->root);
+        TreeOptimize(&(head_new->root));
+        ForestAddElem(head_new, forest_taylor);
+    }
+    metki_del_values(diff_forest->mtk);
+}
+
 
 
 //----------------------------------------------------------
@@ -222,5 +243,6 @@ void ConnectWithParents(TreeNode_t* node){
 #undef  LN_
 #undef  NUM_
 #undef  DEF_OP
+#undef  VAR_NODE
 
 //----------------------------------------------------------

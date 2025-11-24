@@ -61,16 +61,16 @@ const operators_func FUNC_FOR_OPERATORS[] = {
 
 static TreeErr_t CalcTreeExpressionRecursive(metki* mtk, TreeNode_t* node, double* result);
 
-TreeErr_t CalcTreeExpression(Forest_t* forest, size_t num_of_tree, double* result){
+TreeErr_t CalcTreeExpression(Forest_t* forest, size_t num_of_tree, double* result, bool is_taylor){
     assert(result);
 
     TreeErr_t err = NO_MISTAKE_T;
     DEBUG_TREE(err = TreeVerify(forest->head_arr[num_of_tree]);)
     if(err) return err;
     
-    metki_add_values(forest->mtk);
+    if(!is_taylor) metki_add_values(forest->mtk);
     CalcTreeExpressionRecursive(forest->mtk, forest->head_arr[num_of_tree]->root, result);
-    metki_del_values(forest->mtk);
+    if(!is_taylor) metki_del_values(forest->mtk);
 
     DEBUG_TREE(err = TreeVerify(forest->head_arr[num_of_tree]);)
     return err;
@@ -92,6 +92,10 @@ static TreeErr_t CalcTreeExpressionRecursive(metki* mtk, TreeNode_t* node, doubl
 
     double left_result = 0;
     double right_result = 0;
+
+    if(!node){
+        return NO_MISTAKE_T;
+    }
 
     if(node->type == OPERATOR){
         CalcTreeExpressionRecursive(mtk, node->left, &left_result);
@@ -204,6 +208,7 @@ static void ChangeKidParrentConn(TreeNode_t** result, TreeNode_t* node_for_chang
         else{
             node_for_change->parent->right = new_node;
         }
+        new_node->parent = node_for_change->parent;
     }
     else{
         *result = new_node;
@@ -246,7 +251,11 @@ static void TreeOptimizeNeutralDiv(TreeNode_t** result, TreeNode_t* node, bool* 
 }
 
 static void TreeOptimizeNeutralDeg(TreeNode_t** result, TreeNode_t* node, bool* is_optimized){
-    if((IS_ZERO(node->left) && !IS_ZERO(node->right)) || IS_ONE(node->left)){
+    if((IS_ZERO(node->left) && !IS_ZERO(node->right))){
+        TreeDelNodeRecur(node->right);
+        ChangeKidParrentConn(result, node, node->left, is_optimized);
+    }
+    else if(IS_ONE(node->left)){
         TreeDelNodeRecur(node->right);
         ChangeKidParrentConn(result, node, node->left, is_optimized);
     }
@@ -261,10 +270,10 @@ static void TreeOptimizeNeutralDeg(TreeNode_t** result, TreeNode_t* node, bool* 
     }
 }
 
-#undef IS_ZERO
-#undef IS_ONE
 //-----------------------------------------------------------------------------
 // Undef dsl
+#undef IS_ZERO
+#undef IS_ONE
 #undef RES_L
 #undef RES_R
 #undef DEF_OP

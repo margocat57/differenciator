@@ -95,8 +95,25 @@ const operators_func FUNC_FOR_OPERATORS[] = {
 //--------------------------------------------------------------
 // Dump
 
+void LatexDumpTaylor(FILE *file, Forest_t *forest_diff, Forest_t *forest){
+    fprintf(file, "{\\large \\textbf{Taylor Series:}}\n");
+    fprintf(file, "\\begin{dmath}\n");
+    fprintf(file, "T(");
+    LatexDumpRecursive(file, forest_diff->head_arr[0]->root, forest_diff->mtk);
+    fprintf(file, ") = ");
+    for(size_t idx = 0; idx < forest->first_free_place; idx++){
+        if(forest->head_arr[idx]->root->data.const_value == 0){
+            continue;
+        }
+        LatexDumpRecursive(file, forest->head_arr[idx]->root, forest_diff->mtk);
+        fprintf(file, " + ");
+    }
+    fprintf(file, "...");
+    fprintf(file, "\\end{dmath}\n");
+}
+
 void LatexDump(FILE* file, TreeNode_t* node, TreeNode_t* result, metki* mtk, const char* comment){
-    fprintf(file, "%s" ,comment);
+    if(comment) fprintf(file, "%s" ,comment);
     fprintf(file, "\\begin{dmath}\n");
     if(result) fprintf(file, "(\n");
     LatexDumpRecursive(file, node, mtk);
@@ -123,12 +140,12 @@ void LatexDumpRecursive(FILE* file, TreeNode_t* node, metki* mtk){
 }
 
 static bool NeedStaples(TreeNode_t* node){
-    if(node->type != OPERATOR || !node->parent || node->parent->type != OPERATOR || !node){
+    if(!node || node->type != OPERATOR || !node->parent || node->parent->type != OPERATOR){
         return false;
     }
     int node_priority = FUNC_FOR_OPERATORS[node->data.op].priority;
     int node_parent_priority = FUNC_FOR_OPERATORS[node->parent->data.op].priority;
-    if(node_priority < node_parent_priority){
+    if (node_priority < node_parent_priority){
         return true;
     }
     return false;
@@ -191,7 +208,15 @@ void LatexDumpChapterDiff(FILE* latex_file){
     fprintf(latex_file, "\\begin{definition}\n");
     fprintf(latex_file, "The definition of derivative is omitted because it is obvious.\n");
     fprintf(latex_file, "\\end{definition}\n");
-    fprintf(latex_file, "Everything in this chapter is so obvious that no additional explanations will be provided - we'll immediately proceed to analyze an example from kindergarten.\n");
+    fprintf(latex_file, "Everything in this chapter is so obvious that no additional explanations will be provided - we'll immediately proceed to analyze an example from kindergarten.\n\n");
+}
+
+void LatexDumpChapterTaylor(FILE* latex_file){
+    fprintf(latex_file, "\\chapter{Taylor}\n\n");
+    fprintf(latex_file, "\\section{Taylor's formula with the remainder term (and why is it needed? Without it, everything is obvious)}\n\n");
+    fprintf(latex_file, "\\begin{definition}\n");
+    fprintf(latex_file, "Taylor's formula is obvious, so no additional explanations will be given. Let's start straight with an example.\n");
+    fprintf(latex_file, "\\end{definition}\n");
 }
 
 //--------------------------------------------------------------
