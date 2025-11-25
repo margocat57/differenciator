@@ -201,8 +201,8 @@ static TreeErr_t TreeOptimizeNeutral(TreeNode_t **result, TreeNode_t *node, bool
             case OP_MUL:              TreeOptimizeNeutralMul(result, node, is_optimized);    break;
             case OP_DIV:              TreeOptimizeNeutralDiv(result, node, is_optimized);    break;
             case OP_DEG:              TreeOptimizeNeutralDeg(result, node, is_optimized);    break;
-            default: return INCORR_OPERATOR;
-        }
+            default:                                                                         break;
+            }
     }
     return NO_MISTAKE_T;
 }

@@ -239,8 +239,8 @@ TreeErr_t CreateTaylorForest(Forest_t *forest_taylor, Forest_t *diff_forest, FIL
         return err;
     }
 
-    printf("At first the derivatives must be calcutated:\t");
-    fprintf(latex_dump, "{\\large \\At first the derivatives must be calcutated:}}\n");
+    printf("For Taylor formula at first the derivatives must be calcutated:\t");
+    fprintf(latex_dump, "{\\large \\textbf{At first the derivatives must be calcutated:}}\n");
     CHECK_AND_RET_TREEERR(CreateDiffForest(diff_forest, latex_dump));
 
     metki_add_values(diff_forest->mtk);
