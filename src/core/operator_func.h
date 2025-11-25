@@ -1,7 +1,7 @@
 #ifndef OPERATOR_FUNC_H
 #define OPERATOR_FUNC_H
 #include <string.h>
-#include "data_struct/tree.h"
+#include "tree.h"
 #include <stdio.h>
 
 #ifdef DIFFERENCIATOR_CPP

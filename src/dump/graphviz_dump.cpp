@@ -1,4 +1,4 @@
-#include "../data_struct/tree_func.h"
+#include "../core/tree_func.h"
 #include "graphviz_dump.h"
 #include <sys/wait.h>
 #include <stdio.h>
@@ -6,7 +6,7 @@
 #include <stdlib.h>
 #include <stdarg.h>
 #include <assert.h>
-#include "../common/metki.h"
+#include "../utils/metki.h"
 
 #define CHECK_AND_RET_DUMP(bad_condition, msg)\
     if(bad_condition){ \
@@ -91,7 +91,7 @@ static filenames_for_dump filename_ctor(){
     struct tm *t = localtime(&now); 
 
     if (snprintf(dump.dot_filename, 100, 
-                "images/dump%d_%04d%02d%02d_%02d%02d%02d.dot", num,
+                "output/images/dump%d_%04d%02d%02d_%02d%02d%02d.dot", num,
                 t->tm_year + 1900, t->tm_mon + 1, t->tm_mday,
                 t->tm_hour, t->tm_min, t->tm_sec) == -1) {
         fprintf(stderr, "Can't generate dot filename\n");
@@ -100,7 +100,7 @@ static filenames_for_dump filename_ctor(){
     }
     
     if (snprintf(dump.svg_filename, 100, 
-                "images/dump%d_%04d%02d%02d_%02d%02d%02d.svg", num,
+                "output/images/dump%d_%04d%02d%02d_%02d%02d%02d.svg", num,
                 t->tm_year + 1900, t->tm_mon + 1, t->tm_mday,
                 t->tm_hour, t->tm_min, t->tm_sec) == -1) {
         fprintf(stderr, "Can't generate svg filename\n");

@@ -1,8 +1,8 @@
 #ifndef DIFFERENCIATOR_H
 #define DIFFERENCIATOR_H
-#include "../data_struct/tree.h"
-#include "mistakes.h"
-#include "../data_struct/forest.h"
+#include "../core/tree.h"
+#include "../utils/mistakes.h"
+#include "../core/forest.h"
 
 TreeErr_t CreateDiffForest(Forest_t *forest, FILE *latex_dump);
 

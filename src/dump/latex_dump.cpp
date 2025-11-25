@@ -1,10 +1,10 @@
 #include <assert.h>
 #include <math.h>
 #include <stdio.h>
-#include "../common/differenciator.h"
+#include "../differenciation/differenciator.h"
 #include "graphviz_dump.h"
-#include "../data_struct/tree_func.h"
-#include "../data_struct/forest.h"
+#include "../core/tree_func.h"
+#include "../core/forest.h"
 
 static bool NeedStaples(TreeNode_t* node);
 
@@ -65,7 +65,7 @@ DEF_UN_OP(Ch,  "ch(" , ")")
 DEF_UN_OP(Th,  "th(" , ")")
 DEF_UN_OP(Cth, "cth(" , ")")
 
-#include "../operator_func.h"
+#include "../core/operator_func.h"
 
 //-------------------------------------------------------------
 //--------------------------------------------------------------

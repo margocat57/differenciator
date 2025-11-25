@@ -5,11 +5,9 @@ all: diff
 
 COMP=clang++
 
-#make DEBUG=1
 
 CFLAGS_DEBUG = -D _DEBUG 
 COMMON_CFLAGS = -ggdb3 -std=c++20 -O0 -Wall -Wextra -Weffc++ -Wc++14-compat -Wmissing-declarations -Wcast-align -Wcast-qual -Wchar-subscripts -Wconversion -Wctor-dtor-privacy -Wempty-body -Wfloat-equal -Wformat-nonliteral -Wformat-security -Wformat-signedness -Wformat=2 -Winline -Wnon-virtual-dtor -Woverloaded-virtual -Wpacked -Wpointer-arith -Winit-self -Wredundant-decls -Wshadow -Wsign-conversion -Wsign-promo -Wstrict-overflow=2 -Wsuggest-override -Wswitch-default -Wswitch-enum -Wundef -Wunreachable-code -Wunused -Wvariadic-macros -Wno-missing-field-initializers -Wno-narrowing -Wno-old-style-cast -Wno-varargs -Wstack-protector -fcheck-new -fsized-deallocation -fstack-protector -fstrict-overflow -fno-omit-frame-pointer -Wlarger-than=8192 -fPIE -Werror=vla -Wno-c++11-extensions -g -fsanitize=address
-# CFLAGS = -D _DEBUG
 LDFLAGS = -fsanitize=address
 
 
@@ -18,34 +16,34 @@ CFLAGS = $(COMMON_CFLAGS) $(CFLAGS_DEBUG)
 main.o: main.cpp
 	$(COMP) -c $< -o $@ $(CFLAGS)
 
-common/differenciator.o: common/differenciator.cpp
+src/differenciation/differenciator.o: src/differenciation/differenciator.cpp
 	$(COMP) -c $< -o $@ $(CFLAGS)
 
-dump/graphviz_dump.o: dump/graphviz_dump.cpp
+src/dump/graphviz_dump.o: src/dump/graphviz_dump.cpp
 	$(COMP) -c $< -o $@ $(CFLAGS)
 
-common/metki.o: common/metki.cpp
+src/utils/metki.o: src/utils/metki.cpp
 	$(COMP) -c $< -o $@ $(CFLAGS)
 
-input_and_output/input_output.o: input_and_output/input_output.cpp
+src/io/input_output.o: src/io/input_output.cpp
 	$(COMP) -c $< -o $@ $(CFLAGS)
 
-data_struct/tree_func.o: data_struct/tree_func.cpp
+src/core/tree_func.o: src/core/tree_func.cpp
 	$(COMP) -c $< -o $@ $(CFLAGS)
 
-common/calcul_tree.o: common/calcul_tree.cpp
+src/calculation_optimization/calcul_tree.o: src/calculation_optimization/calcul_tree.cpp
 	$(COMP) -c $< -o $@ $(CFLAGS)
 
-dump/latex_dump.o: dump/latex_dump.cpp
+src/dump/latex_dump.o: src/dump/latex_dump.cpp
 	$(COMP) -c $< -o $@ $(CFLAGS)
 
-dump/matan_book.o: dump/matan_book.cpp
+src/matan_book.o: src/matan_book.cpp
 	$(COMP) -c $< -o $@ $(CFLAGS)
 
-data_struct/forest.o: data_struct/forest.cpp
+src/core/forest.o: src/core/forest.cpp
 	$(COMP) -c $< -o $@ $(CFLAGS)
 
-diff: main.o common/differenciator.o dump/graphviz_dump.o data_struct/tree_func.o input_and_output/input_output.o common/metki.o common/calcul_tree.o dump/latex_dump.o data_struct/forest.o dump/matan_book.o
+diff: main.o src/differenciation/differenciator.o src/dump/graphviz_dump.o src/utils/metki.o src/io/input_output.o src/core/tree_func.o src/calculation_optimization/calcul_tree.o src/dump/latex_dump.o src/matan_book.o src/core/forest.o
 	$(COMP) -o $@ $^ $(LDFLAGS)
 
 # $@ имя цели
@@ -54,4 +52,4 @@ diff: main.o common/differenciator.o dump/graphviz_dump.o data_struct/tree_func.
 # clang++ -o stack main.o hash.o log.o my_assert.o stack_func.o
 
 clean:
-	rm -f diff common/*.o data_struct/*.o dump/*.o input_and_output/*.o *.o images/*.dot images/*.svg stack_for_diff/*.o
+	rm -f diff src/calculation_optimization/*.o src/core/*.o src/differenciation/*.o src/dump/*.o src/utils/*.o src/io/*.o src/*.o *.o output/images/*.dot output/images/*.svg

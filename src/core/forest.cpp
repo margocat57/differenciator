@@ -1,5 +1,5 @@
 #include "forest.h"
-#include "../common/metki.h"
+#include "../utils/metki.h"
 #include "tree_func.h"
 #include <stdio.h>
 #include <assert.h>

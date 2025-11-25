@@ -3,8 +3,8 @@
 #include <assert.h>
 #include "tree_func.h"
 #include "../dump/graphviz_dump.h"
-#include "../common/metki.h"
-#include "../operator_func.h"
+#include "../utils/mistakes.h"
+#include "operator_func.h"
 
 //----------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------

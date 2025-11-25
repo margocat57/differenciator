@@ -7,12 +7,12 @@
 #include <stdlib.h>
 #include <errno.h>
 #include <assert.h>
-#include "../data_struct/tree_func.h"
+#include "../core/tree_func.h"
 #include "input_output.h"
-#include "../common/metki.h"
+#include "../utils/metki.h"
 #include "../dump/graphviz_dump.h"
-#include "../data_struct/forest.h"
-#include "../operator_func.h"
+#include "../core/forest.h"
+#include "../core/operator_func.h"
 
 const size_t MAX_BUFFER_SIZE = 50;
 

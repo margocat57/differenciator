@@ -1,9 +1,9 @@
 #ifndef GRAPHVIZ_DUMP_H
 #define GRAPHVIZ_DUMP_H
 #include <string.h>
-#include "../data_struct/tree.h"
+#include "../core/tree.h"
 
-const char* const LOG_FILE = "log.htm";
+const char* const LOG_FILE = "output/log.htm";
 
 struct filenames_for_dump{
     char* dot_filename;

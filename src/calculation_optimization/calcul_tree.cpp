@@ -1,10 +1,10 @@
 #include <assert.h>
 #include <math.h>
 #include <stdio.h>
-#include "differenciator.h"
+#include "../differenciation/differenciator.h"
 #include "../dump/graphviz_dump.h"
-#include "../data_struct/tree_func.h"
-#include "../data_struct/forest.h"
+#include "../core/tree_func.h"
+#include "../core/forest.h"
 
 //--------------------------------------------------------------------------------------------
 //--------------------------------------------------------------------------------------------
@@ -32,7 +32,7 @@ DEF_OP(Ch,  cosh(RES_L));
 DEF_OP(Th,  tanh(RES_L));
 DEF_OP(Cth, (tanh(RES_L) != 0) ? 1 / tanh(RES_L) : 0);
 
-#include "../operator_func.h"
+#include "../core/operator_func.h"
 
 //--------------------------------------------------------------------------------------------
 //--------------------------------------------------------------------------------------------

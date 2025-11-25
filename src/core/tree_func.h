@@ -1,7 +1,7 @@
 #ifndef TREE_FUNC_H
 #define TREE_FUNC_H
 #include "tree.h"
-#include "../common/mistakes.h"
+#include "../utils/mistakes.h"
 #include <stdio.h>
 
 TreeHead_t* TreeCtor();

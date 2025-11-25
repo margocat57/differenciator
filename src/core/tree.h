@@ -2,7 +2,7 @@
 #define TREE_H
 #include <stdint.h>
 #include <string.h>
-#include "../common/metki.h"
+#include "../utils/metki.h"
 
 const char* const TREE_SIGNATURE = "My_tree";
 const int POISON = -6666;

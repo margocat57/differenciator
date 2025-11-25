@@ -5,8 +5,8 @@
 #include <time.h>
 #include "differenciator.h"
 #include "../dump/graphviz_dump.h"
-#include "../data_struct/tree_func.h"
-#include "calcul_tree.h"
+#include "../core/tree_func.h"
+#include "../calculation_optimization/calcul_tree.h"
 #include "../dump/latex_dump.h"
 
 // Need to declare for dsl
@@ -52,7 +52,6 @@ const char *GenerateRoflMsg();
         return result;\
     }\
 
-    // сделать функцию генерации строк
 
 DEF_OP(Add, ADD_(DL_, DR_))
 DEF_OP(Sub, SUB_(DL_, DR_))
@@ -102,7 +101,7 @@ static TreeNode_t* DiffDeg(TreeNode_t* node, const size_t var_id, FILE* file, me
 }
 //----------------------------------------------------
 
-#include "../operator_func.h"
+#include "../core/operator_func.h"
 
 //---------------------------------------------------------
 //---------------------------------------------------------

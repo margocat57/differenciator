@@ -1,7 +1,7 @@
 #ifndef FOREST_H
 #define FOREST_H
 #include "tree.h"
-#include "../common/mistakes.h"
+#include "../utils/mistakes.h"
 
 struct Forest_t{
     TreeHead_t** head_arr; // array of top of tree
