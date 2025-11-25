@@ -10,8 +10,8 @@ void MatanBook(Forest_t* forest_diff, Forest_t* forest_diff_taylor, Forest_t* fo
     CreateDiffForest(forest_diff, latex_dump);
 
     LatexDumpChapterTaylor(latex_dump);
-    CreateTaylorForest(forest_taylor, forest_diff, latex_dump);
-    LatexDumpTaylor(latex_dump,forest_diff_taylor, forest_taylor);
+    CreateTaylorForest(forest_taylor, forest_diff_taylor, latex_dump);
+    LatexDumpTaylor(latex_dump, forest_diff_taylor, forest_taylor);
 
     EndLatexDump(latex_dump);
 }

@@ -1,6 +1,8 @@
 #include <assert.h>
 #include <math.h>
 #include <stdio.h>
+#include <stdlib.h>
+#include <time.h>
 #include "differenciator.h"
 #include "../dump/graphviz_dump.h"
 #include "../data_struct/tree_func.h"
@@ -11,7 +13,10 @@
 
 static TreeNode_t* Differenciate(TreeNode_t* node, const size_t var_id, FILE* file, metki* mtk);
 
-void ConnectWithParents(TreeNode_t* node);
+static void ConnectWithParents(TreeNode_t *node);
+
+const char *GenerateRoflMsg();
+
 //----------------------------------------------------------
 // DSL define
 
@@ -36,35 +41,37 @@ void ConnectWithParents(TreeNode_t* node);
 #define R                       node->right
 #define VAR_NODE(var_id)        NodeCtor(VARIABLE, (TreeElem_t){.var_code = var_id}, NULL, NULL, NULL)
 
-#define DEF_OP(Op, Result, msg)                                                                \
+#define DEF_OP(Op, Result)                                                                \
     static TreeNode_t *Diff##Op(TreeNode_t *node, const size_t var_id, FILE *file, metki *mtk){                                                                                          \
         assert(node);                                                                          \
         TreeNode_t *result = Result;                                                           \
         ConnectWithParents(result);                                                            \
         TreeOptimize(&result);                                                                 \
-        LatexDump(file, node, result, mtk, msg);                                               \
-        return result;                                                                         \
-    }
+        const char *msg = GenerateRoflMsg();                                                   \
+        LatexDump(file, node, result, mtk, msg);\
+        return result;\
+    }\
 
+    // сделать функцию генерации строк
 
-DEF_OP(Add, ADD_(DL_, DR_), "It is obvious that:\n")
-DEF_OP(Sub, SUB_(DL_, DR_), "It is easy to see:\n")
-DEF_OP(Mul, ADD_(MUL_(DL_, CR_), MUL_(CL_, DR_)), "Understanding this transformation is left to the reader as a simple exercise:\n")
-DEF_OP(Div, DIV_(SUB_(MUL_(DL_, CR_), MUL_(CL_, DR_)), DEG_(CR_, NUM_(2))), "Should be known from school:\n")
-DEF_OP(Cos, MUL_(DL_, MUL_(NUM_(-1), SIN_(CL_))), "According to the theorem (which number?) from paragraph ??:\n")
-DEF_OP(Sin, MUL_(DL_, COS_(CL_)), "It is common knowledge:\n")
-DEF_OP(Ln,  MUL_(DL_, DIV_(NUM_(1), CL_)), "As already shown earlier:\n")
-DEF_OP(Tg,  DIV_(DL_, DEG_(COS_(CL_), NUM_(2))), " A similar one can be proved:\n")
-DEF_OP(Ctg, MUL_(DIV_(DL_, DEG_(SIN_(CL_), NUM_(2))), NUM_(-1)), "If this is not obvious to you, try attending a lecture for a change:")
-DEF_OP(Sh,  MUL_(DL_, CH_(CL_)), "Let's imagine this household as:\n")
-DEF_OP(Ch,  MUL_(DL_, SH_(CL_)), "Plus a constant:\n")
-DEF_OP(Th,  DIV_(DL_, DEG_(CH_(CL_), NUM_(2))), "A good, solid task?\n")
-DEF_OP(Cth, MUL_(DIV_(DL_, DEG_(SH_(CL_), NUM_(2))), NUM_(-1)), "If you don't understand this obvious transformation, then you need to go into a program where they don't study mathematical analys:\n")
+DEF_OP(Add, ADD_(DL_, DR_))
+DEF_OP(Sub, SUB_(DL_, DR_))
+DEF_OP(Mul, ADD_(MUL_(DL_, CR_), MUL_(CL_, DR_)))
+DEF_OP(Div, DIV_(SUB_(MUL_(DL_, CR_), MUL_(CL_, DR_)), DEG_(CR_, NUM_(2))))
+DEF_OP(Cos, MUL_(DL_, MUL_(NUM_(-1), SIN_(CL_))))
+DEF_OP(Sin, MUL_(DL_, COS_(CL_)))
+DEF_OP(Ln, MUL_(DL_, DIV_(NUM_(1), CL_)))
+DEF_OP(Tg, DIV_(DL_, DEG_(COS_(CL_), NUM_(2))))
+DEF_OP(Ctg, MUL_(DIV_(DL_, DEG_(SIN_(CL_), NUM_(2))), NUM_(-1)))
+DEF_OP(Sh, MUL_(DL_, CH_(CL_)))
+DEF_OP(Ch, MUL_(DL_, SH_(CL_)))
+DEF_OP(Th, DIV_(DL_, DEG_(CH_(CL_), NUM_(2))))
+DEF_OP(Cth, MUL_(DIV_(DL_, DEG_(SH_(CL_), NUM_(2))), NUM_(-1)))
 
-//---------------------------------------------------------
-// DSL in func. Я очень не хочу это писать в дефайнах, так что будет функция
+    //---------------------------------------------------------
+    // DSL in func. Я очень не хочу это писать в дефайнах, так что будет функция
 
-static bool is_type_num(TreeNode_t* node){
+    static bool is_type_num(TreeNode_t *node){
     assert(node);
     return node->type == CONST;
 }
@@ -207,7 +214,7 @@ static TreeNode_t* Differenciate(TreeNode_t* node, const size_t var_id, FILE* fi
 //-------------------------------------------------------
 // Connect parents - потому что на момент создания узла там будет кринж если передавать родителя
 
-void ConnectWithParents(TreeNode_t* node){
+static void ConnectWithParents(TreeNode_t* node){
     if (!node) return;
 
     ConnectWithParents(node->left);
@@ -240,12 +247,12 @@ TreeErr_t CreateTaylorForest(Forest_t *forest_taylor, Forest_t *diff_forest, FIL
     }
 
     printf("For Taylor formula at first the derivatives must be calcutated:\t");
-    fprintf(latex_dump, "{\\large \\textbf{At first the derivatives must be calcutated:}}\n");
+    fprintf(latex_dump, "{\\large \\textbf{At first the derivatives must be calcutated:}}\n\n");
     CHECK_AND_RET_TREEERR(CreateDiffForest(diff_forest, latex_dump));
 
     metki_add_values(diff_forest->mtk);
 
-    for (size_t idx = 0; idx < diff_forest->first_free_place; idx++){
+    for(size_t idx = 0; idx < diff_forest->first_free_place; idx++){
         CHECK_AND_RET_TREEERR(CreateTaylorTree(idx, forest_taylor, diff_forest, latex_dump));
     }
     metki_del_values(diff_forest->mtk);
@@ -294,3 +301,33 @@ static TreeErr_t CreateTaylorTree(size_t idx, Forest_t *forest_taylor, Forest_t 
 #undef  VAR_NODE
 
 //----------------------------------------------------------
+
+const char *GenerateRoflMsg(){
+    // because need to init once
+    static bool initialized = false;
+    if(!initialized){
+        srand(time(NULL));
+        initialized = true;
+    }
+
+    const char *messages[] = {
+        "It is obvious that:\n",
+        "It is easy to see:\n",
+        "Understanding this transformation is left to the reader as a simple exercise:\n",
+        "Should be known from school:\n",
+        "According to the theorem (which number?) from paragraph ??:\n",
+        "It is common knowledge:\n",
+        "As already shown earlier:\n",
+        "A similar one can be proved:\n",
+        "If this is not obvious to you, try attending a lecture for a change:",
+        "Let's imagine this household as:\n",
+        "Plus a constant:\n",
+        "A good, solid task?\n",
+        "If you don't understand this obvious transformation, then you need to go into a program where they don't study mathematical analys:\n",
+    };
+
+    int max_idx = sizeof(messages) / sizeof(const char *);
+    int idx = rand() % max_idx;
+
+    return messages[idx];
+}

@@ -57,12 +57,12 @@ Everything in this chapter is so obvious that no additional explanations will be
 \textbf{Let's calculate a simple derivative:}
 \begin{dmath}
 cos(sin(x)) + x^{3.00}\end{dmath}
-It is common knowledge:
+A similar one can be proved:
 \begin{dmath}
 (
 sin(x))' = 
 cos(x)\end{dmath}
-According to the theorem (which number?) from paragraph ??:
+As already shown earlier:
 \begin{dmath}
 (
 cos(sin(x)))' = 
@@ -72,7 +72,7 @@ By the obvious theorem:
 (
 x^{3.00})' = 
 3.00 \cdot x^{2.00}\end{dmath}
-It is obvious that:
+It is common knowledge:
 \begin{dmath}
 (
 cos(sin(x)) + x^{3.00})' = 
@@ -80,7 +80,7 @@ cos(x) \cdot -1.00 \cdot sin(sin(x)) + 3.00 \cdot x^{2.00}\end{dmath}
 \textbf{Let's calculate a simple derivative:}
 \begin{dmath}
 cos(x) \cdot -1.00 \cdot sin(sin(x)) + 3.00 \cdot x^{2.00}\end{dmath}
-According to the theorem (which number?) from paragraph ??:
+A similar one can be proved:
 \begin{dmath}
 (
 cos(x))' = 
@@ -90,17 +90,17 @@ It is common knowledge:
 (
 sin(x))' = 
 cos(x)\end{dmath}
-It is common knowledge:
+If you don't understand this obvious transformation, then you need to go into a program where they don't study mathematical analys:
 \begin{dmath}
 (
 sin(sin(x)))' = 
 cos(x) \cdot cos(sin(x))\end{dmath}
-Understanding this transformation is left to the reader as a simple exercise:
+A similar one can be proved:
 \begin{dmath}
 (
 -1.00 \cdot sin(sin(x)))' = 
 -1.00 \cdot cos(x) \cdot cos(sin(x))\end{dmath}
-Understanding this transformation is left to the reader as a simple exercise:
+According to the theorem (which number?) from paragraph ??:
 \begin{dmath}
 (
 cos(x) \cdot -1.00 \cdot sin(sin(x)))' = 
@@ -110,12 +110,12 @@ By the obvious theorem:
 (
 x^{2.00})' = 
 2.00 \cdot x\end{dmath}
-Understanding this transformation is left to the reader as a simple exercise:
+As already shown earlier:
 \begin{dmath}
 (
 3.00 \cdot x^{2.00})' = 
 3.00 \cdot 2.00 \cdot x\end{dmath}
-It is obvious that:
+Understanding this transformation is left to the reader as a simple exercise:
 \begin{dmath}
 (
 cos(x) \cdot -1.00 \cdot sin(sin(x)) + 3.00 \cdot x^{2.00})' = 
@@ -127,82 +127,111 @@ cos(x) \cdot -1.00 \cdot sin(sin(x)) + 3.00 \cdot x^{2.00})' =
 \begin{definition}
 Taylor's formula is obvious, so no additional explanations will be given. Let's start straight with an example.
 \end{definition}
-{\large \At first the derivatives must be calcutated:}}
+{\large \textbf{At first the derivatives must be calcutated:}}
+
 \textbf{Let's calculate a simple derivative:}
 \begin{dmath}
-cos(sin(x)) + x^{3.00}\end{dmath}
+x \cdot sin(x)\end{dmath}
+Should be known from school:
+\begin{dmath}
+(
+sin(x))' = 
+cos(x)\end{dmath}
+A good, solid task?
+\begin{dmath}
+(
+x \cdot sin(x))' = 
+sin(x) + x \cdot cos(x)\end{dmath}
+\textbf{Let's calculate a simple derivative:}
+\begin{dmath}
+sin(x) + x \cdot cos(x)\end{dmath}
 It is common knowledge:
 \begin{dmath}
 (
 sin(x))' = 
 cos(x)\end{dmath}
-According to the theorem (which number?) from paragraph ??:
-\begin{dmath}
-(
-cos(sin(x)))' = 
-cos(x) \cdot -1.00 \cdot sin(sin(x))\end{dmath}
-By the obvious theorem:
-\begin{dmath}
-(
-x^{3.00})' = 
-3.00 \cdot x^{2.00}\end{dmath}
-It is obvious that:
-\begin{dmath}
-(
-cos(sin(x)) + x^{3.00})' = 
-cos(x) \cdot -1.00 \cdot sin(sin(x)) + 3.00 \cdot x^{2.00}\end{dmath}
-\textbf{Let's calculate a simple derivative:}
-\begin{dmath}
-cos(x) \cdot -1.00 \cdot sin(sin(x)) + 3.00 \cdot x^{2.00}\end{dmath}
 According to the theorem (which number?) from paragraph ??:
 \begin{dmath}
 (
 cos(x))' = 
 -1.00 \cdot sin(x)\end{dmath}
-It is common knowledge:
+A similar one can be proved:
+\begin{dmath}
+(
+x \cdot cos(x))' = 
+cos(x) + x \cdot -1.00 \cdot sin(x)\end{dmath}
+According to the theorem (which number?) from paragraph ??:
+\begin{dmath}
+(
+sin(x) + x \cdot cos(x))' = 
+cos(x) + cos(x) + x \cdot -1.00 \cdot sin(x)\end{dmath}
+\textbf{Let's calculate a simple derivative:}
+\begin{dmath}
+cos(x) + cos(x) + x \cdot -1.00 \cdot sin(x)\end{dmath}
+Understanding this transformation is left to the reader as a simple exercise:
+\begin{dmath}
+(
+cos(x))' = 
+-1.00 \cdot sin(x)\end{dmath}
+Should be known from school:
+\begin{dmath}
+(
+cos(x))' = 
+-1.00 \cdot sin(x)\end{dmath}
+Let's imagine this household as:
 \begin{dmath}
 (
 sin(x))' = 
 cos(x)\end{dmath}
-It is common knowledge:
+Let's imagine this household as:
 \begin{dmath}
 (
-sin(sin(x)))' = 
-cos(x) \cdot cos(sin(x))\end{dmath}
+-1.00 \cdot sin(x))' = 
+-1.00 \cdot cos(x)\end{dmath}
+Plus a constant:
+\begin{dmath}
+(
+x \cdot -1.00 \cdot sin(x))' = 
+-1.00 \cdot sin(x) + x \cdot -1.00 \cdot cos(x)\end{dmath}
+As already shown earlier:
+\begin{dmath}
+(
+cos(x) + x \cdot -1.00 \cdot sin(x))' = 
+-1.00 \cdot sin(x) + -1.00 \cdot sin(x) + x \cdot -1.00 \cdot cos(x)\end{dmath}
+Should be known from school:
+\begin{dmath}
+(
+cos(x) + cos(x) + x \cdot -1.00 \cdot sin(x))' = 
+-1.00 \cdot sin(x) + -1.00 \cdot sin(x) + -1.00 \cdot sin(x) + x \cdot -1.00 \cdot cos(x)\end{dmath}
+\textbf{Let's calculate a simple derivative:}
+\begin{dmath}
+-1.00 \cdot sin(x) + -1.00 \cdot sin(x) + -1.00 \cdot sin(x) + x \cdot -1.00 \cdot cos(x)\end{dmath}
+If you don't understand this obvious transformation, then you need to go into a program where they don't study mathematical analys:
+\begin{dmath}
+(
+sin(x))' = 
+cos(x)\end{dmath}
+Should be known from school:
+\begin{dmath}
+(
+-1.00 \cdot sin(x))' = 
+-1.00 \cdot cos(x)\end{dmath}
 Understanding this transformation is left to the reader as a simple exercise:
 \begin{dmath}
 (
--1.00 \cdot sin(sin(x)))' = 
--1.00 \cdot cos(x) \cdot cos(sin(x))\end{dmath}
-Understanding this transformation is left to the reader as a simple exercise:
+sin(x))' = 
+cos(x)\end{dmath}
+A similar one can be proved:
 \begin{dmath}
 (
-cos(x) \cdot -1.00 \cdot sin(sin(x)))' = 
--1.00 \cdot sin(x) \cdot -1.00 \cdot sin(sin(x)) + cos(x) \cdot -1.00 \cdot cos(x) \cdot cos(sin(x))\end{dmath}
-By the obvious theorem:
-\begin{dmath}
-(
-x^{2.00})' = 
-2.00 \cdot x\end{dmath}
-Understanding this transformation is left to the reader as a simple exercise:
-\begin{dmath}
-(
-3.00 \cdot x^{2.00})' = 
-3.00 \cdot 2.00 \cdot x\end{dmath}
+-1.00 \cdot sin(x))' = 
+-1.00 \cdot cos(x)\end{dmath}
 It is obvious that:
 \begin{dmath}
 (
-cos(x) \cdot -1.00 \cdot sin(sin(x)) + 3.00 \cdot x^{2.00})' = 
--1.00 \cdot sin(x) \cdot -1.00 \cdot sin(sin(x)) + cos(x) \cdot -1.00 \cdot cos(x) \cdot cos(sin(x)) + 3.00 \cdot 2.00 \cdot x\end{dmath}
-\textbf{Let's calculate a simple derivative:}
-\begin{dmath}
--1.00 \cdot sin(x) \cdot -1.00 \cdot sin(sin(x)) + cos(x) \cdot -1.00 \cdot cos(x) \cdot cos(sin(x)) + 3.00 \cdot 2.00 \cdot x\end{dmath}
-It is common knowledge:
-\begin{dmath}
-(
 sin(x))' = 
 cos(x)\end{dmath}
-Understanding this transformation is left to the reader as a simple exercise:
+As already shown earlier:
 \begin{dmath}
 (
 -1.00 \cdot sin(x))' = 
@@ -210,210 +239,116 @@ Understanding this transformation is left to the reader as a simple exercise:
 It is common knowledge:
 \begin{dmath}
 (
-sin(x))' = 
-cos(x)\end{dmath}
-It is common knowledge:
-\begin{dmath}
-(
-sin(sin(x)))' = 
-cos(x) \cdot cos(sin(x))\end{dmath}
-Understanding this transformation is left to the reader as a simple exercise:
-\begin{dmath}
-(
--1.00 \cdot sin(sin(x)))' = 
--1.00 \cdot cos(x) \cdot cos(sin(x))\end{dmath}
-Understanding this transformation is left to the reader as a simple exercise:
-\begin{dmath}
-(
--1.00 \cdot sin(x) \cdot -1.00 \cdot sin(sin(x)))' = 
--1.00 \cdot cos(x) \cdot -1.00 \cdot sin(sin(x)) + -1.00 \cdot sin(x) \cdot -1.00 \cdot cos(x) \cdot cos(sin(x))\end{dmath}
-According to the theorem (which number?) from paragraph ??:
-\begin{dmath}
-(
 cos(x))' = 
 -1.00 \cdot sin(x)\end{dmath}
-According to the theorem (which number?) from paragraph ??:
-\begin{dmath}
-(
-cos(x))' = 
--1.00 \cdot sin(x)\end{dmath}
-It is common knowledge:
-\begin{dmath}
-(
-sin(x))' = 
-cos(x)\end{dmath}
-According to the theorem (which number?) from paragraph ??:
-\begin{dmath}
-(
-cos(sin(x)))' = 
-cos(x) \cdot -1.00 \cdot sin(sin(x))\end{dmath}
 Understanding this transformation is left to the reader as a simple exercise:
 \begin{dmath}
 (
-cos(x) \cdot cos(sin(x)))' = 
--1.00 \cdot sin(x) \cdot cos(sin(x)) + cos(x) \cdot cos(x) \cdot -1.00 \cdot sin(sin(x))\end{dmath}
+-1.00 \cdot cos(x))' = 
+-1.00 \cdot -1.00 \cdot sin(x)\end{dmath}
+Let's imagine this household as:
+\begin{dmath}
+(
+x \cdot -1.00 \cdot cos(x))' = 
+-1.00 \cdot cos(x) + x \cdot -1.00 \cdot -1.00 \cdot sin(x)\end{dmath}
+Should be known from school:
+\begin{dmath}
+(
+-1.00 \cdot sin(x) + x \cdot -1.00 \cdot cos(x))' = 
+-1.00 \cdot cos(x) + -1.00 \cdot cos(x) + x \cdot -1.00 \cdot -1.00 \cdot sin(x)\end{dmath}
 Understanding this transformation is left to the reader as a simple exercise:
 \begin{dmath}
 (
--1.00 \cdot cos(x) \cdot cos(sin(x)))' = 
--1.00 \cdot (-1.00 \cdot sin(x) \cdot cos(sin(x)) + cos(x) \cdot cos(x) \cdot -1.00 \cdot sin(sin(x)))\end{dmath}
-Understanding this transformation is left to the reader as a simple exercise:
+-1.00 \cdot sin(x) + -1.00 \cdot sin(x) + x \cdot -1.00 \cdot cos(x))' = 
+-1.00 \cdot cos(x) + -1.00 \cdot cos(x) + -1.00 \cdot cos(x) + x \cdot -1.00 \cdot -1.00 \cdot sin(x)\end{dmath}
+Plus a constant:
 \begin{dmath}
 (
-cos(x) \cdot -1.00 \cdot cos(x) \cdot cos(sin(x)))' = 
--1.00 \cdot sin(x) \cdot -1.00 \cdot cos(x) \cdot cos(sin(x)) + cos(x) \cdot -1.00 \cdot (-1.00 \cdot sin(x) \cdot cos(sin(x)) + cos(x) \cdot cos(x) \cdot -1.00 \cdot sin(sin(x)))\end{dmath}
-It is obvious that:
-\begin{dmath}
-(
--1.00 \cdot sin(x) \cdot -1.00 \cdot sin(sin(x)) + cos(x) \cdot -1.00 \cdot cos(x) \cdot cos(sin(x)))' = 
--1.00 \cdot cos(x) \cdot -1.00 \cdot sin(sin(x)) + -1.00 \cdot sin(x) \cdot -1.00 \cdot cos(x) \cdot cos(sin(x)) + -1.00 \cdot sin(x) \cdot -1.00 \cdot cos(x) \cdot cos(sin(x)) + cos(x) \cdot -1.00 \cdot (-1.00 \cdot sin(x) \cdot cos(sin(x)) + cos(x) \cdot cos(x) \cdot -1.00 \cdot sin(sin(x)))\end{dmath}
-Understanding this transformation is left to the reader as a simple exercise:
-\begin{dmath}
-(
-2.00 \cdot x)' = 
-2.00\end{dmath}
-Understanding this transformation is left to the reader as a simple exercise:
-\begin{dmath}
-(
-3.00 \cdot 2.00 \cdot x)' = 
-6.00\end{dmath}
-It is obvious that:
-\begin{dmath}
-(
--1.00 \cdot sin(x) \cdot -1.00 \cdot sin(sin(x)) + cos(x) \cdot -1.00 \cdot cos(x) \cdot cos(sin(x)) + 3.00 \cdot 2.00 \cdot x)' = 
--1.00 \cdot cos(x) \cdot -1.00 \cdot sin(sin(x)) + -1.00 \cdot sin(x) \cdot -1.00 \cdot cos(x) \cdot cos(sin(x)) + -1.00 \cdot sin(x) \cdot -1.00 \cdot cos(x) \cdot cos(sin(x)) + cos(x) \cdot -1.00 \cdot (-1.00 \cdot sin(x) \cdot cos(sin(x)) + cos(x) \cdot cos(x) \cdot -1.00 \cdot sin(sin(x))) + 6.00\end{dmath}
+-1.00 \cdot sin(x) + -1.00 \cdot sin(x) + -1.00 \cdot sin(x) + x \cdot -1.00 \cdot cos(x))' = 
+-1.00 \cdot cos(x) + -1.00 \cdot cos(x) + -1.00 \cdot cos(x) + -1.00 \cdot cos(x) + x \cdot -1.00 \cdot -1.00 \cdot sin(x)\end{dmath}
 \textbf{Let's calculate a simple derivative:}
 \begin{dmath}
-cos(x) \cdot -1.00 \cdot sin(sin(x)) + 3.00 \cdot x^{2.00}\end{dmath}
+-1.00 \cdot cos(x) + -1.00 \cdot cos(x) + -1.00 \cdot cos(x) + -1.00 \cdot cos(x) + x \cdot -1.00 \cdot -1.00 \cdot sin(x)\end{dmath}
+A good, solid task?
+\begin{dmath}
+(
+cos(x))' = 
+-1.00 \cdot sin(x)\end{dmath}
+A good, solid task?
+\begin{dmath}
+(
+-1.00 \cdot cos(x))' = 
+-1.00 \cdot -1.00 \cdot sin(x)\end{dmath}
+If you don't understand this obvious transformation, then you need to go into a program where they don't study mathematical analys:
+\begin{dmath}
+(
+cos(x))' = 
+-1.00 \cdot sin(x)\end{dmath}
+Understanding this transformation is left to the reader as a simple exercise:
+\begin{dmath}
+(
+-1.00 \cdot cos(x))' = 
+-1.00 \cdot -1.00 \cdot sin(x)\end{dmath}
 According to the theorem (which number?) from paragraph ??:
 \begin{dmath}
 (
 cos(x))' = 
 -1.00 \cdot sin(x)\end{dmath}
-It is common knowledge:
-\begin{dmath}
-(
-sin(x))' = 
-cos(x)\end{dmath}
-It is common knowledge:
-\begin{dmath}
-(
-sin(sin(x)))' = 
-cos(x) \cdot cos(sin(x))\end{dmath}
 Understanding this transformation is left to the reader as a simple exercise:
 \begin{dmath}
 (
--1.00 \cdot sin(sin(x)))' = 
--1.00 \cdot cos(x) \cdot cos(sin(x))\end{dmath}
-Understanding this transformation is left to the reader as a simple exercise:
-\begin{dmath}
-(
-cos(x) \cdot -1.00 \cdot sin(sin(x)))' = 
--1.00 \cdot sin(x) \cdot -1.00 \cdot sin(sin(x)) + cos(x) \cdot -1.00 \cdot cos(x) \cdot cos(sin(x))\end{dmath}
-By the obvious theorem:
-\begin{dmath}
-(
-x^{2.00})' = 
-2.00 \cdot x\end{dmath}
-Understanding this transformation is left to the reader as a simple exercise:
-\begin{dmath}
-(
-3.00 \cdot x^{2.00})' = 
-3.00 \cdot 2.00 \cdot x\end{dmath}
+-1.00 \cdot cos(x))' = 
+-1.00 \cdot -1.00 \cdot sin(x)\end{dmath}
 It is obvious that:
 \begin{dmath}
 (
-cos(x) \cdot -1.00 \cdot sin(sin(x)) + 3.00 \cdot x^{2.00})' = 
--1.00 \cdot sin(x) \cdot -1.00 \cdot sin(sin(x)) + cos(x) \cdot -1.00 \cdot cos(x) \cdot cos(sin(x)) + 3.00 \cdot 2.00 \cdot x\end{dmath}
-\textbf{Let's calculate a simple derivative:}
+cos(x))' = 
+-1.00 \cdot sin(x)\end{dmath}
+A similar one can be proved:
 \begin{dmath}
--1.00 \cdot sin(x) \cdot -1.00 \cdot sin(sin(x)) + cos(x) \cdot -1.00 \cdot cos(x) \cdot cos(sin(x)) + 3.00 \cdot 2.00 \cdot x\end{dmath}
-It is common knowledge:
+(
+-1.00 \cdot cos(x))' = 
+-1.00 \cdot -1.00 \cdot sin(x)\end{dmath}
+A good, solid task?
 \begin{dmath}
 (
 sin(x))' = 
 cos(x)\end{dmath}
-Understanding this transformation is left to the reader as a simple exercise:
+Plus a constant:
 \begin{dmath}
 (
 -1.00 \cdot sin(x))' = 
 -1.00 \cdot cos(x)\end{dmath}
-It is common knowledge:
+If this is not obvious to you, try attending a lecture for a change:\begin{dmath}
+(
+-1.00 \cdot -1.00 \cdot sin(x))' = 
+-1.00 \cdot -1.00 \cdot cos(x)\end{dmath}
+If you don't understand this obvious transformation, then you need to go into a program where they don't study mathematical analys:
 \begin{dmath}
 (
-sin(x))' = 
-cos(x)\end{dmath}
-It is common knowledge:
+x \cdot -1.00 \cdot -1.00 \cdot sin(x))' = 
+-1.00 \cdot -1.00 \cdot sin(x) + x \cdot -1.00 \cdot -1.00 \cdot cos(x)\end{dmath}
+A good, solid task?
 \begin{dmath}
 (
-sin(sin(x)))' = 
-cos(x) \cdot cos(sin(x))\end{dmath}
-Understanding this transformation is left to the reader as a simple exercise:
+-1.00 \cdot cos(x) + x \cdot -1.00 \cdot -1.00 \cdot sin(x))' = 
+-1.00 \cdot -1.00 \cdot sin(x) + -1.00 \cdot -1.00 \cdot sin(x) + x \cdot -1.00 \cdot -1.00 \cdot cos(x)\end{dmath}
+A similar one can be proved:
 \begin{dmath}
 (
--1.00 \cdot sin(sin(x)))' = 
--1.00 \cdot cos(x) \cdot cos(sin(x))\end{dmath}
-Understanding this transformation is left to the reader as a simple exercise:
+-1.00 \cdot cos(x) + -1.00 \cdot cos(x) + x \cdot -1.00 \cdot -1.00 \cdot sin(x))' = 
+-1.00 \cdot -1.00 \cdot sin(x) + -1.00 \cdot -1.00 \cdot sin(x) + -1.00 \cdot -1.00 \cdot sin(x) + x \cdot -1.00 \cdot -1.00 \cdot cos(x)\end{dmath}
+Plus a constant:
 \begin{dmath}
 (
--1.00 \cdot sin(x) \cdot -1.00 \cdot sin(sin(x)))' = 
--1.00 \cdot cos(x) \cdot -1.00 \cdot sin(sin(x)) + -1.00 \cdot sin(x) \cdot -1.00 \cdot cos(x) \cdot cos(sin(x))\end{dmath}
-According to the theorem (which number?) from paragraph ??:
+-1.00 \cdot cos(x) + -1.00 \cdot cos(x) + -1.00 \cdot cos(x) + x \cdot -1.00 \cdot -1.00 \cdot sin(x))' = 
+-1.00 \cdot -1.00 \cdot sin(x) + -1.00 \cdot -1.00 \cdot sin(x) + -1.00 \cdot -1.00 \cdot sin(x) + -1.00 \cdot -1.00 \cdot sin(x) + x \cdot -1.00 \cdot -1.00 \cdot cos(x)\end{dmath}
+Let's imagine this household as:
 \begin{dmath}
 (
-cos(x))' = 
--1.00 \cdot sin(x)\end{dmath}
-According to the theorem (which number?) from paragraph ??:
-\begin{dmath}
-(
-cos(x))' = 
--1.00 \cdot sin(x)\end{dmath}
-It is common knowledge:
-\begin{dmath}
-(
-sin(x))' = 
-cos(x)\end{dmath}
-According to the theorem (which number?) from paragraph ??:
-\begin{dmath}
-(
-cos(sin(x)))' = 
-cos(x) \cdot -1.00 \cdot sin(sin(x))\end{dmath}
-Understanding this transformation is left to the reader as a simple exercise:
-\begin{dmath}
-(
-cos(x) \cdot cos(sin(x)))' = 
--1.00 \cdot sin(x) \cdot cos(sin(x)) + cos(x) \cdot cos(x) \cdot -1.00 \cdot sin(sin(x))\end{dmath}
-Understanding this transformation is left to the reader as a simple exercise:
-\begin{dmath}
-(
--1.00 \cdot cos(x) \cdot cos(sin(x)))' = 
--1.00 \cdot (-1.00 \cdot sin(x) \cdot cos(sin(x)) + cos(x) \cdot cos(x) \cdot -1.00 \cdot sin(sin(x)))\end{dmath}
-Understanding this transformation is left to the reader as a simple exercise:
-\begin{dmath}
-(
-cos(x) \cdot -1.00 \cdot cos(x) \cdot cos(sin(x)))' = 
--1.00 \cdot sin(x) \cdot -1.00 \cdot cos(x) \cdot cos(sin(x)) + cos(x) \cdot -1.00 \cdot (-1.00 \cdot sin(x) \cdot cos(sin(x)) + cos(x) \cdot cos(x) \cdot -1.00 \cdot sin(sin(x)))\end{dmath}
-It is obvious that:
-\begin{dmath}
-(
--1.00 \cdot sin(x) \cdot -1.00 \cdot sin(sin(x)) + cos(x) \cdot -1.00 \cdot cos(x) \cdot cos(sin(x)))' = 
--1.00 \cdot cos(x) \cdot -1.00 \cdot sin(sin(x)) + -1.00 \cdot sin(x) \cdot -1.00 \cdot cos(x) \cdot cos(sin(x)) + -1.00 \cdot sin(x) \cdot -1.00 \cdot cos(x) \cdot cos(sin(x)) + cos(x) \cdot -1.00 \cdot (-1.00 \cdot sin(x) \cdot cos(sin(x)) + cos(x) \cdot cos(x) \cdot -1.00 \cdot sin(sin(x)))\end{dmath}
-Understanding this transformation is left to the reader as a simple exercise:
-\begin{dmath}
-(
-2.00 \cdot x)' = 
-2.00\end{dmath}
-Understanding this transformation is left to the reader as a simple exercise:
-\begin{dmath}
-(
-3.00 \cdot 2.00 \cdot x)' = 
-6.00\end{dmath}
-It is obvious that:
-\begin{dmath}
-(
--1.00 \cdot sin(x) \cdot -1.00 \cdot sin(sin(x)) + cos(x) \cdot -1.00 \cdot cos(x) \cdot cos(sin(x)) + 3.00 \cdot 2.00 \cdot x)' = 
--1.00 \cdot cos(x) \cdot -1.00 \cdot sin(sin(x)) + -1.00 \cdot sin(x) \cdot -1.00 \cdot cos(x) \cdot cos(sin(x)) + -1.00 \cdot sin(x) \cdot -1.00 \cdot cos(x) \cdot cos(sin(x)) + cos(x) \cdot -1.00 \cdot (-1.00 \cdot sin(x) \cdot cos(sin(x)) + cos(x) \cdot cos(x) \cdot -1.00 \cdot sin(sin(x))) + 6.00\end{dmath}
+-1.00 \cdot cos(x) + -1.00 \cdot cos(x) + -1.00 \cdot cos(x) + -1.00 \cdot cos(x) + x \cdot -1.00 \cdot -1.00 \cdot sin(x))' = 
+-1.00 \cdot -1.00 \cdot sin(x) + -1.00 \cdot -1.00 \cdot sin(x) + -1.00 \cdot -1.00 \cdot sin(x) + -1.00 \cdot -1.00 \cdot sin(x) + -1.00 \cdot -1.00 \cdot sin(x) + x \cdot -1.00 \cdot -1.00 \cdot cos(x)\end{dmath}
 {\large \textbf{Taylor Series:}}
 \begin{dmath}
-T(x \cdot sin(x)) = 1.00 + -0.50 \cdot x^{2.00} + -0.04 \cdot x^{4.00} + 0.05 \cdot x^{5.00} + -0.00 \cdot x^{6.00} + 0.00 \cdot x^{7.00} + ...\end{dmath}
+T(x \cdot sin(x)) = x^{2.00} + -0.17 \cdot x^{4.00} + ...\end{dmath}
 \end{document}
