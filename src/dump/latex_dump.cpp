@@ -18,7 +18,7 @@ static void LatexDumpRecursive(FILE* file, TreeNode_t* node, metki* mtk);
 #define LATEX_DUMP_CPP
 #define DEF_BIN_OP(Op, start, cont, end) \
 static void BinaryOperatorDump##Op(FILE* file, TreeNode_t* node, metki* mtk){ \
-    assert(file); assert(node); assert(cont);\
+    assert(file); assert(node); \
     fprintf(file, "%s", start); \
     \
     bool left_staples = NeedStaples(node->left); \
@@ -45,7 +45,6 @@ DEF_BIN_OP(Deg, "", "^{", "}")
 #define DEF_UN_OP(Op, start, end) \
 static void UnaryOperatorDump##Op(FILE* file, TreeNode_t* node, metki* mtk){ \
     assert(file); assert(node); \
-    assert(start); assert(end); \
     \
     fprintf(file, "%s", start); \
     \
@@ -100,6 +99,7 @@ void LatexDump(FILE* file, TreeNode_t* node, TreeNode_t* result, metki* mtk, con
 }
 
 static void LatexDumpRecursive(FILE* file, TreeNode_t* node, metki* mtk){
+    size_t arr_num_of_elem = sizeof(OPERATORS_INFO) / sizeof(op_info);
     switch(node->type){
         case CONST:
             fprintf(file, "%.2lf" ,node->data.const_value);
@@ -108,11 +108,12 @@ static void LatexDumpRecursive(FILE* file, TreeNode_t* node, metki* mtk){
             fprintf(file, "%s" , mtk->var_info[node->data.var_code].variable_name);
             break;
         case OPERATOR:
-            size_t arr_num_of_elem = sizeof(OPERATORS_INFO) / sizeof(op_info);
             if(node->data.op >= arr_num_of_elem){
                 return;
             }
             OPERATORS_INFO[node->data.op].function_dump(file, node, mtk);
+            break;
+        default: return;
     }
 }
 

@@ -2,12 +2,12 @@
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <time.h>
 #include "differenciator.h"
 #include "../dump/graphviz_dump.h"
 #include "../core/tree_func.h"
 #include "../calculation_optimization/calcul_tree.h"
 #include "../dump/latex_dump.h"
+#include "../utils/rofl_matan.h"
 
 // Need to declare for dsl
 
@@ -15,7 +15,7 @@ static TreeNode_t* Differenciate(TreeNode_t* node, const size_t var_id, FILE* fi
 
 static void ConnectWithParents(TreeNode_t *node);
 
-const char *GenerateRoflMsg();
+
 
 //----------------------------------------------------------
 // DSL define
@@ -280,33 +280,3 @@ static TreeErr_t CreateTaylorTree(size_t idx, Forest_t *forest_taylor, Forest_t 
 #undef  VAR_NODE
 #undef  DIFFERENCIATOR_CPP
 //----------------------------------------------------------
-
-const char *GenerateRoflMsg(){
-    // because need to init once
-    static bool initialized = false;
-    if(!initialized){
-        srand(time(NULL));
-        initialized = true;
-    }
-
-    const char *messages[] = {
-        "It is obvious that:\n",
-        "It is easy to see:\n",
-        "Understanding this transformation is left to the reader as a simple exercise:\n",
-        "Should be known from school:\n",
-        "According to the theorem (which number?) from paragraph ??:\n",
-        "It is common knowledge:\n",
-        "As already shown earlier:\n",
-        "A similar one can be proved:\n",
-        "If this is not obvious to you, try attending a lecture for a change:",
-        "Let's imagine this household as:\n",
-        "Plus a constant:\n",
-        "A good, solid task?\n",
-        "If you don't understand this obvious transformation, then you need to go into a program where they don't study mathematical analys:\n",
-    };
-
-    int max_idx = sizeof(messages) / sizeof(const char *);
-    int idx = rand() % max_idx;
-
-    return messages[idx];
-}

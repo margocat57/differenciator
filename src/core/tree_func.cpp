@@ -171,8 +171,6 @@ TreeErr_t TreeDelNodeRecur(TreeNode_t* node){
     DEBUG_TREE(err = TreeNodeVerify(node);)
     if(err) return err;
 
-    TreeNode_t* parent = node->parent;
-
     if(node->left){
         CHECK_AND_RET_TREEERR(TreeDelNodeRecur(node->left))
     }
