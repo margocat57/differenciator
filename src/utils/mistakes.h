@@ -22,6 +22,7 @@ enum Err{
     INCORR_OPERATOR,
     INCORR_TYPE,
     NO_ELEM_FOR_BINARY_OP,
+    NULL_PTR_TO_FUNC,
 };
 
 #endif //MISTAKES_H

@@ -111,6 +111,9 @@ static void LatexDumpRecursive(FILE* file, TreeNode_t* node, metki* mtk){
             if(node->data.op >= arr_num_of_elem){
                 return;
             }
+            if(OPERATORS_INFO[node->data.op].function_dump == NULL){
+                return;
+            }
             OPERATORS_INFO[node->data.op].function_dump(file, node, mtk);
             break;
         default: return;

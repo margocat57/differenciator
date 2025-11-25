@@ -184,7 +184,7 @@ static TreeNode_t* Differenciate(TreeNode_t* node, const size_t var_id, FILE* fi
         return NUM_(1);
     }
     size_t arr_num_of_elem = sizeof(OPERATORS_INFO) / sizeof(op_info);
-    if(node->data.op >= arr_num_of_elem){
+    if(node->data.op >= arr_num_of_elem || OPERATORS_INFO[node->data.op].function_diff == NULL){
         return NULL;
     }
     return OPERATORS_INFO[node->data.op].function_diff(node, var_id, file, mtk);

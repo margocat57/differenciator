@@ -104,6 +104,9 @@ static TreeErr_t CalcExpWithOperator(TreeNode_t* node, double* result, double* l
     if(node->data.op >= arr_num_of_elem){
         return INCORR_OPERATOR;
     }
+    if(OPERATORS_INFO[node->data.op].function_calc == NULL){
+        return NULL_PTR_TO_FUNC;
+    }
     OPERATORS_INFO[node->data.op].function_calc(result, left_result, right_result);
     return NO_MISTAKE_T;
 }
@@ -146,6 +149,9 @@ static TreeErr_t TreeOptimizeConst(TreeNode_t *node, bool *is_optimized){
         size_t arr_num_of_elem = sizeof(OPERATORS_INFO) / sizeof(op_info);
         if(node->data.op >= arr_num_of_elem){
             return INCORR_OPERATOR;
+        }
+        if(OPERATORS_INFO[node->data.op].function_calc == NULL){
+            return NULL_PTR_TO_FUNC;
         }
         OPERATORS_INFO[node->data.op].function_calc(&(node->data.const_value), &(node->left->data.const_value), &(node->right->data.const_value));
         NodeDtor(node->left);
