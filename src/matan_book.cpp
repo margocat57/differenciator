@@ -14,5 +14,5 @@ void MatanBook(Forest_t* forest_diff, Forest_t* forest_diff_taylor, Forest_t* fo
     LatexDumpTaylor(latex_dump, forest_diff_taylor, forest_taylor);
 
     EndLatexDump(latex_dump);
-    system("cd output && pdflatex diff.tex"); 
+    GeneratePdfFromTex(book_file);
 }

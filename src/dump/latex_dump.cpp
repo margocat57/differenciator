@@ -213,20 +213,23 @@ void EndLatexDump(FILE* latex_file){
 void GeneratePdfFromTex(const char* latex_file){
     assert(latex_file);
     // cd output && pdflatex 
-    char cmd_buffer[MAX_CMD_BUFFER] = "cd ";
+    char cmd_buffer[MAX_CMD_BUFFER] = "";
     size_t len = strlen(latex_file);
-    size_t folder = strcspn(latex_file, "\\");
+    size_t folder = strcspn(latex_file, "/");
     if(folder != len){
+        strncat(cmd_buffer, "cd ", sizeof("cd "));
         strncat(cmd_buffer, latex_file, folder);
+        strncat(cmd_buffer, " && ", sizeof(" && "));
     }
-    strncat(cmd_buffer, " && pdflatex", sizeof(" && pdflatex"));
+    strncat(cmd_buffer, "pdflatex ", sizeof("pdflatex "));
     if(folder != len){
-        strncat(cmd_buffer, latex_file + folder, len - folder);
+        strncat(cmd_buffer, latex_file + (folder + 1), len - (folder + 1));
     }
     else{
         strncat(cmd_buffer, latex_file, len);
     }
     system(cmd_buffer);
+    printf("%s\n", cmd_buffer);
 }
 
 #undef DEF_BIN_OP
