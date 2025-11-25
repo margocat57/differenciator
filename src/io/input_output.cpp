@@ -159,6 +159,7 @@ static TreeErr_t ReadNode(size_t *pos, TreeNode_t *node_parent, char *buffer, Tr
         skip_space(buffer, pos);
         return NO_MISTAKE_T;
     }
+
     fprintf(stderr, "Incorr file undef symbol(%s is %c), pos(%zu)\n", buffer + *pos, buffer[*pos] , *pos);
     return INCORR_FILE;
 }

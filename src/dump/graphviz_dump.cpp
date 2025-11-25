@@ -62,7 +62,7 @@ static void tree_dump_html(const char* img, const char* debug_msg, const char *f
     vfprintf(html_output, debug_msg, args);
     fprintf(html_output, "\n");
 
-    fprintf(html_output, "<img src=\"%s\" alt=\"Tree visualization\" width=\"45%%\">\n", img);
+    fprintf(html_output, "<img src=\"%s\" alt=\"Tree visualization\" width=\"45%%\">\n", img + sizeof("output/") - 1);
     fprintf(html_output, "\n");
     fclose(html_output);
 }
