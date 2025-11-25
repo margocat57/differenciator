@@ -19,7 +19,7 @@ const char *GenerateRoflMsg();
 
 //----------------------------------------------------------
 // DSL define
-
+#define DIFFERENCIATOR_CPP
 #define DL_                     Differenciate(node->left, var_id, file, mtk)
 #define DR_                     Differenciate(node->right, var_id, file, mtk)
 #define CL_                     NodeCopy(node->left)
@@ -101,28 +101,8 @@ static TreeNode_t* DiffDeg(TreeNode_t* node, const size_t var_id, FILE* file, me
     return result;
 }
 //----------------------------------------------------
-struct operators_func{
-    TreeNode_t*(*function_diff)(TreeNode_t* node, const size_t var_id, FILE* file, metki* mtk);
-};
 
-const operators_func FUNC_FOR_OPERATORS[] = {
-    NULL,
-    DiffAdd,
-    DiffSub,
-    DiffMul,
-    DiffDiv,
-    DiffDeg,
-    DiffSin,
-    DiffCos,
-    DiffLn,
-    DiffTg,
-    DiffCtg,
-    DiffSh,
-    DiffCh,
-    DiffTh,
-    DiffCth
-};
-
+#include "../operator_func.h"
 
 //---------------------------------------------------------
 //---------------------------------------------------------
@@ -204,11 +184,11 @@ static TreeNode_t* Differenciate(TreeNode_t* node, const size_t var_id, FILE* fi
     if(node->type == VARIABLE && node->data.var_code == var_id){
         return NUM_(1);
     }
-    size_t arr_num_of_elem = sizeof(FUNC_FOR_OPERATORS) / sizeof(operators_func);
+    size_t arr_num_of_elem = sizeof(OPERATORS_INFO) / sizeof(op_info);
     if(node->data.op >= arr_num_of_elem){
         return NULL;
     }
-    return FUNC_FOR_OPERATORS[node->data.op].function_diff(node, var_id, file, mtk);
+    return OPERATORS_INFO[node->data.op].function_diff(node, var_id, file, mtk);
 }
 
 //-------------------------------------------------------
@@ -299,7 +279,7 @@ static TreeErr_t CreateTaylorTree(size_t idx, Forest_t *forest_taylor, Forest_t 
 #undef  NUM_
 #undef  DEF_OP
 #undef  VAR_NODE
-
+#undef  DIFFERENCIATOR_CPP
 //----------------------------------------------------------
 
 const char *GenerateRoflMsg(){

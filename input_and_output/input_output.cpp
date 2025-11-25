@@ -12,33 +12,9 @@
 #include "../common/metki.h"
 #include "../dump/graphviz_dump.h"
 #include "../data_struct/forest.h"
+#include "../operator_func.h"
 
 const size_t MAX_BUFFER_SIZE = 50;
-
-struct op_name_and_num_of_symb{
-    OPERATORS op;
-    const char* op_name;
-    size_t num_of_symb;
-};
-
-
-op_name_and_num_of_symb NAMES_OF_OP_NUM_SYMB[] = {
-    {OPERATORS::INCORR},
-    {OPERATORS::OP_ADD, "+",   1},
-    {OPERATORS::OP_SUB, "-",   1},
-    {OPERATORS::OP_MUL, "*",   1},
-    {OPERATORS::OP_DIV, "/",   1},
-    {OPERATORS::OP_DEG, "^",   1},
-    {OPERATORS::OP_SIN, "sin", 3},
-    {OPERATORS::OP_COS, "cos", 3},
-    {OPERATORS::OP_LN,  "ln",  2},
-    {OPERATORS::OP_TG,  "tg",  2},
-    {OPERATORS::OP_CTG, "ctg", 3},
-    {OPERATORS::OP_SH,  "sh",  2},
-    {OPERATORS::OP_CH,  "ch",  2},
-    {OPERATORS::OP_TH,  "th",  2},
-    {OPERATORS::OP_CTH, "cth", 3},
-};
 
 //----------------------------------------------------------------------------
 // Helping functions to find spaces
@@ -236,11 +212,11 @@ static void BufScanfWord(char* buffer, size_t* pos, char* dest){
 
 static bool FindOperator(char* dest, OPERATORS* op){
     assert(dest); assert(op);
-    size_t arr_num_of_elem = sizeof(NAMES_OF_OP_NUM_SYMB) / sizeof(op_name_and_num_of_symb);
+    size_t arr_num_of_elem = sizeof(OPERATORS_INFO) / sizeof(op_info);
 
     for(size_t idx = 1; idx < arr_num_of_elem; idx++){
-        if(!strncmp(dest, NAMES_OF_OP_NUM_SYMB[idx].op_name, NAMES_OF_OP_NUM_SYMB[idx].num_of_symb)){
-            *op = NAMES_OF_OP_NUM_SYMB[idx].op;
+        if(!strncmp(dest, OPERATORS_INFO[idx].op_name, OPERATORS_INFO[idx].num_of_symb)){
+            *op = OPERATORS_INFO[idx].op;
             return true;
         }
     }

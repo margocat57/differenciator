@@ -39,7 +39,7 @@ union TreeElem_t{
 
 #define CHECK_AND_RET_TREEERR(bad_condition)\
     if(bad_condition){ \
-        fprintf(stderr, "err = %llu, %s, %s, %d", bad_condition, __FILE__, __func__, __LINE__); \
+        fprintf(stderr, "err = %llu, %s, %s, %d\n", bad_condition, __FILE__, __func__, __LINE__); \
         return bad_condition; \
     } \
 

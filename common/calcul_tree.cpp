@@ -9,7 +9,7 @@
 //--------------------------------------------------------------------------------------------
 //--------------------------------------------------------------------------------------------
 // DSL for calculating funt
-
+#define CALCUL_TREE_CPP
 #define RES_L *left_result
 #define RES_R *right_result
 #define DEF_OP(Op, Result) \
@@ -32,28 +32,7 @@ DEF_OP(Ch,  cosh(RES_L));
 DEF_OP(Th,  tanh(RES_L));
 DEF_OP(Cth, (tanh(RES_L) != 0) ? 1 / tanh(RES_L) : 0);
 
-struct operators_func{
-    void(*function_calc)(double* result, double* left_result, double* right_result);
-};
-
-const operators_func FUNC_FOR_OPERATORS[] = {
-    NULL,
-    CalcAdd,
-    CalcSub,
-    CalcMul,
-    CalcDiv,
-    CalcDeg,
-    CalcSin,
-    CalcCos,
-    CalcLn ,
-    CalcTg ,
-    CalcCtg,
-    CalcSh ,
-    CalcCh ,
-    CalcTh ,
-    CalcCth
-};
-
+#include "../operator_func.h"
 
 //--------------------------------------------------------------------------------------------
 //--------------------------------------------------------------------------------------------
@@ -113,11 +92,11 @@ static TreeErr_t CalcTreeExpressionRecursive(metki* mtk, TreeNode_t* node, doubl
 
 static TreeErr_t CalcExpWithOperator(TreeNode_t* node, double* result, double* left_result, double* right_result){
     assert(result); 
-    size_t arr_num_of_elem = sizeof(FUNC_FOR_OPERATORS) / sizeof(operators_func);
+    size_t arr_num_of_elem = sizeof(OPERATORS_INFO) / sizeof(op_info);
     if(node->data.op >= arr_num_of_elem){
         return INCORR_OPERATOR;
     }
-    FUNC_FOR_OPERATORS[node->data.op].function_calc(result, left_result, right_result);
+    OPERATORS_INFO[node->data.op].function_calc(result, left_result, right_result);
     return NO_MISTAKE_T;
 }
 
@@ -156,11 +135,11 @@ static TreeErr_t TreeOptimizeConst(TreeNode_t *node, bool *is_optimized){
         CHECK_AND_RET_TREEERR(TreeOptimizeConst(node->right, is_optimized));
     }
     if(node->left && node->right && node->left->type == CONST && node->right->type == CONST && node->type == OPERATOR){
-        size_t arr_num_of_elem = sizeof(FUNC_FOR_OPERATORS) / sizeof(operators_func);
+        size_t arr_num_of_elem = sizeof(OPERATORS_INFO) / sizeof(op_info);
         if(node->data.op >= arr_num_of_elem){
             return INCORR_OPERATOR;
         }
-        FUNC_FOR_OPERATORS[node->data.op].function_calc(&(node->data.const_value), &(node->left->data.const_value), &(node->right->data.const_value));
+        OPERATORS_INFO[node->data.op].function_calc(&(node->data.const_value), &(node->left->data.const_value), &(node->right->data.const_value));
         NodeDtor(node->left);
         NodeDtor(node->right);
         node->type = CONST;
@@ -284,3 +263,4 @@ static void TreeOptimizeNeutralDeg(TreeNode_t** result, TreeNode_t* node, bool* 
 #undef RES_L
 #undef RES_R
 #undef DEF_OP
+#undef CALCUL_TREE_CPP

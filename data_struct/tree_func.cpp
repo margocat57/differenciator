@@ -4,24 +4,7 @@
 #include "tree_func.h"
 #include "../dump/graphviz_dump.h"
 #include "../common/metki.h"
-
-const char* NAMES_OF_OP_TO_GRAPH_DUMP[] = {
-    NULL,
-    "OP_ADD",
-    "OP_SUB",
-    "OP_MUL",
-    "OP_DIV",
-    "OP_DEG",
-    "OP_SIN",
-    "OP_COS",
-    "OP_LN",
-    "OP_TG",
-    "OP_CTG",
-    "OP_SH",
-    "OP_CH",
-    "OP_TH",
-    "OP_CTH"
-};
+#include "../operator_func.h"
 
 //----------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------
@@ -123,11 +106,11 @@ TreeErr_t PrintNode(const TreeNode_t* node, FILE* dot_file, int* rank, metki* mt
     }
 
     if(node->type == OPERATOR){
-        size_t arr_num_of_elem = sizeof(NAMES_OF_OP_TO_GRAPH_DUMP) / sizeof(const char*);
+        size_t arr_num_of_elem = sizeof(OPERATORS_INFO) / sizeof(op_info);
         if(node->data.op >= arr_num_of_elem){
             return INCORR_OPERATOR;
         }
-        fprintf(dot_file, " node_%p[shape=\"Mrecord\", style=\"filled\", fillcolor=\"#00FFFF\", rank=%d, color = \"#964B00\", penwidth=1.0, label=\"{{type = OPERATOR} | {val = %d(%s)} | {L | R }} \"];\n", node, *rank, node->data.op, NAMES_OF_OP_TO_GRAPH_DUMP[node->data.op]);
+        fprintf(dot_file, " node_%p[shape=\"Mrecord\", style=\"filled\", fillcolor=\"#00FFFF\", rank=%d, color = \"#964B00\", penwidth=1.0, label=\"{{type = OPERATOR} | {val = %d(%s)} | {L | R }} \"];\n", node, *rank, node->data.op, OPERATORS_INFO[node->data.op].name_for_graph_dump);
     }
     else{
         if(node->type == CONST){
