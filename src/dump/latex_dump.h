@@ -19,4 +19,6 @@ void LatexDumpChapterTaylor(FILE* latex_file);
 
 void EndLatexDump(FILE* latex_file);
 
+void GeneratePdfFromTex(const char* latex_file);
+
 #endif //LATEX_DUMP_H

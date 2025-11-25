@@ -52,4 +52,4 @@ diff: main.o src/differenciation/differenciator.o src/dump/graphviz_dump.o src/u
 # clang++ -o stack main.o hash.o log.o my_assert.o stack_func.o
 
 clean:
-	rm -f diff src/calculation_optimization/*.o src/core/*.o src/differenciation/*.o src/dump/*.o src/utils/*.o src/io/*.o src/*.o *.o output/images/*.dot output/images/*.svg
+	rm -f diff output/diff.tex output/diff.aux output/diff.log src/calculation_optimization/*.o src/core/*.o src/differenciation/*.o src/dump/*.o src/utils/*.o src/io/*.o src/*.o *.o output/images/*.dot output/images/*.svg

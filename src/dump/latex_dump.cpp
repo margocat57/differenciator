@@ -6,10 +6,12 @@
 #include "../core/tree_func.h"
 #include "../core/forest.h"
 
+const size_t MAX_CMD_BUFFER = 2048;
+
 static bool NeedStaples(TreeNode_t* node);
 
 // Need to declare for dsl
-void LatexDumpRecursive(FILE* file, TreeNode_t* node, metki* mtk);
+static void LatexDumpRecursive(FILE* file, TreeNode_t* node, metki* mtk);
 
 //----------------------------------------------------------------
 // DSL for latex define
@@ -82,7 +84,6 @@ void LatexDumpTaylor(FILE *file, Forest_t *forest_diff, Forest_t *forest){
             continue;
         }
         LatexDumpRecursive(file, forest->head_arr[idx]->root, forest_diff->mtk);
-        fprintf(file, " + ");
     }
     fprintf(file, "...");
     fprintf(file, "\\end{dmath}\n");
@@ -98,7 +99,7 @@ void LatexDump(FILE* file, TreeNode_t* node, TreeNode_t* result, metki* mtk, con
     fprintf(file, "\\end{dmath}\n");
 }
 
-void LatexDumpRecursive(FILE* file, TreeNode_t* node, metki* mtk){
+static void LatexDumpRecursive(FILE* file, TreeNode_t* node, metki* mtk){
     switch(node->type){
         case CONST:
             fprintf(file, "%.2lf" ,node->data.const_value);
@@ -207,6 +208,25 @@ void EndLatexDump(FILE* latex_file){
     assert(latex_file);
     fprintf(latex_file, "\\end{document}\n");
     fclose(latex_file);
+}
+
+void GeneratePdfFromTex(const char* latex_file){
+    assert(latex_file);
+    // cd output && pdflatex 
+    char cmd_buffer[MAX_CMD_BUFFER] = "cd ";
+    size_t len = strlen(latex_file);
+    size_t folder = strcspn(latex_file, "\\");
+    if(folder != len){
+        strncat(cmd_buffer, latex_file, folder);
+    }
+    strncat(cmd_buffer, " && pdflatex", sizeof(" && pdflatex"));
+    if(folder != len){
+        strncat(cmd_buffer, latex_file + folder, len - folder);
+    }
+    else{
+        strncat(cmd_buffer, latex_file, len);
+    }
+    system(cmd_buffer);
 }
 
 #undef DEF_BIN_OP
