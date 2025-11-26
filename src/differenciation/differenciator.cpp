@@ -15,8 +15,6 @@ static TreeNode_t* Differenciate(TreeNode_t* node, const size_t var_id, FILE* fi
 
 static void ConnectWithParents(TreeNode_t *node);
 
-
-
 //----------------------------------------------------------
 // DSL define
 #define DIFFERENCIATOR_CPP
@@ -67,10 +65,10 @@ DEF_OP(Ch, MUL_(DL_, SH_(CL_)))
 DEF_OP(Th, DIV_(DL_, DEG_(CH_(CL_), NUM_(2))))
 DEF_OP(Cth, MUL_(DIV_(DL_, DEG_(SH_(CL_), NUM_(2))), NUM_(-1)))
 
-    //---------------------------------------------------------
-    // DSL in func. Я очень не хочу это писать в дефайнах, так что будет функция
+//---------------------------------------------------------
+// DSL in func. Я очень не хочу это писать в дефайнах, так что будет функция
 
-    static bool is_type_num(TreeNode_t *node){
+static bool is_type_num(TreeNode_t *node){
     assert(node);
     return node->type == CONST;
 }
@@ -162,7 +160,7 @@ static size_t FindVarCodeToDiff(metki* mtk){
 
 static TreeErr_t CreateDiffTree(const size_t var_id, Forest_t *forest, size_t idx, FILE *latex_dump){
     TreeHead_t* head_new = TreeCtor();
-    LatexDump(latex_dump, forest->head_arr[idx]->root, NULL, forest->mtk, "\\textbf{Let's calculate a simple derivative:}\n");
+    CHECK_AND_RET_TREEERR(LatexDump(latex_dump, forest->head_arr[idx]->root, NULL, forest->mtk, "\\textbf{Let's calculate a simple derivative:}\n"));
     head_new->root = Differenciate(forest->head_arr[idx]->root, var_id, latex_dump, forest->mtk);
     CHECK_AND_RET_TREEERR(ForestAddElem(head_new, forest));
     return NO_MISTAKE_T;

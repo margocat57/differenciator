@@ -46,6 +46,8 @@ DEF_OP(Cth, (tanh(RES_L) != 0) ? 1 / tanh(RES_L) : 0);
 //--------------------------------------------------------------------------------------------
 // First part of task - tree of expressions and main function for it
 
+//! передавать енам - тейлор / нот тейлор
+
 static TreeErr_t CalcTreeExpressionRecursive(metki* mtk, TreeNode_t* node, double* result);
 
 TreeErr_t CalcTreeExpression(Forest_t* forest, size_t num_of_tree, double* result, bool is_taylor){
@@ -72,7 +74,6 @@ static TreeErr_t CalcExpWithOperator(TreeNode_t *node, double *result, double *l
 static TreeErr_t CalcExpWithConst(TreeNode_t* node, double* result);
 
 static TreeErr_t CalcExpWithVar(metki* mtk, TreeNode_t* node, double* result);
-
 
 static TreeErr_t CalcTreeExpressionRecursive(metki* mtk, TreeNode_t* node, double* result){
     assert(result);
@@ -121,6 +122,9 @@ static TreeErr_t CalcExpWithConst(TreeNode_t* node, double* result){
 }
 
 static TreeErr_t CalcExpWithVar(metki* mtk, TreeNode_t* node, double* result){
+    if(!result){
+        return NULL_RES_PTR;
+    }
     if(!mtk){
         return NULL_PTR_TO_MTK;
     }
@@ -153,7 +157,7 @@ TreeErr_t TreeOptimize(TreeNode_t **node){
 }
 
 static TreeErr_t TreeOptimizeConst(TreeNode_t *node, bool *is_optimized){
-    assert(node); assert(is_optimized);
+    assert(node); 
     if(node->left){
         CHECK_AND_RET_TREEERR(TreeOptimizeConst(node->left, is_optimized));
     }
@@ -185,6 +189,7 @@ static TreeErr_t TreeOptimizeConst(TreeNode_t *node, bool *is_optimized){
 //--------------------------------------------------------------------------
 // Optimizing neutrals
 
+//! IS_EQUAL
 #define IS_ZERO(node) ((node) && (node)->type == CONST && (node)->data.const_value == 0)
 #define IS_ONE(node) ((node) && (node)->type == CONST && (node)->data.const_value == 1)
 

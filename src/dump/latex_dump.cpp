@@ -15,6 +15,9 @@ static TreeErr_t LatexDumpRecursive(FILE* file, TreeNode_t* node, metki* mtk);
 
 //----------------------------------------------------------------
 // DSL for latex define
+
+//! to func
+//! макрос который вызывает функцию
 #define LATEX_DUMP_CPP
 #define DEF_BIN_OP(Op, start, cont, end) \
 static TreeErr_t BinaryOperatorDump##Op(FILE* file, TreeNode_t* node, metki* mtk){ \
@@ -89,11 +92,11 @@ TreeErr_t LatexDumpTaylor(FILE *file, Forest_t *forest_diff, Forest_t *forest){
     CHECK_AND_RET_TREEERR(LatexDumpRecursive(file, forest_diff->head_arr[0]->root, forest_diff->mtk));
     fprintf(file, ") = ");
     for(size_t idx = 0; idx < forest->first_free_place; idx++){
-        tree_dump_func(forest->head_arr[idx]->root, "Dump Taylor %zu Taylor Tree", __FILE__, __func__, __LINE__, forest_diff->mtk, idx);
-        if(forest->head_arr[idx]->root->data.const_value == 0){
+        // tree_dump_func(forest->head_arr[idx]->root, "Dump Taylor %zu Taylor Tree", __FILE__, __func__, __LINE__, forest_diff->mtk, idx);
+        if(forest->head_arr[idx]->root->type == CONST && forest->head_arr[idx]->root->data.const_value == 0){
             continue;
         }
-        if(forest->head_arr[idx]->root->left && forest->head_arr[idx]->root->left->data.const_value >= 0){
+        if(forest->head_arr[idx]->root->left &&  forest->head_arr[idx]->root->type == CONST && forest->head_arr[idx]->root->left->data.const_value >= 0){
             fprintf(file, " + ");
         }
         CHECK_AND_RET_TREEERR(LatexDumpRecursive(file, forest->head_arr[idx]->root, forest_diff->mtk));
@@ -124,9 +127,10 @@ static TreeErr_t LatexDumpRecursive(FILE* file, TreeNode_t* node, metki* mtk){
     size_t arr_num_of_elem = sizeof(OPERATORS_INFO) / sizeof(op_info);
     switch(node->type){
         case CONST:
-            fprintf(file, "%.2lf" ,node->data.const_value);
+            fprintf(file, "%lg" ,node->data.const_value);
             break;
         case VARIABLE:
+            // not vilezli
             fprintf(file, "%s" , mtk->var_info[node->data.var_code].variable_name);
             break;
         case OPERATOR:
@@ -170,6 +174,8 @@ static TreeErr_t NeedStaples(TreeNode_t* node, bool* need_staples){
 }
 
 
+// в один принтф
+// писать без каычек на каждой строчке
 FILE* StartLatexDump(const char* filename){
     assert(filename);
     FILE* latex_file = fopen(filename, "w");
