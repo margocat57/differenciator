@@ -8,32 +8,35 @@
 
 const size_t MAX_CMD_BUFFER = 2048;
 
-static bool NeedStaples(TreeNode_t* node);
+static TreeErr_t NeedStaples(TreeNode_t* node, bool* need_staples);
 
 // Need to declare for dsl
-static void LatexDumpRecursive(FILE* file, TreeNode_t* node, metki* mtk);
+static TreeErr_t LatexDumpRecursive(FILE* file, TreeNode_t* node, metki* mtk);
 
 //----------------------------------------------------------------
 // DSL for latex define
 #define LATEX_DUMP_CPP
 #define DEF_BIN_OP(Op, start, cont, end) \
-static void BinaryOperatorDump##Op(FILE* file, TreeNode_t* node, metki* mtk){ \
+static TreeErr_t BinaryOperatorDump##Op(FILE* file, TreeNode_t* node, metki* mtk){ \
     assert(file); assert(node); \
     fprintf(file, "%s", start); \
     \
-    bool left_staples = NeedStaples(node->left); \
+    bool left_staples = false; \
+    CHECK_AND_RET_TREEERR(NeedStaples(node->left, &left_staples)); \
     if (left_staples) fprintf(file, "("); \
-    LatexDumpRecursive(file, node->left, mtk); \
+    CHECK_AND_RET_TREEERR(LatexDumpRecursive(file, node->left, mtk)); \
     if (left_staples) fprintf(file, ")"); \
     \
     fprintf(file, "%s", cont); \
     \
-    bool right_staples = NeedStaples(node->right); \
+    bool right_staples = false; \
+    CHECK_AND_RET_TREEERR(NeedStaples(node->right, &right_staples)); \
     if (right_staples) fprintf(file, "("); \
-    LatexDumpRecursive(file, node->right, mtk); \
+    CHECK_AND_RET_TREEERR(LatexDumpRecursive(file, node->right, mtk)); \
     if (right_staples) fprintf(file, ")"); \
     \
     fprintf(file, "%s", end); \
+    return NO_MISTAKE_T; \
 }
 
 DEF_BIN_OP(Add, "" , " + ", "")
@@ -43,17 +46,19 @@ DEF_BIN_OP(Div, "\\frac{", "}{", "}")
 DEF_BIN_OP(Deg, "", "^{", "}")
 
 #define DEF_UN_OP(Op, start, end) \
-static void UnaryOperatorDump##Op(FILE* file, TreeNode_t* node, metki* mtk){ \
+static TreeErr_t UnaryOperatorDump##Op(FILE* file, TreeNode_t* node, metki* mtk){ \
     assert(file); assert(node); \
     \
     fprintf(file, "%s", start); \
     \
-    bool left_staples = NeedStaples(node->left); \
+    bool left_staples = false; \
+    CHECK_AND_RET_TREEERR(NeedStaples(node->left, &left_staples)); \
     if (left_staples) fprintf(file, "("); \
-    LatexDumpRecursive(file, node->left, mtk); \
+    CHECK_AND_RET_TREEERR(LatexDumpRecursive(file, node->left, mtk)); \
     if (left_staples) fprintf(file, ")"); \
     \
     fprintf(file, "%s", end); \
+    return NO_MISTAKE_T; \
 }
 
 DEF_UN_OP(Sin, "sin(" , ")")
@@ -72,33 +77,50 @@ DEF_UN_OP(Cth, "cth(" , ")")
 //--------------------------------------------------------------
 // Dump
 
-void LatexDumpTaylor(FILE *file, Forest_t *forest_diff, Forest_t *forest){
+TreeErr_t LatexDumpTaylor(FILE *file, Forest_t *forest_diff, Forest_t *forest){
+    TreeErr_t err = NO_MISTAKE_T;
+    DEBUG_TREE( err = ForestVerify(forest_diff);
+                err = ForestVerify(forest);)
+    if(err) return err;
+
     fprintf(file, "{\\large \\textbf{Taylor Series:}}\n");
     fprintf(file, "\\begin{dmath}\n");
     fprintf(file, "T(");
-    LatexDumpRecursive(file, forest_diff->head_arr[0]->root, forest_diff->mtk);
+    CHECK_AND_RET_TREEERR(LatexDumpRecursive(file, forest_diff->head_arr[0]->root, forest_diff->mtk));
     fprintf(file, ") = ");
     for(size_t idx = 0; idx < forest->first_free_place; idx++){
+        tree_dump_func(forest->head_arr[idx]->root, "Dump Taylor %zu Taylor Tree", __FILE__, __func__, __LINE__, forest_diff->mtk, idx);
         if(forest->head_arr[idx]->root->data.const_value == 0){
             continue;
         }
-        LatexDumpRecursive(file, forest->head_arr[idx]->root, forest_diff->mtk);
+        if(forest->head_arr[idx]->root->left && forest->head_arr[idx]->root->left->data.const_value >= 0){
+            fprintf(file, " + ");
+        }
+        CHECK_AND_RET_TREEERR(LatexDumpRecursive(file, forest->head_arr[idx]->root, forest_diff->mtk));
     }
     fprintf(file, "...");
     fprintf(file, "\\end{dmath}\n");
+
+    DEBUG_TREE( err = ForestVerify(forest_diff);
+                err = ForestVerify(forest);)
+    return err;
 }
 
-void LatexDump(FILE* file, TreeNode_t* node, TreeNode_t* result, metki* mtk, const char* comment){
+TreeErr_t LatexDump(FILE* file, TreeNode_t* node, TreeNode_t* result, metki* mtk, const char* comment){
     if(comment) fprintf(file, "%s" ,comment);
     fprintf(file, "\\begin{dmath}\n");
+
     if(result) fprintf(file, "(\n");
-    LatexDumpRecursive(file, node, mtk);
+    CHECK_AND_RET_TREEERR(LatexDumpRecursive(file, node, mtk));
     if(result) fprintf(file, ")' = \n");
-    if(result) LatexDumpRecursive(file, result, mtk);
+
+    if(result) CHECK_AND_RET_TREEERR(LatexDumpRecursive(file, result, mtk));
     fprintf(file, "\\end{dmath}\n");
+
+    return NO_MISTAKE_T;
 }
 
-static void LatexDumpRecursive(FILE* file, TreeNode_t* node, metki* mtk){
+static TreeErr_t LatexDumpRecursive(FILE* file, TreeNode_t* node, metki* mtk){
     size_t arr_num_of_elem = sizeof(OPERATORS_INFO) / sizeof(op_info);
     switch(node->type){
         case CONST:
@@ -109,30 +131,42 @@ static void LatexDumpRecursive(FILE* file, TreeNode_t* node, metki* mtk){
             break;
         case OPERATOR:
             if(node->data.op >= arr_num_of_elem){
-                return;
+                return INCORR_OPERATOR;
             }
             if(OPERATORS_INFO[node->data.op].function_dump == NULL){
-                return;
+                return NULL_PTR_TO_FUNC;
             }
-            OPERATORS_INFO[node->data.op].function_dump(file, node, mtk);
+            CHECK_AND_RET_TREEERR(OPERATORS_INFO[node->data.op].function_dump(file, node, mtk));
             break;
-        default: return;
+        default: return INCORR_TYPE;
     }
+    return NO_MISTAKE_T;
 }
 
-static bool NeedStaples(TreeNode_t* node){
+static TreeErr_t NeedStaples(TreeNode_t* node, bool* need_staples){
+    assert(need_staples);
     if(!node || node->type != OPERATOR || !node->parent || node->parent->type != OPERATOR){
-        return false;
+        *need_staples = false;
+        return NO_MISTAKE_T;
+    }
+
+    size_t arr_num_of_elem = sizeof(OPERATORS_INFO) / sizeof(op_info);
+    if(node->data.op >= arr_num_of_elem || node->parent->data.op >= arr_num_of_elem || node->data.op == INCORR || node->parent->data.op == INCORR){
+        return INCORR_OPERATOR;
     }
     int node_priority = OPERATORS_INFO[node->data.op].priority;
     int node_parent_priority = OPERATORS_INFO[node->parent->data.op].priority;
+
     if(node_priority < node_parent_priority){
-        return true;
+        *need_staples = true;
+        return NO_MISTAKE_T;
     }
     if(node->parent->data.op == OP_SUB){
-        return true;
+        *need_staples = true;
+        return NO_MISTAKE_T;
     }
-    return false;
+    *need_staples = false;
+    return NO_MISTAKE_T;
 }
 
 

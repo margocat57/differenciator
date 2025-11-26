@@ -7,9 +7,9 @@
 
 FILE* StartLatexDump(const char* filename);
 
-void LatexDumpTaylor(FILE *file, Forest_t *forest_diff, Forest_t *forest);
+TreeErr_t LatexDumpTaylor(FILE *file, Forest_t *forest_diff, Forest_t *forest);
 
-void LatexDump(FILE* file, TreeNode_t* node, TreeNode_t* result, metki* mtk, const char* comment);
+TreeErr_t LatexDump(FILE* file, TreeNode_t* node, TreeNode_t* result, metki* mtk, const char* comment);
 
 void LatexDumpDecimals(FILE* latex_file);
 

@@ -30,7 +30,7 @@ struct op_info{
     // dump
     const char* name_for_graph_dump;
     int priority;
-    LATEX_DUMP(void(*function_dump)(FILE* file, TreeNode_t* node, metki* mtk);)
+    LATEX_DUMP(TreeErr_t(*function_dump)(FILE* file, TreeNode_t* node, metki* mtk);)
     // differenciate
     DIFFERENCIATOR(TreeNode_t*(*function_diff)(TreeNode_t* node, const size_t var_id, FILE* file, metki* mtk);)
     // calculate expression

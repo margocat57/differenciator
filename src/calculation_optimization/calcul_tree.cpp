@@ -14,6 +14,7 @@
 #define RES_R *right_result
 #define DEF_OP(Op, Result) \
 static void Calc##Op(double* result, double* left_result, double* right_result){ \
+    assert(result); \
     *result = (Result); \
 }
 
@@ -55,7 +56,7 @@ TreeErr_t CalcTreeExpression(Forest_t* forest, size_t num_of_tree, double* resul
     if(err) return err;
     
     if(!is_taylor) metki_add_values(forest->mtk);
-    CalcTreeExpressionRecursive(forest->mtk, forest->head_arr[num_of_tree]->root, result);
+    CHECK_AND_RET_TREEERR(CalcTreeExpressionRecursive(forest->mtk, forest->head_arr[num_of_tree]->root, result));
     if(!is_taylor) metki_del_values(forest->mtk);
 
     DEBUG_TREE(err = TreeVerify(forest->head_arr[num_of_tree]);)
@@ -68,9 +69,9 @@ TreeErr_t CalcTreeExpression(Forest_t* forest, size_t num_of_tree, double* resul
 
 static TreeErr_t CalcExpWithOperator(TreeNode_t *node, double *result, double *left_result, double *right_result);
 
-static void CalcExpWithConst(TreeNode_t* node, double* result);
+static TreeErr_t CalcExpWithConst(TreeNode_t* node, double* result);
 
-static void CalcExpWithVar(metki* mtk, TreeNode_t* node, double* result);
+static TreeErr_t CalcExpWithVar(metki* mtk, TreeNode_t* node, double* result);
 
 
 static TreeErr_t CalcTreeExpressionRecursive(metki* mtk, TreeNode_t* node, double* result){
@@ -90,9 +91,9 @@ static TreeErr_t CalcTreeExpressionRecursive(metki* mtk, TreeNode_t* node, doubl
     switch(node->type){
         case INCORR_VAL: return INCORR_TYPE;
         case OPERATOR: CHECK_AND_RET_TREEERR(CalcExpWithOperator(node, result, &left_result, &right_result)); break;
-        case CONST:                          CalcExpWithConst(node, result);                                  break;
-        case VARIABLE:                       CalcExpWithVar(mtk, node, result);                               break;
-        default:        return INCORR_TYPE;
+        case CONST:    CHECK_AND_RET_TREEERR(CalcExpWithConst(node, result));                                 break;
+        case VARIABLE: CHECK_AND_RET_TREEERR(CalcExpWithVar(mtk, node, result));                              break;
+        default:         return INCORR_TYPE;
     }
     return NO_MISTAKE_T;
 }
@@ -111,12 +112,26 @@ static TreeErr_t CalcExpWithOperator(TreeNode_t* node, double* result, double* l
     return NO_MISTAKE_T;
 }
 
-static void CalcExpWithConst(TreeNode_t* node, double* result){
+static TreeErr_t CalcExpWithConst(TreeNode_t* node, double* result){
+    if(!result){
+        return NULL_RES_PTR;
+    }
     *result = node->data.const_value;
+    return NO_MISTAKE_T;
 }
 
-static void CalcExpWithVar(metki* mtk, TreeNode_t* node, double* result){
+static TreeErr_t CalcExpWithVar(metki* mtk, TreeNode_t* node, double* result){
+    if(!mtk){
+        return NULL_PTR_TO_MTK;
+    }
+    if(node->data.var_code >= mtk->num_of_metki){
+        return INCORR_IDX_IN_MTK;
+    }
+    if(!mtk->var_info[node->data.var_code].variable_name){
+        return CANT_GET_VALUE_FOR_NULL_NAME_IN_MTK;
+    }
     *result = mtk->var_info[node->data.var_code].value;
+    return NO_MISTAKE_T;
 }
 //---------------------------------------------------------------------------
 // Optimization
@@ -159,6 +174,9 @@ static TreeErr_t TreeOptimizeConst(TreeNode_t *node, bool *is_optimized){
         node->type = CONST;
         node->left = NULL;
         node->right = NULL;
+        if(!is_optimized){
+            return NULL_IS_OPT_PTR;
+        }
         *is_optimized = true;
     }
     return NO_MISTAKE_T;
@@ -172,13 +190,13 @@ static TreeErr_t TreeOptimizeConst(TreeNode_t *node, bool *is_optimized){
 
 static void ChangeKidParrentConn(TreeNode_t** result, TreeNode_t* node_for_change, TreeNode_t* new_node, bool* is_optimized);
 
-static void TreeOptimizeNeutralAddSub(TreeNode_t** result, TreeNode_t* node, bool* is_optimized);
+static TreeErr_t TreeOptimizeNeutralAddSub(TreeNode_t** result, TreeNode_t* node, bool* is_optimized);
 
-static void TreeOptimizeNeutralMul(TreeNode_t** result, TreeNode_t* node, bool* is_optimized);
+static TreeErr_t TreeOptimizeNeutralMul(TreeNode_t** result, TreeNode_t* node, bool* is_optimized);
 
-static void TreeOptimizeNeutralDiv(TreeNode_t** result, TreeNode_t* node, bool* is_optimized);
+static TreeErr_t TreeOptimizeNeutralDiv(TreeNode_t** result, TreeNode_t* node, bool* is_optimized);
 
-static void TreeOptimizeNeutralDeg(TreeNode_t** result, TreeNode_t* node, bool* is_optimized);
+static TreeErr_t TreeOptimizeNeutralDeg(TreeNode_t** result, TreeNode_t* node, bool* is_optimized);
 
 static TreeErr_t TreeOptimizeNeutral(TreeNode_t **result, TreeNode_t *node, bool *is_optimized){
     if(node->left){
@@ -191,11 +209,13 @@ static TreeErr_t TreeOptimizeNeutral(TreeNode_t **result, TreeNode_t *node, bool
     if(node->type == OPERATOR){
         switch(node->data.op){
             case INCORR:              return INCORR_OPERATOR;
-            case OP_ADD: case OP_SUB: TreeOptimizeNeutralAddSub(result, node, is_optimized); break;
-            case OP_MUL:              TreeOptimizeNeutralMul(result, node, is_optimized);    break;
-            case OP_DIV:              TreeOptimizeNeutralDiv(result, node, is_optimized);    break;
-            case OP_DEG:              TreeOptimizeNeutralDeg(result, node, is_optimized);    break;
-            default:                                                                         break;
+            case OP_ADD: case OP_SUB: CHECK_AND_RET_TREEERR(TreeOptimizeNeutralAddSub(result, node, is_optimized)); break;
+            case OP_MUL:              CHECK_AND_RET_TREEERR(TreeOptimizeNeutralMul(result, node, is_optimized));    break;
+            case OP_DIV:              CHECK_AND_RET_TREEERR(TreeOptimizeNeutralDiv(result, node, is_optimized));    break;
+            case OP_DEG:              CHECK_AND_RET_TREEERR(TreeOptimizeNeutralDeg(result, node, is_optimized));    break;
+            case OP_SIN: case OP_COS: case OP_TG: case OP_CTG: case OP_LN:
+            case OP_SH:  case OP_CH:  case OP_TH: case OP_CTH:                                                      break;
+            default:                  return INCORR_OPERATOR;
             }
     }
     return NO_MISTAKE_T;
@@ -218,57 +238,73 @@ static void ChangeKidParrentConn(TreeNode_t** result, TreeNode_t* node_for_chang
     *is_optimized = true;
 }
 
-static void TreeOptimizeNeutralAddSub(TreeNode_t** result, TreeNode_t* node, bool* is_optimized){
+static TreeErr_t TreeOptimizeNeutralAddSub(TreeNode_t** result, TreeNode_t* node, bool* is_optimized){
+    if(!node->left || !node->right){
+        return NO_ELEM_FOR_BINARY_OP;
+    }
     if(IS_ZERO(node->left) && node->data.op != OP_SUB){
-        TreeDelNodeRecur(node->left);
+        CHECK_AND_RET_TREEERR(TreeDelNodeRecur(node->left));
         ChangeKidParrentConn(result, node, node->right, is_optimized); 
     }
     else if(IS_ZERO(node->right)){
-        TreeDelNodeRecur(node->right);
+        CHECK_AND_RET_TREEERR(TreeDelNodeRecur(node->right));
         ChangeKidParrentConn(result, node, node->left, is_optimized);
     }
+    return NO_MISTAKE_T;
 }
 
-static void TreeOptimizeNeutralMul(TreeNode_t** result, TreeNode_t* node, bool* is_optimized){
+static TreeErr_t TreeOptimizeNeutralMul(TreeNode_t** result, TreeNode_t* node, bool* is_optimized){
+    if(!node->left || !node->right){
+        return NO_ELEM_FOR_BINARY_OP;
+    }
     if(IS_ZERO(node->left) || IS_ONE(node->right)){
-        TreeDelNodeRecur(node->right);
+        CHECK_AND_RET_TREEERR(TreeDelNodeRecur(node->right));
         ChangeKidParrentConn(result, node, node->left, is_optimized);
     }
     else if(IS_ZERO(node->right) || IS_ONE(node->left)){
-        TreeDelNodeRecur(node->left);
+        CHECK_AND_RET_TREEERR(TreeDelNodeRecur(node->left));
         ChangeKidParrentConn(result, node, node->right, is_optimized);
     }
+    return NO_MISTAKE_T;
 }
 
-static void TreeOptimizeNeutralDiv(TreeNode_t** result, TreeNode_t* node, bool* is_optimized){
+static TreeErr_t TreeOptimizeNeutralDiv(TreeNode_t** result, TreeNode_t* node, bool* is_optimized){
+    if(!node->left || !node->right){
+        return NO_ELEM_FOR_BINARY_OP;
+    }
     if(IS_ZERO(node->left) && !IS_ZERO(node->right)){
-        TreeDelNodeRecur(node->right);
+        CHECK_AND_RET_TREEERR(TreeDelNodeRecur(node->right));
         ChangeKidParrentConn(result, node, node->left, is_optimized);
     }
     else if(IS_ONE(node->right)){
-        TreeDelNodeRecur(node->left);
+        CHECK_AND_RET_TREEERR(TreeDelNodeRecur(node->left));
         ChangeKidParrentConn(result, node, node->right, is_optimized);
     }
+    return NO_MISTAKE_T;
 }
 
-static void TreeOptimizeNeutralDeg(TreeNode_t** result, TreeNode_t* node, bool* is_optimized){
+static TreeErr_t TreeOptimizeNeutralDeg(TreeNode_t** result, TreeNode_t* node, bool* is_optimized){
+    if(!node->left || !node->right){
+        return NO_ELEM_FOR_BINARY_OP;
+    }
     if((IS_ZERO(node->left) && !IS_ZERO(node->right))){
-        TreeDelNodeRecur(node->right);
+        CHECK_AND_RET_TREEERR(TreeDelNodeRecur(node->right));
         ChangeKidParrentConn(result, node, node->left, is_optimized);
     }
     else if(IS_ONE(node->left)){
-        TreeDelNodeRecur(node->right);
+        CHECK_AND_RET_TREEERR(TreeDelNodeRecur(node->right));
         ChangeKidParrentConn(result, node, node->left, is_optimized);
     }
     else if(IS_ZERO(node->right) && !IS_ZERO(node->left)){
         node->right->data.const_value += 1;
-        TreeDelNodeRecur(node->left);
+        CHECK_AND_RET_TREEERR(TreeDelNodeRecur(node->left));
         ChangeKidParrentConn(result, node, node->right, is_optimized);
     }
     else if(IS_ONE(node->right)){
-        TreeDelNodeRecur(node->right);
+        CHECK_AND_RET_TREEERR(TreeDelNodeRecur(node->right));
         ChangeKidParrentConn(result, node, node->left, is_optimized);
     }
+    return NO_MISTAKE_T;
 }
 
 //-----------------------------------------------------------------------------

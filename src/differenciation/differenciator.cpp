@@ -216,8 +216,8 @@ TreeErr_t CreateTaylorForest(Forest_t *forest_taylor, Forest_t *diff_forest, FIL
     assert(forest_taylor); assert(diff_forest); assert(latex_dump);
 
     TreeErr_t err = NO_MISTAKE_T;
-    DEBUG_TREE(err = ForestVerify(diff_forest);)
-    DEBUG_TREE(err = ForestVerify(forest_taylor);)
+    DEBUG_TREE( err = ForestVerify(diff_forest);
+                err = ForestVerify(forest_taylor);)
     if(err) return err;
 
     if(diff_forest->mtk->first_free != 1){
@@ -236,8 +236,8 @@ TreeErr_t CreateTaylorForest(Forest_t *forest_taylor, Forest_t *diff_forest, FIL
     }
     metki_del_values(diff_forest->mtk);
 
-    DEBUG_TREE(err = ForestVerify(diff_forest);)
-    DEBUG_TREE(err = ForestVerify(forest_taylor);)
+    DEBUG_TREE( err = ForestVerify(diff_forest);
+                err = ForestVerify(forest_taylor);)
     return err;
 }
 
