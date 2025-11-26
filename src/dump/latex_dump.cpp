@@ -61,15 +61,15 @@ static TreeErr_t UnaryOperatorDump##Op(FILE* file, TreeNode_t* node, metki* mtk)
     return NO_MISTAKE_T; \
 }
 
-DEF_UN_OP(Sin, "sin(" , ")")
-DEF_UN_OP(Cos, "cos(" , ")")
-DEF_UN_OP(Ln,  "ln(" , ")")
-DEF_UN_OP(Tg,  "tg(" , ")")
-DEF_UN_OP(Ctg, "ctg(" , ")")
-DEF_UN_OP(Sh,  "sh(" , ")")
-DEF_UN_OP(Ch,  "ch(" , ")")
-DEF_UN_OP(Th,  "th(" , ")")
-DEF_UN_OP(Cth, "cth(" , ")")
+DEF_UN_OP(Sin, "\\sin(" , ")")
+DEF_UN_OP(Cos, "\\cos(" , ")")
+DEF_UN_OP(Ln,  "\\ln(" , ")")
+DEF_UN_OP(Tg,  "\\tan(" , ")")
+DEF_UN_OP(Ctg, "\\cot(" , ")")
+DEF_UN_OP(Sh,  "\\sh(" , ")")
+DEF_UN_OP(Ch,  "\\ch(" , ")")
+DEF_UN_OP(Th,  "\\th(" , ")")
+DEF_UN_OP(Cth, "\\cth(" , ")")
 
 #include "../core/operator_func.h"
 
