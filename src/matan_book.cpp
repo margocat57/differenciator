@@ -10,6 +10,9 @@ TreeErr_t MatanBook(Forest_t* forest_diff, Forest_t* forest_diff_taylor, Forest_
     if(err) return err;
 
     FILE* latex_dump = StartLatexDump(book_file);
+    if(!latex_dump){
+        return INCORR_FILE;
+    }
     LatexDumpDecimals(latex_dump);
 
     LatexDumpChapterDiff(latex_dump);

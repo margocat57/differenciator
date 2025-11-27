@@ -59,18 +59,21 @@ TreeErr_t LatexDumpTaylor(FILE *file, Forest_t *forest_diff, Forest_t *forest){
                 err = ForestVerify(forest);)
     if(err) return err;
 
-    fprintf(file, R"( 
-    {\\large \\textbf{Taylor Series:}}\n
-    \\begin{dmath}\n
-    T(
-    )");
+    fprintf(file, "{\\large \\textbf{Taylor Series:}}\n\n");
+    fprintf(file, "\\begin{dmath}\n");
+    fprintf(file, "T( ");
+
     CHECK_AND_RET_TREEERR(LatexDumpRecursive(file, forest_diff->head_arr[0]->root, forest_diff->mtk));
     fprintf(file, ") = ");
     for(size_t idx = 0; idx < forest->first_free_place; idx++){
+    tree_dump_func(forest->head_arr[idx]->root, "f", __FILE__, __func__, __LINE__,  forest_diff->mtk);
         if(forest->head_arr[idx]->root->type == CONST && forest->head_arr[idx]->root->data.const_value == 0){
             continue;
         }
-        if(forest->head_arr[idx]->root->left &&  forest->head_arr[idx]->root->type == CONST && forest->head_arr[idx]->root->left->data.const_value >= 0){
+        if(forest->head_arr[idx]->root->left && forest->head_arr[idx]->root->left->type == CONST && forest->head_arr[idx]->root->left->data.const_value >= 0){
+            fprintf(file, " + ");
+        }
+        if(forest->head_arr[idx]->root->left && forest->head_arr[idx]->root->left->type == VARIABLE){
             fprintf(file, " + ");
         }
         CHECK_AND_RET_TREEERR(LatexDumpRecursive(file, forest->head_arr[idx]->root, forest_diff->mtk));
@@ -149,21 +152,27 @@ static TreeErr_t NeedStaples(TreeNode_t* node, bool* need_staples){
 FILE* StartLatexDump(const char* filename){
     assert(filename);
     FILE* latex_file = fopen(filename, "w");
-    fprintf(latex_file, R"( 
-    \\documentclass[a4paper,12pt]{report}\n\\usepackage[utf8]{inputenc}\n\\usepackage{amsmath,amssymb}\n\\usepackage{geometry}\n\\usepackage{breqn}\n\\newtheorem{definition}{Definition}\n\\newtheorem{obviousfact}{Obvious Fact}\n
+    fprintf(latex_file,  
+R"(\documentclass[a4paper,12pt]{report}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath,amssymb}
+\usepackage{geometry}
+\usepackage{breqn}
+\newtheorem{definition}{Definition}
+\newtheorem{obviousfact}{Obvious Fact}
 
-    \\title{MatematiCAL anal for economists}\n
-    \\author{Anonymus fan of mat.anal}\n\n
+\title{MatematiCAL anal for economists}
+\author{Anonymus fan of mat.anal}
 
-    \\begin{document}\n\n
-    \\maketitle\n\n
-    \\chapter*{Preface}\n\n
-    This textbook is designed to assist economics students studying the basic course of mathematical analysis. 
-    It summarizes the entire mathematical analysis course taught to economists in the best undergraduate economics program in Eastern Europe.\n\n
+\begin{document}
+\maketitle
+\chapter*{Preface}
+This textbook is designed to assist economics students studying the basic course of mathematical analysis. 
+It summarizes the entire mathematical analysis course taught to economists in the best undergraduate economics program in Eastern Europe.
 
-    The lectures include only the essential material, ensuring that students who have achieved top honors in national economics Olympiads are not overburdened and can maintain their sense of superiority over the rest of the world. 
-    After all, they likely mastered all this material in kindergarten (or at the latest, by first grade). The division of topics into lectures corresponds well to the actual pace of the course, which spans an entire semester. 
-    Almost all statements in the course are self-evident, and their proofs are left to the reader as straightforward exercises.\n\n
+The lectures include only the essential material, ensuring that students who have achieved top honors in national economics Olympiads are not overburdened and can maintain their sense of superiority over the rest of the world. 
+After all, they likely mastered all this material in kindergarten (or at the latest, by first grade). The division of topics into lectures corresponds well to the actual pace of the course, which spans an entire semester. 
+Almost all statements in the course are self-evident, and their proofs are left to the reader as straightforward exercises.
 
     )");
     return latex_file;
@@ -171,65 +180,65 @@ FILE* StartLatexDump(const char* filename){
 
 void LatexDumpDecimals(FILE* latex_file){
     assert(latex_file);
-    fprintf(latex_file, R"( 
-    \\chapter{Numbers}\n\n
-    \\section{Basic Classes of Numbers}\n\n
+    fprintf(latex_file, 
+R"(\chapter{Numbers}
+\section{Basic Classes of Numbers}
     
-    First, let's introduce the definitions of the basic classes of numbers that we will constantly work with throughout the course.\n\n
+First, let's introduce the definitions of the basic classes of numbers that we will constantly work with throughout the course.
     
-    \\begin{definition}\n;
-    Numbers 1, 2, 3, \\ldots are called \\textit{natural numbers}. 
-    The notation for the set of all natural numbers is $\\mathbb{N}$.\n
-    \\end{definition}\n\n
+\begin{definition}
+Numbers 1, 2, 3, \ldots are called \textit{natural numbers}. 
+The notation for the set of all natural numbers is $\mathbb{N}$.
+\end{definition}
     
-    \\begin{definition}\n
-    A number is called an \\textit{integer} if it is equal to\\ldots 
-    but you don't need this because everything in economics is positive.\n
-    \\end{definition}\n\n
+\begin{definition}
+A number is called an \textit{integer} if it is equal to\ldots 
+but you don't need this because everything in economics is positive.
+\end{definition}
     
-    \\begin{definition}\n
-    A number is called \\textit{rational} if it can be represented as 
-    something above a line and something below a line.\n
-    \\end{definition}\n\n
+\begin{definition}
+A number is called \\textit{rational} if it can be represented as 
+something above a line and something below a line.
+\end{definition}
     
-    \\begin{definition}\n
-    A number is called \\textit{irrational} if it is not rational.\n;
-    \\end{definition}\n\n
+\begin{definition}
+A number is called \\textit{irrational} if it is not rational.
+\end{definition}
     
-    \\begin{obviousfact}\n
-    The sum of all natural numbers equals $-1/12$.\n
-    \\end{obviousfact}\n
+\begin{obviousfact}
+The sum of all natural numbers equals $-1/12$.
+\end{obviousfact}
 
-    \\textbf{Kindergarten Example:}\n
-    If Vasya had 2 apples and Petya took 1 apple from him, how many apples does Vasya have left? The answer is obviously $-1/12$, as any advanced mathematician knows.\n
+\textbf{Kindergarten Example:}
+If Vasya had 2 apples and Petya took 1 apple from him, how many apples does Vasya have left? The answer is obviously $-1/12$, as any advanced mathematician knows.
     )");
 }
 
 void LatexDumpChapterDiff(FILE* latex_file){
     assert(latex_file);
-    fprintf(latex_file, R"( 
-    \\chapter{Derivative}\n\n
+    fprintf(latex_file, 
+R"(\chapter{Derivative}
 
-    \\section{Basic derivatives}\n\n
+\section{Basic derivatives}
 
-    \\begin{definition}\n
-    The definition of derivative is omitted because it is obvious.\n
-    \\end{definition}\n
+\begin{definition}
+The definition of derivative is omitted because it is obvious.
+\end{definition}
 
-    Everything in this chapter is so obvious that no additional explanations will be provided - we'll immediately proceed to analyze an example from kindergarten.\n\n
+Everything in this chapter is so obvious that no additional explanations will be provided - we'll immediately proceed to analyze an example from kindergarten.
     )");
 }
 
 void LatexDumpChapterTaylor(FILE* latex_file){
     assert(latex_file);
-    fprintf(latex_file, R"(
-    \chapter{Taylor}
+    fprintf(latex_file, 
+R"(\chapter{Taylor}
 
-    \section{Taylor's formula with the remainder term (and why is it needed? Without it, everything is obvious)}
+\section{Taylor's formula with the remainder term (and why is it needed? Without it, everything is obvious)}
 
-    \begin{definition}
-    Taylor's formula is obvious, so no additional explanations will be given. Let's start straight with an example.
-    \end{definition}
+\begin{definition}
+Taylor's formula is obvious, so no additional explanations will be given. Let's start straight with an example.
+\end{definition}
     )");
 }
 
@@ -260,5 +269,4 @@ void GeneratePdfFromTex(const char* latex_file){
         strncat(cmd_buffer, latex_file, len);
     }
     system(cmd_buffer);
-    printf("%s\n", cmd_buffer);
 }
