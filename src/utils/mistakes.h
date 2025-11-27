@@ -28,6 +28,7 @@ enum Err{
     INCORR_IDX_IN_MTK,
     NULL_RES_PTR,
     NULL_IS_OPT_PTR,
+    NOT_ALL_INFO_IN_MTK,
 };
 
 #endif //MISTAKES_H

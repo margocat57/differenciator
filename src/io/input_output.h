@@ -6,6 +6,4 @@
 
 Forest_t* MakeDiffForest(const char *name_of_file);
 
-// TreeErr_t PutDiffFile(const char* file_name, TreeNode_t *node, const TreeHead_t* head);
-
 #endif // INPUT_OUTPUT_H

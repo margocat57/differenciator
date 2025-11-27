@@ -15,7 +15,6 @@ ifdef DEBUG_TREE
 else
     CFLAGS = $(COMMON_CFLAGS)
 endif
-CFLAGS = $(COMMON_CFLAGS) $(CFLAGS_DEBUG)
 
 main.o: main.cpp
 	$(COMP) -c $< -o $@ $(CFLAGS)

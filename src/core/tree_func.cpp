@@ -114,7 +114,7 @@ TreeErr_t PrintNode(const TreeNode_t* node, FILE* dot_file, int* rank, metki* mt
     }
     else{
         if(node->type == CONST){
-            fprintf(dot_file, " node_%p[shape=\"Mrecord\", style=\"filled\", fillcolor=\"#98FB98\", rank=%d, color = \"#964B00\", penwidth=1.0, label=\"{{type = CONST_VAR} | {val = %.2lf} | {0 | 0}} \"];\n", node, *rank, node->data.const_value);
+            fprintf(dot_file, " node_%p[shape=\"Mrecord\", style=\"filled\", fillcolor=\"#98FB98\", rank=%d, color = \"#964B00\", penwidth=1.0, label=\"{{type = CONST_VAR} | {val = %lg} | {0 | 0}} \"];\n", node, *rank, node->data.const_value);
         }
         else if(node->type == VARIABLE){
             fprintf(dot_file, " node_%p[shape=\"Mrecord\", style=\"filled\", fillcolor=\"#DAA520\", rank=%d, color = \"#964B00\", penwidth=1.0, label=\"{{type = VARIABLE} | {val = %zu(%s)} | {0 | 0}} \"];\n", node, *rank, node->data.var_code, mtk->var_info[node->data.var_code].variable_name);
