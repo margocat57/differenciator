@@ -5,7 +5,7 @@
 const int MAX_NUMBER_OF_METKI = 20;
 
 struct variables{
-    char* variable_name;
+    char variable_name;
     double value;
 };
 
@@ -17,11 +17,11 @@ struct metki{
 
 metki* metki_init();
 
-size_t metki_add_name(metki* mtk, char* num_of_variable);
+size_t metki_add_name(metki* mtk, char num_of_variable);
 
 void metki_realloc(metki* mtk, size_t num_of_elem);
 
-size_t find_var_in_mtk_arr(metki* mtk, char* num_of_variable);
+size_t find_var_in_mtk_arr(metki* mtk, char num_of_variable);
 
 void metki_add_values(metki* mtk);
 

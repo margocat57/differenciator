@@ -29,6 +29,8 @@ enum Err{
     NULL_RES_PTR,
     NULL_IS_OPT_PTR,
     NOT_ALL_INFO_IN_MTK,
+    NULL_FOREST_PTR,
+    INCORR_USER_INPUT_VALUE,
 };
 
 #endif //MISTAKES_H

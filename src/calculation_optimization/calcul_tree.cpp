@@ -27,6 +27,7 @@ DEF_OP(Deg, pow(RES_L, RES_R));
 /*
 * Унарные операторы со значением в левом узле - снимаем предупреждение
 */
+//! to RES_R
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wunused-parameter"
 DEF_OP(Cos, cos(RES_L));
@@ -46,7 +47,7 @@ DEF_OP(Cth, (tanh(RES_L) != 0) ? 1 / tanh(RES_L) : 0);
 //--------------------------------------------------------------------------------------------
 // First part of task - tree of expressions and main function for it
 
-// передавать енам - тейлор / нот тейлор
+//!передавать енам - тейлор / нот тейлор
 
 static TreeErr_t CalcTreeExpressionRecursive(metki* mtk, TreeNode_t* node, double* result);
 
@@ -246,11 +247,11 @@ static TreeErr_t TreeOptimizeNeutralAddSub(TreeNode_t** result, TreeNode_t* node
         return NO_ELEM_FOR_BINARY_OP;
     }
     if(IS_EQUAL(node->left, 0) && node->data.op != OP_SUB){
-        CHECK_AND_RET_TREEERR(TreeDelNodeRecur(node->left));
+        TreeDelNodeRecur(node->left);
         ChangeKidParrentConn(result, node, node->right, is_optimized); 
     }
     else if(IS_EQUAL(node->right, 0)){
-        CHECK_AND_RET_TREEERR(TreeDelNodeRecur(node->right));
+        TreeDelNodeRecur(node->right);
         ChangeKidParrentConn(result, node, node->left, is_optimized);
     }
     return NO_MISTAKE_T;
@@ -261,11 +262,11 @@ static TreeErr_t TreeOptimizeNeutralMul(TreeNode_t** result, TreeNode_t* node, b
         return NO_ELEM_FOR_BINARY_OP;
     }
     if(IS_EQUAL(node->left, 0) || IS_EQUAL(node->right, 1)){
-        CHECK_AND_RET_TREEERR(TreeDelNodeRecur(node->right));
+        TreeDelNodeRecur(node->right);
         ChangeKidParrentConn(result, node, node->left, is_optimized);
     }
     else if(IS_EQUAL(node->right, 0) || IS_EQUAL(node->left, 1)){
-        CHECK_AND_RET_TREEERR(TreeDelNodeRecur(node->left));
+        TreeDelNodeRecur(node->left);
         ChangeKidParrentConn(result, node, node->right, is_optimized);
     }
     return NO_MISTAKE_T;
@@ -276,11 +277,11 @@ static TreeErr_t TreeOptimizeNeutralDiv(TreeNode_t** result, TreeNode_t* node, b
         return NO_ELEM_FOR_BINARY_OP;
     }
     if(IS_EQUAL(node->left, 0) && !IS_EQUAL(node->right, 0)){
-        CHECK_AND_RET_TREEERR(TreeDelNodeRecur(node->right));
+        TreeDelNodeRecur(node->right);
         ChangeKidParrentConn(result, node, node->left, is_optimized);
     }
     else if(IS_EQUAL(node->right, 1)){
-        CHECK_AND_RET_TREEERR(TreeDelNodeRecur(node->left));
+        TreeDelNodeRecur(node->left);
         ChangeKidParrentConn(result, node, node->right, is_optimized);
     }
     return NO_MISTAKE_T;
@@ -291,20 +292,20 @@ static TreeErr_t TreeOptimizeNeutralDeg(TreeNode_t** result, TreeNode_t* node, b
         return NO_ELEM_FOR_BINARY_OP;
     }
     if((IS_EQUAL(node->left, 0) && !IS_EQUAL(node->right, 0))){
-        CHECK_AND_RET_TREEERR(TreeDelNodeRecur(node->right));
+        TreeDelNodeRecur(node->right);
         ChangeKidParrentConn(result, node, node->left, is_optimized);
     }
     else if(IS_EQUAL(node->left, 1)){
-        CHECK_AND_RET_TREEERR(TreeDelNodeRecur(node->right));
+        TreeDelNodeRecur(node->right);
         ChangeKidParrentConn(result, node, node->left, is_optimized);
     }
     else if(IS_EQUAL(node->right, 0) && !IS_EQUAL(node->left, 0)){
         node->right->data.const_value += 1;
-        CHECK_AND_RET_TREEERR(TreeDelNodeRecur(node->left));
+        TreeDelNodeRecur(node->left);
         ChangeKidParrentConn(result, node, node->right, is_optimized);
     }
     else if(IS_EQUAL(node->right, 1)){
-        CHECK_AND_RET_TREEERR(TreeDelNodeRecur(node->right));
+        TreeDelNodeRecur(node->right);
         ChangeKidParrentConn(result, node, node->left, is_optimized);
     }
     return NO_MISTAKE_T;

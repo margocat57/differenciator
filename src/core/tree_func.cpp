@@ -117,7 +117,7 @@ TreeErr_t PrintNode(const TreeNode_t* node, FILE* dot_file, int* rank, metki* mt
             fprintf(dot_file, " node_%p[shape=\"Mrecord\", style=\"filled\", fillcolor=\"#98FB98\", rank=%d, color = \"#964B00\", penwidth=1.0, label=\"{{type = CONST_VAR} | {val = %lg} | {0 | 0}} \"];\n", node, *rank, node->data.const_value);
         }
         else if(node->type == VARIABLE){
-            fprintf(dot_file, " node_%p[shape=\"Mrecord\", style=\"filled\", fillcolor=\"#DAA520\", rank=%d, color = \"#964B00\", penwidth=1.0, label=\"{{type = VARIABLE} | {val = %zu(%s)} | {0 | 0}} \"];\n", node, *rank, node->data.var_code, mtk->var_info[node->data.var_code].variable_name);
+            fprintf(dot_file, " node_%p[shape=\"Mrecord\", style=\"filled\", fillcolor=\"#DAA520\", rank=%d, color = \"#964B00\", penwidth=1.0, label=\"{{type = VARIABLE} | {val = %zu(%c)} | {0 | 0}} \"];\n", node, *rank, node->data.var_code, mtk->var_info[node->data.var_code].variable_name);
         }
     }
 
@@ -151,36 +151,29 @@ static void PrintNodeConnect(const TreeNode_t* node, const TreeNode_t* node_chil
 // Tree and node destructors
 
 
-TreeErr_t TreeDel(TreeHead_t* head){
+void TreeDel(TreeHead_t* head){
     assert(head);
 
-    TreeErr_t err = NO_MISTAKE_T;
-    DEBUG_TREE(err = TreeVerify(head);)
-    if(err) return err;
-
-    CHECK_AND_RET_TREEERR(TreeDelNodeRecur(head->root))
+    TreeDelNodeRecur(head->root);
 
     memset(head, 0, sizeof(TreeHead_t));
     free(head);
 
-    return err;
 }
 
-TreeErr_t TreeDelNodeRecur(TreeNode_t* node){
-    TreeErr_t err = NO_MISTAKE_T;
-    DEBUG_TREE(err = TreeNodeVerify(node);)
-    if(err) return err;
+void TreeDelNodeRecur(TreeNode_t* node){
+    if(!node){
+        return;
+    }
 
     if(node->left){
-        CHECK_AND_RET_TREEERR(TreeDelNodeRecur(node->left))
+        TreeDelNodeRecur(node->left);
     }
     if(node->right){
-        CHECK_AND_RET_TREEERR(TreeDelNodeRecur(node->right))
+        TreeDelNodeRecur(node->right);
     }
 
     NodeDtor(node);
-
-    return err;
 }
 
 void NodeDtor(TreeNode_t* node){

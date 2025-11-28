@@ -25,6 +25,7 @@ static TreeErr_t OperatorDump(FILE* file, TreeNode_t* node, metki* mtk){
     if(node->data.op >= arr_num_of_elem){
         return INCORR_OPERATOR;
     }
+
     fprintf(file, "%s", OPERATORS_INFO[node->data.op].dump_start); 
     
     CHECK_AND_RET_TREEERR(DumpSubtree(file, node->left, mtk));
@@ -86,13 +87,13 @@ TreeErr_t LatexDumpTaylor(FILE *file, Forest_t *forest_diff, Forest_t *forest){
     return err;
 }
 
-TreeErr_t LatexDump(FILE* file, TreeNode_t* node, TreeNode_t* result, metki* mtk, const char* comment){
+TreeErr_t LatexDump(FILE* file, TreeNode_t* node, TreeNode_t* result, metki* mtk, const char* comment, const size_t var_id){
     if(comment) fprintf(file, "%s" ,comment);
     fprintf(file, "\\begin{dmath}\n");
 
-    if(result) fprintf(file, "(\n");
+    if(result) fprintf(file, "\\frac{df}{d%c}( \n", mtk->var_info[var_id].variable_name);
     CHECK_AND_RET_TREEERR(LatexDumpRecursive(file, node, mtk));
-    if(result) fprintf(file, ")' = \n");
+    if(result) fprintf(file, " ) = ");
 
     if(result) CHECK_AND_RET_TREEERR(LatexDumpRecursive(file, result, mtk));
     fprintf(file, "\\end{dmath}\n");
@@ -110,7 +111,7 @@ static TreeErr_t LatexDumpRecursive(FILE* file, TreeNode_t* node, metki* mtk){
             if(node->data.var_code >= mtk->num_of_metki){
                 return INCORR_IDX_IN_MTK;
             }
-            fprintf(file, "%s" , mtk->var_info[node->data.var_code].variable_name);
+            fprintf(file, "%c" , mtk->var_info[node->data.var_code].variable_name);
             break;
         case OPERATOR:
             CHECK_AND_RET_TREEERR(OperatorDump(file, node, mtk));
@@ -142,13 +143,17 @@ static TreeErr_t NeedStaples(TreeNode_t* node, bool* need_staples){
         *need_staples = true;
         return NO_MISTAKE_T;
     }
+    if(node->parent->data.op == OP_DEG){
+        *need_staples = true;
+        return NO_MISTAKE_T;
+    }
     *need_staples = false;
     return NO_MISTAKE_T;
 }
 
+//---------------------------------------------------------------
+// Dumping chapters
 
-// в один принтф
-// писать без каычек на каждой строчке
 FILE* StartLatexDump(const char* filename){
     assert(filename);
     FILE* latex_file = fopen(filename, "w");
@@ -158,6 +163,9 @@ R"(\documentclass[a4paper,12pt]{report}
 \usepackage{amsmath,amssymb}
 \usepackage{geometry}
 \usepackage{breqn}
+\usepackage{hyperref}
+\usepackage{bookmark}
+
 \newtheorem{definition}{Definition}
 \newtheorem{obviousfact}{Obvious Fact}
 
@@ -166,14 +174,16 @@ R"(\documentclass[a4paper,12pt]{report}
 
 \begin{document}
 \maketitle
+
+\tableofcontents
+
 \chapter*{Preface}
 This textbook is designed to assist economics students studying the basic course of mathematical analysis. 
 It summarizes the entire mathematical analysis course taught to economists in the best undergraduate economics program in Eastern Europe.
 
 The lectures include only the essential material, ensuring that students who have achieved top honors in national economics Olympiads are not overburdened and can maintain their sense of superiority over the rest of the world. 
 After all, they likely mastered all this material in kindergarten (or at the latest, by first grade). The division of topics into lectures corresponds well to the actual pace of the course, which spans an entire semester. 
-Almost all statements in the course are self-evident, and their proofs are left to the reader as straightforward exercises.
-
+Almost all statements in the course are self-evident, and their proofs are left to the reader as straightforward exercises. 
     )");
     return latex_file;
 }
@@ -261,12 +271,17 @@ void GeneratePdfFromTex(const char* latex_file){
         strncat(cmd_buffer, latex_file, folder);
         strncat(cmd_buffer, " && ", sizeof(" && "));
     }
-    strncat(cmd_buffer, "pdflatex ", sizeof("pdflatex "));
-    if(folder != len){
-        strncat(cmd_buffer, latex_file + (folder + 1), len - (folder + 1));
-    }
-    else{
-        strncat(cmd_buffer, latex_file, len);
+    for(int i = 0; i < 2; i++){
+        strncat(cmd_buffer, "pdflatex ", sizeof("pdflatex "));
+        if(folder != len){
+            strncat(cmd_buffer, latex_file + (folder + 1), len - (folder + 1));
+        }
+        else{
+            strncat(cmd_buffer, latex_file, len);
+        }
+        if(i == 0){
+            strncat(cmd_buffer, " && ", sizeof(" && "));
+        }
     }
     system(cmd_buffer);
 }

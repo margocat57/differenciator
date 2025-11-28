@@ -37,11 +37,16 @@ union TreeElem_t{
     #define DEBUG_TREE(...)
 #endif //_DEBUG_SMALL_TREE
 
+
 #define CHECK_AND_RET_TREEERR(bad_condition)\
-    if(bad_condition){ \
-        fprintf(stderr, "err = %llu, %s, %s, %d\n", bad_condition, __FILE__, __func__, __LINE__); \
-        return bad_condition; \
-    } \
+    do{\
+    TreeErr_t err_macro = (bad_condition);\
+        if(err_macro){ \
+            fprintf(stderr, "err = %llu, %s, %s, %d\n", err_macro, __FILE__, __func__, __LINE__); \
+            return err_macro; \
+        } \
+    }while(0); \
+
 
 enum VALUE_TYPE{
     INCORR_VAL,

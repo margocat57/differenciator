@@ -16,9 +16,9 @@ TreeErr_t TreeVerify(const TreeHead_t *head);
 
 TreeErr_t TreeNodeVerify(const TreeNode_t *node);
 
-TreeErr_t TreeDel(TreeHead_t* head);
+void TreeDel(TreeHead_t* head);
 
-TreeErr_t TreeDelNodeRecur(TreeNode_t* node);
+void TreeDelNodeRecur(TreeNode_t* node);
 
 void NodeDtor(TreeNode_t* node);
 

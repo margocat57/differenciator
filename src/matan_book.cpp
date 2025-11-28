@@ -3,6 +3,11 @@
 
 
 TreeErr_t MatanBook(Forest_t* forest_diff, Forest_t* forest_diff_taylor, Forest_t* forest_taylor, const char* book_file){
+    if(!forest_diff || !forest_diff_taylor || !forest_taylor){
+        fprintf(stderr, "Can't work with null forest ptr\n");
+        return NULL_FOREST_PTR;
+    }
+
     TreeErr_t err = NO_MISTAKE_T;
     DEBUG_TREE( err = ForestVerify(forest_diff);
                 err = ForestVerify(forest_diff_taylor);

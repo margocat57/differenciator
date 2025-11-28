@@ -46,7 +46,7 @@ static void ConnectWithParents(TreeNode_t *node);
         ConnectWithParents(result);                                                            \
         TreeOptimize(&result);                                                                 \
         const char *msg = GenerateRoflMsg();                                                   \
-        LatexDump(file, node, result, mtk, msg);\
+        LatexDump(file, node, result, mtk, msg, var_id);\
         return result;\
     }\
 
@@ -94,7 +94,8 @@ static TreeNode_t* DiffDeg(TreeNode_t* node, const size_t var_id, FILE* file, me
     }
     ConnectWithParents(result);
     TreeOptimize(&result); 
-    LatexDump(file, node, result, mtk, "By the obvious theorem:\n");
+    const char *msg = GenerateRoflMsg();    
+    LatexDump(file, node, result, mtk, msg, var_id);
     return result;
 }
 //----------------------------------------------------
@@ -107,11 +108,11 @@ static TreeNode_t* DiffDeg(TreeNode_t* node, const size_t var_id, FILE* file, me
 
 static TreeErr_t CreateDiffTree(const size_t var_id, Forest_t *forest, size_t idx, FILE *latex_dump);
 
-static void AskAboutN(size_t *n);
+static TreeErr_t AskAboutN(size_t *n);
 
 static size_t FindVarCodeToDiff(metki *mtk);
 
-static size_t FindVarByName(const char* var_name, metki* mtk);
+static size_t FindVarByName(char var_name, metki* mtk);
 
 TreeErr_t CreateDiffForest(Forest_t *forest, FILE *latex_dump){
     TreeErr_t err = NO_MISTAKE_T;
@@ -119,7 +120,7 @@ TreeErr_t CreateDiffForest(Forest_t *forest, FILE *latex_dump){
     if (err) return err;
 
     size_t n = 0;
-    AskAboutN(&n);
+    CHECK_AND_RET_TREEERR(AskAboutN(&n));
 
     size_t var_id = FindVarCodeToDiff(forest->mtk);
     if(var_id == SIZE_MAX){
@@ -135,16 +136,19 @@ TreeErr_t CreateDiffForest(Forest_t *forest, FILE *latex_dump){
     return err;
 }
 
-static void AskAboutN(size_t *n){
+static TreeErr_t AskAboutN(size_t *n){
     assert(n);
     printf("Which derivative do you want to calculate?\n");
-    scanf("%zu", n);
+    if(scanf("%zu", n) != 1){
+        return INCORR_USER_INPUT_VALUE;
+    }
+    return NO_MISTAKE_T;
 }
 
-static size_t FindVarByName(const char *var_name, metki *mtk){
+static size_t FindVarByName(char var_name, metki *mtk){
     assert(var_name);
     for(size_t metka_idx = 0; metka_idx < mtk->first_free; metka_idx++){
-        if(!strcmp(mtk->var_info[metka_idx].variable_name, var_name)){
+        if(mtk->var_info[metka_idx].variable_name == var_name){
             return metka_idx;
         }
     }
@@ -152,15 +156,15 @@ static size_t FindVarByName(const char *var_name, metki *mtk){
 }
 
 static size_t FindVarCodeToDiff(metki* mtk){
-    char var_name[50] = {};
+    char var_name = '0';
     printf("For which variable find the derivative\n");
-    scanf("%49s", var_name);
+    scanf(" %c", &var_name);
     return FindVarByName(var_name, mtk);
 }
 
 static TreeErr_t CreateDiffTree(const size_t var_id, Forest_t *forest, size_t idx, FILE *latex_dump){
     TreeHead_t* head_new = TreeCtor();
-    CHECK_AND_RET_TREEERR(LatexDump(latex_dump, forest->head_arr[idx]->root, NULL, forest->mtk, "\\textbf{Let's calculate a simple derivative:}\n"));
+    CHECK_AND_RET_TREEERR(LatexDump(latex_dump, forest->head_arr[idx]->root, NULL, forest->mtk, "\\textbf{Let's calculate a simple derivative:}\n", var_id));
     head_new->root = Differenciate(forest->head_arr[idx]->root, var_id, latex_dump, forest->mtk);
     CHECK_AND_RET_TREEERR(ForestAddElem(head_new, forest));
     return NO_MISTAKE_T;
