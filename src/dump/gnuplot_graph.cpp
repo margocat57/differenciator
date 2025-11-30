@@ -3,30 +3,19 @@
 #include <stdlib.h>
 #include <time.h>
 #include "../io/input_output.h"
+#include "../core/forest.h"
 #include "../calculation_optimization/calcul_tree.h"
 #include <assert.h>
-/*
-короче идейно должны всегда рисовать график функции и график производной
-Единственное у функции двух переменных мы не можем вставить график
-*/
 
 static char* CreateDumpFile(const char* format);
 
-static TreeErr_t PrintInfo(TreeNode_t* node1, TreeNode_t* node2, metki* mtk, FILE* gp_dump, const char* svg_filename);
+static TreeErr_t PrintInfo(Forest_t *forest1, Forest_t *forest2, size_t idx1, size_t idx2, FILE* gp_dump, const char* svg_filename);
 
 static void MakePicture(const char* gp_filename, TreeErr_t* err);
 
-char* DrawGraph(TreeNode_t* node1, TreeNode_t* node2, metki* mtk, TreeErr_t *err){
-    assert(node1); assert(node2); assert(mtk); assert(err);
-
-    if(mtk->first_free != 1){
-        fprintf(stderr, "Can't draw plot of 2 variables");
-        *err =  NO_MISTAKE_T;
-        return NULL;
-    }
-
-    DEBUG_TREE( *err = TreeNodeVerify(node1);
-                *err = TreeNodeVerify(node2);)
+char* DrawGraph(Forest_t *diff_forest, Forest_t *forest_taylor, size_t idx1, size_t idx2, TreeErr_t *err){
+    DEBUG_TREE( *err = TreeNodeVerify(diff_forest->head_arr[idx1]->root);
+                *err = TreeNodeVerify(forest_taylor->head_arr[idx2]->root);)
     if(*err) return NULL;
 
     char* svg_filename = CreateDumpFile("svg");
@@ -44,7 +33,7 @@ char* DrawGraph(TreeNode_t* node1, TreeNode_t* node2, metki* mtk, TreeErr_t *err
         return NULL;
     }
 
-    *err = PrintInfo(node1, node2, mtk, gp_dump, svg_filename);
+    *err = PrintInfo(diff_forest, forest_taylor, idx1, idx2, gp_dump, svg_filename);
     if(*err){
         free(gp_filename);
         free(svg_filename);
@@ -62,8 +51,8 @@ char* DrawGraph(TreeNode_t* node1, TreeNode_t* node2, metki* mtk, TreeErr_t *err
 
     free(gp_filename);
 
-    DEBUG_TREE( *err = TreeNodeVerify(node1);
-                *err = TreeNodeVerify(node2);)
+    DEBUG_TREE( *err = TreeNodeVerify(diff_forest->head_arr[idx1]->root);
+                *err = TreeNodeVerify(forest_taylor->head_arr[idx2]->root);)
     return svg_filename;
 }
 
@@ -96,11 +85,11 @@ static char* CreateDumpFile(const char* format){
     return svg_filename;
 }
 
-static TreeErr_t PrintInfo(TreeNode_t* node1, TreeNode_t* node2, metki* mtk, FILE* gp_dump, const char* svg_filename){
+static TreeErr_t PrintInfo(Forest_t *forest1, Forest_t *forest2, size_t idx1, size_t idx2, FILE* gp_dump, const char* svg_filename){
     double delta = 10;
-    double min_value_x = mtk->var_info[0].value - delta;
-    double max_value_x = mtk->var_info[0].value + delta;
-
+    double min_value_x = forest1->mtk->var_info[0].value - delta;
+    double max_value_x = forest1->mtk->var_info[0].value + delta;
+    char var_name = forest1->mtk->var_info[0].variable_name;
 
     fprintf(gp_dump, 
     "set terminal svg\n"
@@ -117,18 +106,29 @@ static TreeErr_t PrintInfo(TreeNode_t* node1, TreeNode_t* node2, metki* mtk, FIL
     "set key width 2.5\n"
     "set key height 1\n", svg_filename, min_value_x, max_value_x);  
 
-    fprintf(gp_dump, "f(%c) = ", mtk->var_info[0].variable_name);
-    CHECK_AND_RET_TREEERR(DumpToFile(gp_dump, node1, mtk, 0));
+    fprintf(gp_dump, "f(%c) = ", var_name);
+    CHECK_AND_RET_TREEERR(DumpToFile(gp_dump, forest1->head_arr[idx1]->root, forest1->mtk, 0));
     fprintf(gp_dump, "\n");
 
-    fprintf(gp_dump, "df(%c) = ", mtk->var_info[0].variable_name);
-    CHECK_AND_RET_TREEERR(DumpToFile(gp_dump, node2, mtk, 0));
+    if(forest1 == forest2){
+        fprintf(gp_dump, "df(%c) = ", var_name);
+        CHECK_AND_RET_TREEERR(DumpToFile(gp_dump, forest2->head_arr[idx2]->root, forest1->mtk, 0));
+    }
+    else{   
+        fprintf(gp_dump, "Tf(%c) = ", var_name);
+        CHECK_AND_RET_TREEERR(DumpToFileTaylor(gp_dump, forest2, forest1));
+    }
+
     fprintf(gp_dump, "\n");
 
-    fprintf(gp_dump, 
-    "plot f(x) with lines linecolor \"blue\" title \"f(x)\", \\\n"
-        "df(x) with lines linecolor \"red\" title \"f'(x)\" \n"
-    );
+    fprintf(gp_dump, "plot f(%c) with lines linecolor \"blue\" title \"f(%c)\", \\\n", var_name, var_name);
+    if(forest1 == forest2){
+        fprintf(gp_dump, "df(%c) with lines linecolor \"red\" title \"f'(%c)\" \n", var_name, var_name);
+    }
+    else{
+        fprintf(gp_dump, "Tf(%c) with lines linecolor \"red\" title \"T(%c)\" \n", var_name, var_name);
+    }
+    
     return NO_MISTAKE_T;
 }
 

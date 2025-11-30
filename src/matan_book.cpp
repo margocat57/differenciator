@@ -30,6 +30,10 @@ TreeErr_t MatanBook(Forest_t* forest_diff, Forest_t* forest_diff_taylor, Forest_
     LatexDumpChapterTaylor(latex_dump);
     CHECK_AND_RET_TREEERR(CreateTaylorForest(forest_taylor, forest_diff_taylor, latex_dump))
     CHECK_AND_RET_TREEERR(LatexDumpTaylor(latex_dump, forest_diff_taylor, forest_taylor))
+    CHECK_AND_RET_TREEERR(DumpGraphLatex(forest_diff_taylor, forest_taylor, 0, 0, latex_dump));
+    metki_del_values(forest_diff_taylor->mtk);
+
+    LatexDumpAfterWord(latex_dump);
 
     EndLatexDump(latex_dump);
     GeneratePdfFromTex(book_file);

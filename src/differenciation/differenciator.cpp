@@ -168,7 +168,7 @@ static TreeErr_t CreateDiffTree(const size_t var_id, Forest_t *forest, size_t id
     head_new->root = Differenciate(forest->head_arr[idx]->root, var_id, latex_dump, forest->mtk);
     CHECK_AND_RET_TREEERR(ForestAddElem(head_new, forest));
     if(forest->mtk->first_free == 1){
-        CHECK_AND_RET_TREEERR(DumpGraphLatex(forest->head_arr[idx]->root, head_new->root, forest->mtk, latex_dump));
+        CHECK_AND_RET_TREEERR(DumpGraphLatex(forest, forest, idx, idx + 1, latex_dump));
     }
     return NO_MISTAKE_T;
 }
@@ -239,7 +239,6 @@ TreeErr_t CreateTaylorForest(Forest_t *forest_taylor, Forest_t *diff_forest, FIL
     for(size_t idx = 0; idx < diff_forest->first_free_place; idx++){
         CHECK_AND_RET_TREEERR(CreateTaylorTree(idx, forest_taylor, diff_forest, latex_dump));
     }
-    metki_del_values(diff_forest->mtk);
 
     DEBUG_TREE( err = ForestVerify(diff_forest);
                 err = ForestVerify(forest_taylor);)

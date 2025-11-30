@@ -67,7 +67,6 @@ TreeErr_t LatexDumpTaylor(FILE *file, Forest_t *forest_diff, Forest_t *forest){
     CHECK_AND_RET_TREEERR(LatexDumpRecursive(file, forest_diff->head_arr[0]->root, forest_diff->mtk));
     fprintf(file, ") = ");
     for(size_t idx = 0; idx < forest->first_free_place; idx++){
-    tree_dump_func(forest->head_arr[idx]->root, "f", __FILE__, __func__, __LINE__,  forest_diff->mtk);
         if(forest->head_arr[idx]->root->type == CONST && forest->head_arr[idx]->root->data.const_value == 0){
             continue;
         }
@@ -150,9 +149,9 @@ TreeErr_t NeedStaples(TreeNode_t* node, bool* need_staples){
     return NO_MISTAKE_T;
 }
 
-TreeErr_t DumpGraphLatex(TreeNode_t* node1, TreeNode_t* node2, metki* mtk, FILE* latex_file){
+TreeErr_t DumpGraphLatex(Forest_t *forest1, Forest_t *forest2, size_t idx1, size_t idx2, FILE* latex_file){
     TreeErr_t err = NO_MISTAKE_T;
-    char* dump_picture = DrawGraph(node1, node2, mtk, &err);
+    char* dump_picture = DrawGraph(forest1,forest2, idx1, idx2, &err);
     if(err){
         free(dump_picture);
         return err;
@@ -267,6 +266,28 @@ R"(\chapter{Taylor}
 Taylor's formula is obvious, so no additional explanations will be given. Let's start straight with an example.
 \end{definition}
     )");
+}
+
+void LatexDumpAfterWord(FILE* latex_file){
+    fprintf(latex_file,
+R"(\chapter*{Afterword}
+
+Dear readers, I hope you have been able to spare a moment of your attention for this textbook and to realize its incredible obviousness. You will now excel in your exam, and if not, good luck next year.
+
+The author also expresses great gratitude for the help in preparing this textbook to the students and professors of MIPT, namely to DED, mentor Kolya, and co-mentor Artyom, for actively seeking out the cringe in the code, which undoubtedly improved the quality of the materials. For this important work, the author wholeheartedly thanks all the assistants.
+
+\section*{Bibliography:}
+
+- Textbooks by G.I. Arkhipov, V.A. Sadovnichy, and V.N. Chubarikov
+
+- Textbook by J. Stewart
+
+- Textbook by an unknown author, "The Obviousness of Math"
+
+- Lectures by A.L. Lukashov on Bipkas
+
+- Lectures by D.A. Dagaev on the poetry of the Mechanics and Mathematics Faculty
+)");
 }
 
 //--------------------------------------------------------------
