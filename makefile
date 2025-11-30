@@ -40,6 +40,9 @@ src/calculation_optimization/calcul_tree.o: src/calculation_optimization/calcul_
 src/dump/latex_dump.o: src/dump/latex_dump.cpp
 	$(COMP) -c $< -o $@ $(CFLAGS)
 
+src/dump/gnuplot_graph.o: src/dump/gnuplot_graph.cpp
+	$(COMP) -c $< -o $@ $(CFLAGS)
+
 src/matan_book.o: src/matan_book.cpp
 	$(COMP) -c $< -o $@ $(CFLAGS)
 
@@ -49,7 +52,7 @@ src/core/forest.o: src/core/forest.cpp
 src/utils/rofl_matan.o: src/utils/rofl_matan.cpp
 	$(COMP) -c $< -o $@ $(CFLAGS)
 
-diff: main.o src/differenciation/differenciator.o src/dump/graphviz_dump.o src/utils/metki.o src/io/input_output.o src/core/tree_func.o src/calculation_optimization/calcul_tree.o src/dump/latex_dump.o src/matan_book.o src/core/forest.o src/utils/rofl_matan.o
+diff: main.o src/differenciation/differenciator.o src/dump/graphviz_dump.o src/utils/metki.o src/io/input_output.o src/core/tree_func.o src/calculation_optimization/calcul_tree.o src/dump/latex_dump.o src/matan_book.o src/core/forest.o src/utils/rofl_matan.o src/dump/gnuplot_graph.o
 	$(COMP) -o $@ $^ $(LDFLAGS)
 
 # $@ имя цели
@@ -58,4 +61,4 @@ diff: main.o src/differenciation/differenciator.o src/dump/graphviz_dump.o src/u
 # clang++ -o stack main.o hash.o log.o my_assert.o stack_func.o
 
 clean:
-	rm -f diff *.toc *.out output/*.toc output/*.out output/*.tex output/*.aux output/*.log *.tex *.aux *.log src/calculation_optimization/*.o src/core/*.o src/differenciation/*.o src/dump/*.o src/utils/*.o src/io/*.o src/*.o *.o output/images/*.dot output/images/*.svg
+	rm -f diff output/plots_gnuplot/*.gp output/plots_gnuplot/*.svg output/*.gp *.toc *.out output/*.toc output/*.out output/*.tex output/*.aux output/*.log *.tex *.aux *.log src/calculation_optimization/*.o src/core/*.o src/differenciation/*.o src/dump/*.o src/utils/*.o src/io/*.o src/*.o *.o output/images/*.dot output/images/*.svg

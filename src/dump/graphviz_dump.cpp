@@ -90,7 +90,7 @@ static filenames_for_dump filename_ctor(){
     time_t now = time(NULL); 
     struct tm *t = localtime(&now); 
 
-    if (snprintf(dump.dot_filename, 100, 
+    if(snprintf(dump.dot_filename, 100, 
                 "output/images/dump%d_%04d%02d%02d_%02d%02d%02d.dot", num,
                 t->tm_year + 1900, t->tm_mon + 1, t->tm_mday,
                 t->tm_hour, t->tm_min, t->tm_sec) == -1) {
@@ -99,7 +99,7 @@ static filenames_for_dump filename_ctor(){
         return {};
     }
     
-    if (snprintf(dump.svg_filename, 100, 
+    if(snprintf(dump.svg_filename, 100, 
                 "output/images/dump%d_%04d%02d%02d_%02d%02d%02d.svg", num,
                 t->tm_year + 1900, t->tm_mon + 1, t->tm_mday,
                 t->tm_hour, t->tm_min, t->tm_sec) == -1) {

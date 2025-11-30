@@ -51,16 +51,16 @@ DEF_OP(Cth, (tanh(RES_L) != 0) ? 1 / tanh(RES_L) : 0);
 
 static TreeErr_t CalcTreeExpressionRecursive(metki* mtk, TreeNode_t* node, double* result);
 
-TreeErr_t CalcTreeExpression(Forest_t* forest, size_t num_of_tree, double* result, bool is_taylor){
+TreeErr_t CalcTreeExpression(TreeNode_t* node, metki* mtk, double* result, bool is_taylor){
     assert(result);
 
     TreeErr_t err = NO_MISTAKE_T;
     DEBUG_TREE(err = TreeVerify(forest->head_arr[num_of_tree]);)
     if(err) return err;
     
-    if(!is_taylor) metki_add_values(forest->mtk);
-    CHECK_AND_RET_TREEERR(CalcTreeExpressionRecursive(forest->mtk, forest->head_arr[num_of_tree]->root, result));
-    if(!is_taylor) metki_del_values(forest->mtk);
+    if(!is_taylor) metki_add_values(mtk);
+    CHECK_AND_RET_TREEERR(CalcTreeExpressionRecursive(mtk, node, result));
+    if(!is_taylor) metki_del_values(mtk);
 
     DEBUG_TREE(err = TreeVerify(forest->head_arr[num_of_tree]);)
     return err;

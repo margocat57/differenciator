@@ -14,7 +14,11 @@ TreeErr_t MatanBook(Forest_t* forest_diff, Forest_t* forest_diff_taylor, Forest_
                 err = ForestVerify(forest_taylor);)
     if(err) return err;
 
-    FILE* latex_dump = StartLatexDump(book_file);
+    char buffer[300]={};
+    strncpy(buffer, "output/", sizeof("output/"));
+    strncat(buffer, book_file, strlen(book_file));
+
+    FILE* latex_dump = StartLatexDump(buffer);
     if(!latex_dump){
         return INCORR_FILE;
     }

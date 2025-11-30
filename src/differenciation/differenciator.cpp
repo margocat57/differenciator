@@ -167,6 +167,9 @@ static TreeErr_t CreateDiffTree(const size_t var_id, Forest_t *forest, size_t id
     CHECK_AND_RET_TREEERR(LatexDump(latex_dump, forest->head_arr[idx]->root, NULL, forest->mtk, "\\textbf{Let's calculate a simple derivative:}\n", var_id));
     head_new->root = Differenciate(forest->head_arr[idx]->root, var_id, latex_dump, forest->mtk);
     CHECK_AND_RET_TREEERR(ForestAddElem(head_new, forest));
+    if(forest->mtk->first_free == 1){
+        CHECK_AND_RET_TREEERR(DumpGraphLatex(forest->head_arr[idx]->root, head_new->root, forest->mtk, latex_dump));
+    }
     return NO_MISTAKE_T;
 }
 
@@ -246,7 +249,7 @@ TreeErr_t CreateTaylorForest(Forest_t *forest_taylor, Forest_t *diff_forest, FIL
 static TreeErr_t CreateTaylorTree(size_t idx, Forest_t *forest_taylor, Forest_t *diff_forest, FILE *latex_dump){
     double result = 0;
     TreeHead_t * head_new = TreeCtor();
-    CHECK_AND_RET_TREEERR(CalcTreeExpression(diff_forest, idx, &result, true));
+    CHECK_AND_RET_TREEERR(CalcTreeExpression(diff_forest->head_arr[idx]->root, diff_forest->mtk, &result, true));
     head_new->root = MUL_(DIV_(NUM_(result), NUM_(tgammaf(idx + 1))), DEG_(SUB_(VAR_NODE(0), NUM_(diff_forest->mtk->var_info[0].value)), NUM_(idx)));
     ConnectWithParents(head_new->root);
     CHECK_AND_RET_TREEERR(TreeOptimize(&(head_new->root)));

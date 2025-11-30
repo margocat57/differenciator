@@ -6,10 +6,10 @@
 #include "../core/tree_func.h"
 #include "../core/forest.h"
 #include "../core/operator_func.h"
+#include "gnuplot_graph.h"
+#include "latex_dump.h"
 
 const size_t MAX_CMD_BUFFER = 2048;
-
-static TreeErr_t NeedStaples(TreeNode_t* node, bool* need_staples);
 
 // Need to declare for dsl
 static TreeErr_t LatexDumpRecursive(FILE* file, TreeNode_t* node, metki* mtk);
@@ -102,7 +102,6 @@ TreeErr_t LatexDump(FILE* file, TreeNode_t* node, TreeNode_t* result, metki* mtk
 }
 
 static TreeErr_t LatexDumpRecursive(FILE* file, TreeNode_t* node, metki* mtk){
-    size_t arr_num_of_elem = sizeof(OPERATORS_INFO) / sizeof(op_info);
     switch(node->type){
         case CONST:
             fprintf(file, "%lg" ,node->data.const_value);
@@ -121,7 +120,7 @@ static TreeErr_t LatexDumpRecursive(FILE* file, TreeNode_t* node, metki* mtk){
     return NO_MISTAKE_T;
 }
 
-static TreeErr_t NeedStaples(TreeNode_t* node, bool* need_staples){
+TreeErr_t NeedStaples(TreeNode_t* node, bool* need_staples){
     assert(need_staples);
     if(!node || node->type != OPERATOR || !node->parent || node->parent->type != OPERATOR){
         *need_staples = false;
@@ -151,6 +150,21 @@ static TreeErr_t NeedStaples(TreeNode_t* node, bool* need_staples){
     return NO_MISTAKE_T;
 }
 
+TreeErr_t DumpGraphLatex(TreeNode_t* node1, TreeNode_t* node2, metki* mtk, FILE* latex_file){
+    TreeErr_t err = NO_MISTAKE_T;
+    char* dump_picture = DrawGraph(node1, node2, mtk, &err);
+    if(err){
+        free(dump_picture);
+        return err;
+    }
+    fprintf(latex_file, 
+    "\\begin{figure}\n"
+    "\\includesvg[width=0.6\\textwidth,height=0.3\\textheight]{%s}\n" 
+    "\\end{figure}\n", dump_picture + sizeof("output/") - 1);
+    free(dump_picture);
+    return err;
+}
+
 //---------------------------------------------------------------
 // Dumping chapters
 
@@ -162,7 +176,10 @@ R"(\documentclass[a4paper,12pt]{report}
 \usepackage[utf8]{inputenc}
 \usepackage{amsmath,amssymb}
 \usepackage{geometry}
+\usepackage[inkscapepath=/Applications/Inkscape.app/Contents/MacOS/]{svg}
 \usepackage{breqn}
+\usepackage{svg}
+\usepackage{graphicx} 
 \usepackage{hyperref}
 \usepackage{bookmark}
 
@@ -265,20 +282,10 @@ void GeneratePdfFromTex(const char* latex_file){
     // cd output && pdflatex 
     char cmd_buffer[MAX_CMD_BUFFER] = "";
     size_t len = strlen(latex_file);
-    size_t folder = strcspn(latex_file, "/");
-    if(folder != len){
-        strncat(cmd_buffer, "cd ", sizeof("cd "));
-        strncat(cmd_buffer, latex_file, folder);
-        strncat(cmd_buffer, " && ", sizeof(" && "));
-    }
+    strncat(cmd_buffer, "cd output &&", sizeof("cd output &&"));
     for(int i = 0; i < 2; i++){
-        strncat(cmd_buffer, "pdflatex ", sizeof("pdflatex "));
-        if(folder != len){
-            strncat(cmd_buffer, latex_file + (folder + 1), len - (folder + 1));
-        }
-        else{
-            strncat(cmd_buffer, latex_file, len);
-        }
+        strncat(cmd_buffer, "pdflatex -shell-escape ", sizeof("pdflatex -shell-escape "));
+        strncat(cmd_buffer, latex_file, len);
         if(i == 0){
             strncat(cmd_buffer, " && ", sizeof(" && "));
         }

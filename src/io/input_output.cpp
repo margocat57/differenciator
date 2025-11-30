@@ -13,6 +13,7 @@
 #include "../dump/graphviz_dump.h"
 #include "../core/forest.h"
 #include "../core/operator_func.h"
+#include "../dump/latex_dump.h"
 
 const size_t MAX_BUFFER_SIZE = 50;
 
@@ -87,27 +88,16 @@ static void buffer_free(char* buffer){
 //-----------------------------------------------------------------------------------------
 // Make akinator tree
 
-/*
-    Grammar of language:
-    G ::= "E$"
-    E ::= T{[+,-] T}*
-    T ::= F{[*,/,^] F}*
-    F ::= ["sin", "cos", ... ] P | P
-    P ::= (E) | N | V
-*/
-
-// do/while
 /* 
-    ! new Grammar of language:
+    !Grammar of tree:
     G ::= "E$"
     E ::= T{[+,-] T}*
     T ::= P{[*,/,^] P}*
     P ::= (E) | N | V | F
     N ::= ['0' - '9']+
-    V ::= ['a' - 'z', _ ] ['a' - 'z', '0' - '9' , _ ]*
-    F ::= ["sin", "cos", ... ] '(' E ')'
+    V ::= ['a' - 'z']
+    F ::= ["sin", "cos", ... ] '(' E ')'   comment : (Проверка F зашита в проверку V)
 */
-
 
 
 static TreeNode_t* GetG(size_t* pos, char* buffer, metki *mtk, TreeErr_t* err);
@@ -116,7 +106,7 @@ static TreeNode_t* GetE(size_t* pos, char* buffer, metki *mtk, TreeErr_t* err);
 
 static TreeNode_t* GetT(size_t* pos, char* buffer, metki *mtk, TreeErr_t* err);
 
-static TreeNode_t* GetF(size_t* pos, char* buffer, metki *mtk, TreeErr_t* err);
+static TreeNode_t* GetF(size_t* pos, char* buffer, metki *mtk, TreeErr_t* err, OPERATORS op);
 
 static TreeNode_t* GetP(size_t* pos, char* buffer, metki *mtk, TreeErr_t* err);
 
@@ -178,7 +168,6 @@ static TreeNode_t* GetE(size_t* pos, char* buffer, metki *mtk, TreeErr_t* err){
         (*pos)++;
         skip_space(buffer, pos); 
 
-        // короче глобально идея такая - вернуть ошибку может только GetP, вот и ее и надо проверять
         TreeNode_t* right = GetT(pos, buffer, mtk, err);
         if(*err){
             TreeDelNodeRecur(left);
@@ -203,7 +192,7 @@ static TreeNode_t* GetE(size_t* pos, char* buffer, metki *mtk, TreeErr_t* err){
 
 static TreeNode_t* GetT(size_t* pos, char* buffer, metki *mtk, TreeErr_t* err){
     skip_space(buffer, pos); 
-    TreeNode_t* left = GetF(pos, buffer, mtk, err);
+    TreeNode_t* left = GetP(pos, buffer, mtk, err);
     skip_space(buffer, pos); 
 
     while(buffer[*pos] == '*' || buffer[*pos] == '/' || buffer[*pos] == '^'){
@@ -211,7 +200,7 @@ static TreeNode_t* GetT(size_t* pos, char* buffer, metki *mtk, TreeErr_t* err){
         (*pos)++;
         skip_space(buffer, pos); 
 
-        TreeNode_t* right = GetF(pos, buffer, mtk, err);
+        TreeNode_t* right = GetP(pos, buffer, mtk, err);
         if(*err){
             TreeDelNodeRecur(left);
             return NULL;
@@ -234,50 +223,6 @@ static TreeNode_t* GetT(size_t* pos, char* buffer, metki *mtk, TreeErr_t* err){
     }
     tree_dump_func(left, "Before ret GetT node %s", __FILE__, __func__, __LINE__, mtk, buffer + *pos);
     return left;
-}
-
-static bool FindOperator(size_t* pos, char* buffer, OPERATORS* op);
-
-static TreeNode_t* GetF(size_t* pos, char* buffer, metki *mtk, TreeErr_t* err){
-    TreeNode_t* val = NULL;
-    OPERATORS op = INCORR;
-    skip_space(buffer, pos); 
-
-    if(FindOperator(pos, buffer, &op)){ 
-        skip_space(buffer, pos); 
-        TreeNode_t* left = GetP(pos, buffer, mtk, err);
-        if(*err){
-            TreeDelNodeRecur(left);
-            return NULL;
-        }
-
-        skip_space(buffer, pos); 
-        val = NodeCtor(OPERATOR, (TreeElem_t){.op = op}, NULL, left, NULL);
-        left->parent = val;
-    }
-    else{
-        return GetP(pos, buffer, mtk, err);
-    }
-    tree_dump_func(val, "Before ret GetF(val) node %s", __FILE__, __func__, __LINE__, mtk, buffer + *pos);
-    return val;
-}
-
-static bool FindOperator(size_t* pos, char* buffer, OPERATORS* op){
-    assert(pos); assert(buffer);  assert(op);
-    size_t arr_num_of_elem = sizeof(OPERATORS_INFO) / sizeof(op_info);
-
-    for(size_t idx = 1; idx < arr_num_of_elem; idx++){
-        if(OPERATORS_INFO[idx].op == OP_ADD || OPERATORS_INFO[idx].op == OP_SUB || OPERATORS_INFO[idx].op == OP_MUL || OPERATORS_INFO[idx].op == OP_DIV || OPERATORS_INFO[idx].op == OP_DEG){
-            continue;
-        }
-        if(!strncmp(buffer + *pos, OPERATORS_INFO[idx].op_name, OPERATORS_INFO[idx].num_of_symb)){
-            *op = OPERATORS_INFO[idx].op;
-            *pos += OPERATORS_INFO[idx].num_of_symb;
-            return true;
-        }
-    }
-
-    return false;
 }
 
 static TreeNode_t* GetP(size_t* pos, char* buffer, metki *mtk, TreeErr_t* err){
@@ -316,16 +261,66 @@ TreeNode_t* GetN(size_t* pos, char* buffer, TreeErr_t* err){
     return NodeCtor(CONST, (TreeElem_t){.const_value = val}, NULL, NULL, NULL);
 }
 
+static bool FindF(size_t* pos, char* buffer, OPERATORS* op);
+
 static size_t FindVar(char dest, metki* mtk);
 
 TreeNode_t* GetV(size_t* pos, char* buffer, metki* mtk, TreeErr_t* err){
     skip_space(buffer, pos); 
+    OPERATORS op = INCORR;
+
+    if(FindF(pos, buffer, &op)){
+        return GetF(pos, buffer, mtk, err, op);
+    }
+
     char num_of_var = buffer[*pos];
     (*pos)++;
 
     return NodeCtor(VARIABLE, (TreeElem_t){.var_code = FindVar(num_of_var, mtk)}, NULL, NULL, NULL);
 }
 
+static bool FindF(size_t* pos, char* buffer, OPERATORS* op){
+    size_t num_of_op = sizeof(OPERATORS_INFO) / sizeof(op_info);
+    for(size_t idx = 1; idx < num_of_op; idx++){
+        if(OPERATORS_INFO[idx].op == OP_ADD || OPERATORS_INFO[idx].op == OP_SUB || OPERATORS_INFO[idx].op == OP_MUL || OPERATORS_INFO[idx].op == OP_DIV || OPERATORS_INFO[idx].op == OP_DEG){
+            continue;
+        }
+        if(!strncmp(buffer + *pos, OPERATORS_INFO[idx].op_name, OPERATORS_INFO[idx].num_of_symb)){
+            (*pos) += OPERATORS_INFO[idx].num_of_symb;
+            *op = OPERATORS_INFO[idx].op;
+            return true;
+        }
+    }
+    return false;
+}
+
+static TreeNode_t* GetF(size_t* pos, char* buffer, metki *mtk, TreeErr_t* err, OPERATORS op){
+    TreeNode_t* val = NULL;
+    skip_space(buffer, pos); 
+
+    if(buffer[*pos] == '('){
+        (*pos)++;
+        TreeNode_t* left = GetE(pos, buffer, mtk, err);
+        if(*err){
+            TreeDelNodeRecur(left);
+            return NULL;
+        }
+        skip_space(buffer, pos); 
+        if(buffer[*pos] != ')'){
+            *err = INCORR_FILE;
+            TreeDelNodeRecur(left);
+            return NULL;
+        }
+        (*pos)++;
+
+        val = NodeCtor(OPERATOR, (TreeElem_t){.op = op}, NULL, left, NULL);
+        left->parent = val;
+    }
+    else{
+        *err = INCORR_FILE;
+    }
+    return val;
+}
 
 static size_t FindVar(char dest, metki* mtk){
     assert(dest); assert(mtk); 
@@ -335,4 +330,70 @@ static size_t FindVar(char dest, metki* mtk){
         return metka_idx;
     }
     return metki_add_name(mtk, dest);
+}
+
+
+//-----------------------------------------------------------------
+// Output func
+
+static TreeErr_t DumpToFileRecursive(FILE* file, TreeNode_t* node, metki* mtk);
+
+static TreeErr_t OperatorDumpFile(FILE* file, TreeNode_t* node, metki* mtk);
+
+TreeErr_t DumpToFile(FILE* file, TreeNode_t* node, metki* mtk, const size_t var_id){
+    CHECK_AND_RET_TREEERR(DumpToFileRecursive(file, node, mtk));
+    return NO_MISTAKE_T;
+}
+
+static TreeErr_t DumpToFileRecursive(FILE* file, TreeNode_t* node, metki* mtk){
+    size_t arr_num_of_elem = sizeof(OPERATORS_INFO) / sizeof(op_info);
+    switch(node->type){
+        case CONST:
+            fprintf(file, "%lg" ,node->data.const_value);
+            break;
+        case VARIABLE:
+            if(node->data.var_code >= mtk->num_of_metki){
+                return INCORR_IDX_IN_MTK;
+            }
+            fprintf(file, "%c" , mtk->var_info[node->data.var_code].variable_name);
+            break;
+        case OPERATOR:
+            CHECK_AND_RET_TREEERR(OperatorDumpFile(file, node, mtk));
+            break;
+        default: return INCORR_TYPE;
+    }
+    return NO_MISTAKE_T;
+}
+
+static TreeErr_t DumpSubtree(FILE* file, TreeNode_t* node, metki* mtk);
+
+static TreeErr_t OperatorDumpFile(FILE* file, TreeNode_t* node, metki* mtk){
+    assert(file); assert(node); 
+    size_t arr_num_of_elem = sizeof(OPERATORS_INFO) / sizeof(op_info);
+    if(node->data.op >= arr_num_of_elem){
+        return INCORR_OPERATOR;
+    }
+    
+    CHECK_AND_RET_TREEERR(DumpSubtree(file, node->left, mtk));
+    if(OPERATORS_INFO[node->data.op].dump_cont && OPERATORS_INFO[node->data.op].op != OP_DEG){
+        fprintf(file, "%s", OPERATORS_INFO[node->data.op].op_name); 
+    }
+    else if(OPERATORS_INFO[node->data.op].op == OP_DEG){
+        fprintf(file, "**"); 
+    }
+
+    if(node->right){
+        CHECK_AND_RET_TREEERR(DumpSubtree(file, node->right, mtk));
+    }
+
+    return NO_MISTAKE_T; 
+}
+
+static TreeErr_t DumpSubtree(FILE* file, TreeNode_t* node, metki* mtk){
+    bool staples = false; 
+    CHECK_AND_RET_TREEERR(NeedStaples(node, &staples)); 
+    if (staples) fprintf(file, "("); 
+    CHECK_AND_RET_TREEERR(DumpToFileRecursive(file, node, mtk)); 
+    if (staples) fprintf(file, ")"); 
+    return NO_MISTAKE_T;
 }
