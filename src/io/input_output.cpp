@@ -240,21 +240,23 @@ static TreeNode_t* GetP(size_t* pos, char* buffer, metki *mtk, TreeErr_t* err){
             (*pos)++;
         }
     }
-    else if(isdigit(buffer[*pos])){
-        return GetN(pos, buffer, err);
-    }
-    else if(isalpha(buffer[*pos])){
-        return GetV(pos, buffer, mtk, err);
-    }
     else{
-        *err = INCORR_FILE;
+        val = GetN(pos, buffer, err);
+        if(!val){
+            val = GetV(pos, buffer, mtk, err);
+        }
+        if(!val){
+            *err = INCORR_FILE;
+        }
     }
     tree_dump_func(val, "Before ret GetP(val) node %s", __FILE__, __func__, __LINE__, mtk, buffer + *pos);
     return val;
 }
 
 TreeNode_t* GetN(size_t* pos, char* buffer, TreeErr_t* err){
-    skip_space(buffer, pos); 
+    if(!isdigit(buffer[*pos])){
+        return NULL;
+    }
     char *endptr = NULL;
     double val = strtod(buffer + *pos, &endptr);
     *pos += endptr - (buffer + *pos);
@@ -266,9 +268,11 @@ static bool FindF(size_t* pos, char* buffer, OPERATORS* op);
 static size_t FindVar(char dest, metki* mtk);
 
 TreeNode_t* GetV(size_t* pos, char* buffer, metki* mtk, TreeErr_t* err){
-    skip_space(buffer, pos); 
-    OPERATORS op = INCORR;
+    if(!isalpha(buffer[*pos])){
+        return NULL;
+    }
 
+    OPERATORS op = INCORR;
     if(FindF(pos, buffer, &op)){
         return GetF(pos, buffer, mtk, err, op);
     }

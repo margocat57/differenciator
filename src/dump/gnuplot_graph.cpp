@@ -3,7 +3,6 @@
 #include <stdlib.h>
 #include <time.h>
 #include "../io/input_output.h"
-#include "../core/forest.h"
 #include "../calculation_optimization/calcul_tree.h"
 #include <assert.h>
 
