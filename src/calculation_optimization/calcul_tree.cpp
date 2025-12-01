@@ -6,6 +6,8 @@
 #include "../core/tree_func.h"
 #include "../core/forest.h"
 
+const double EPS = 1e-15;
+
 //--------------------------------------------------------------------------------------------
 //--------------------------------------------------------------------------------------------
 // DSL for calculating funt
@@ -190,7 +192,7 @@ static TreeErr_t TreeOptimizeConst(TreeNode_t *node, bool *is_optimized){
 //--------------------------------------------------------------------------
 // Optimizing neutrals
 
-#define IS_EQUAL(node, value) ((node) && (node)->type == CONST && (node)->data.const_value == value)
+#define IS_EQUAL(node, value) ((node) && (node)->type == CONST && fabs((node)->data.const_value - value) < EPS)
 
 static void ChangeKidParrentConn(TreeNode_t** result, TreeNode_t* node_for_change, TreeNode_t* new_node, bool* is_optimized);
 
@@ -281,8 +283,8 @@ static TreeErr_t TreeOptimizeNeutralDiv(TreeNode_t** result, TreeNode_t* node, b
         ChangeKidParrentConn(result, node, node->left, is_optimized);
     }
     else if(IS_EQUAL(node->right, 1)){
-        TreeDelNodeRecur(node->left);
-        ChangeKidParrentConn(result, node, node->right, is_optimized);
+        TreeDelNodeRecur(node->right);
+        ChangeKidParrentConn(result, node, node->left, is_optimized);
     }
     return NO_MISTAKE_T;
 }

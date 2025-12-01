@@ -95,6 +95,9 @@ void ForestDtor(Forest_t* forest){
         }
         TreeDel(forest->head_arr[idx]);
     }
+    if(forest->head_arr){
+        free(forest->head_arr);
+    }
 
     free(forest);
 }

@@ -215,7 +215,7 @@ static void ConnectWithParents(TreeNode_t* node){
 //---------------------------------------------------------------
 // Taylor - only for one variable(for two and more too complex)
 
-static TreeErr_t CreateTaylorTree(size_t idx, Forest_t *forest_taylor, Forest_t *diff_forest, FILE *latex_dump);
+static TreeErr_t CreateTaylorTree(size_t idx, Forest_t *forest_taylor, Forest_t *diff_forest);
 
 TreeErr_t CreateTaylorForest(Forest_t *forest_taylor, Forest_t *diff_forest, FILE *latex_dump){
     assert(forest_taylor); assert(diff_forest); assert(latex_dump);
@@ -237,7 +237,7 @@ TreeErr_t CreateTaylorForest(Forest_t *forest_taylor, Forest_t *diff_forest, FIL
     metki_add_values(diff_forest->mtk);
 
     for(size_t idx = 0; idx < diff_forest->first_free_place; idx++){
-        CHECK_AND_RET_TREEERR(CreateTaylorTree(idx, forest_taylor, diff_forest, latex_dump));
+        CHECK_AND_RET_TREEERR(CreateTaylorTree(idx, forest_taylor, diff_forest));
     }
 
     DEBUG_TREE( err = ForestVerify(diff_forest);
@@ -245,7 +245,7 @@ TreeErr_t CreateTaylorForest(Forest_t *forest_taylor, Forest_t *diff_forest, FIL
     return err;
 }
 
-static TreeErr_t CreateTaylorTree(size_t idx, Forest_t *forest_taylor, Forest_t *diff_forest, FILE *latex_dump){
+static TreeErr_t CreateTaylorTree(size_t idx, Forest_t *forest_taylor, Forest_t *diff_forest){
     double result = 0;
     TreeHead_t * head_new = TreeCtor();
     CHECK_AND_RET_TREEERR(CalcTreeExpression(diff_forest->head_arr[idx]->root, diff_forest->mtk, &result, true));

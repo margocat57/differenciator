@@ -11,6 +11,8 @@
 
 const size_t MAX_CMD_BUFFER = 2048;
 
+const double EPS = 1e-15;
+
 // Need to declare for dsl
 static TreeErr_t LatexDumpRecursive(FILE* file, TreeNode_t* node, metki* mtk);
 
@@ -67,7 +69,7 @@ TreeErr_t LatexDumpTaylor(FILE *file, Forest_t *forest_diff, Forest_t *forest){
     CHECK_AND_RET_TREEERR(LatexDumpRecursive(file, forest_diff->head_arr[0]->root, forest_diff->mtk));
     fprintf(file, ") = ");
     for(size_t idx = 0; idx < forest->first_free_place; idx++){
-        if(forest->head_arr[idx]->root->type == CONST && forest->head_arr[idx]->root->data.const_value == 0){
+        if(forest->head_arr[idx]->root->type == CONST && fabs(forest->head_arr[idx]->root->data.const_value) < EPS){
             continue;
         }
         if(forest->head_arr[idx]->root->left && forest->head_arr[idx]->root->left->type == CONST && forest->head_arr[idx]->root->left->data.const_value >= 0){
@@ -102,6 +104,7 @@ TreeErr_t LatexDump(FILE* file, TreeNode_t* node, TreeNode_t* result, metki* mtk
 
 static TreeErr_t LatexDumpRecursive(FILE* file, TreeNode_t* node, metki* mtk){
     switch(node->type){
+        case INCORR_VAL: return INCORR_TYPE;
         case CONST:
             fprintf(file, "%lg" ,node->data.const_value);
             break;
@@ -170,6 +173,9 @@ TreeErr_t DumpGraphLatex(Forest_t *forest1, Forest_t *forest2, size_t idx1, size
 FILE* StartLatexDump(const char* filename){
     assert(filename);
     FILE* latex_file = fopen(filename, "w");
+    if(!latex_file){
+        return NULL;
+    }
     fprintf(latex_file,  
 R"(\documentclass[a4paper,12pt]{report}
 \usepackage[utf8]{inputenc}

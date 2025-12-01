@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <math.h>
 #include <ctype.h>
 #include <sys/stat.h>
 #include <sys/types.h>
@@ -8,14 +9,14 @@
 #include <errno.h>
 #include <assert.h>
 #include "../core/tree_func.h"
-#include "input_output.h"
+#include "read_expr_from_file.h"
 #include "../utils/metki.h"
 #include "../dump/graphviz_dump.h"
 #include "../core/forest.h"
 #include "../core/operator_func.h"
 #include "../dump/latex_dump.h"
 
-const size_t MAX_BUFFER_SIZE = 50;
+const double EPS = 1e-15;
 
 //----------------------------------------------------------------------------
 // Helping functions to find spaces
@@ -33,7 +34,7 @@ static void skip_space(char* str, size_t* pos){
 
 //-----------------------------------------------------------------------------------------
 //-----------------------------------------------------------------------------------------
-// Creating buffer for reading akinator info from disk
+// Creating buffer for reading expression from disk
 
 static bool is_stat_err(const char *name_of_file, struct stat *all_info_about_file);
 
@@ -50,13 +51,13 @@ static char* read_file_to_string_array(const char *name_of_file){
         return NULL;
     }
 
-    char *all_strings_in_file = (char *)calloc(file_info.st_size + 1, sizeof(char));
+    char *all_strings_in_file = (char *)calloc((size_t)(file_info.st_size + 1), sizeof(char));
     if(!all_strings_in_file){
         fprintf(stderr, "Array for strings allocation error\n");
         return NULL;
     }
 
-    if(fread(all_strings_in_file, sizeof(char), file_info.st_size, fptr) != file_info.st_size){
+    if(fread(all_strings_in_file, sizeof(char), (size_t)file_info.st_size, fptr) != (size_t)file_info.st_size){
         fprintf(stderr, "Can't read all symbols from file\n");
         return NULL;
     }
@@ -86,10 +87,9 @@ static void buffer_free(char* buffer){
 
 //-----------------------------------------------------------------------------------------
 //-----------------------------------------------------------------------------------------
-// Make akinator tree
+// Make differenciator tree
 
 /* 
-    !Grammar of tree:
     G ::= "E$"
     E ::= T{[+,-] T}*
     T ::= P{[*,/,^] P}*
@@ -110,9 +110,9 @@ static TreeNode_t* GetF(size_t* pos, char* buffer, metki *mtk, TreeErr_t* err, O
 
 static TreeNode_t* GetP(size_t* pos, char* buffer, metki *mtk, TreeErr_t* err);
 
-TreeNode_t* GetN(size_t* pos, char* buffer, TreeErr_t* err);
+static TreeNode_t* GetN(size_t* pos, char* buffer);
 
-TreeNode_t* GetV(size_t* pos, char* buffer, metki *mtk, TreeErr_t* err);
+static TreeNode_t* GetV(size_t* pos, char* buffer, metki *mtk, TreeErr_t* err);
 
 Forest_t* MakeDiffForest(const char *name_of_file){
     assert(name_of_file);
@@ -127,6 +127,7 @@ Forest_t* MakeDiffForest(const char *name_of_file){
     TreeErr_t err = NO_MISTAKE_T;
     head->root = GetG(&pos, buffer, forest->mtk, &err);
     if(!head->root){
+        TreeDel(head);
         ForestDtor(forest);
         buffer_free(buffer);
         return NULL;
@@ -134,7 +135,7 @@ Forest_t* MakeDiffForest(const char *name_of_file){
     DEBUG_TREE(
     if(TreeVerify(head)){
         fprintf(stderr, "File is not correct - can't work with created tree\n");
-        free(head); // потому что добавляем в лес уже после всех проверок
+        TreeDel(head); // потому что добавляем в лес уже после всех проверок
         ForestDtor(forest);
         buffer_free(buffer);
         return NULL;
@@ -155,7 +156,7 @@ static TreeNode_t* GetG(size_t* pos, char* buffer, metki *mtk, TreeErr_t* err){
         TreeDelNodeRecur(head);
         return NULL;
     }
-    tree_dump_func(head, "Before ret GetG node %s", __FILE__, __func__, __LINE__, mtk, buffer + *pos);
+    tree_dump_func(head, __FILE__, __func__, __LINE__, mtk,  "Before ret GetG node %s", buffer + *pos);
     return head;
 }
 
@@ -186,7 +187,7 @@ static TreeNode_t* GetE(size_t* pos, char* buffer, metki *mtk, TreeErr_t* err){
         right->parent = new_node;
         left = new_node;
     }
-    tree_dump_func(left, "Before ret GetE node %s", __FILE__, __func__, __LINE__, mtk, buffer + *pos);
+    tree_dump_func(left, __FILE__, __func__, __LINE__, mtk, "Before ret GetE node %s", buffer + *pos);
     return left;
 }
 
@@ -221,7 +222,7 @@ static TreeNode_t* GetT(size_t* pos, char* buffer, metki *mtk, TreeErr_t* err){
         right->parent = new_node;
         left = new_node;
     }
-    tree_dump_func(left, "Before ret GetT node %s", __FILE__, __func__, __LINE__, mtk, buffer + *pos);
+    tree_dump_func(left, __FILE__, __func__, __LINE__, mtk, "Before ret GetT node %s", buffer + *pos);
     return left;
 }
 
@@ -241,7 +242,7 @@ static TreeNode_t* GetP(size_t* pos, char* buffer, metki *mtk, TreeErr_t* err){
         }
     }
     else{
-        val = GetN(pos, buffer, err);
+        val = GetN(pos, buffer);
         if(!val){
             val = GetV(pos, buffer, mtk, err);
         }
@@ -249,11 +250,11 @@ static TreeNode_t* GetP(size_t* pos, char* buffer, metki *mtk, TreeErr_t* err){
             *err = INCORR_FILE;
         }
     }
-    tree_dump_func(val, "Before ret GetP(val) node %s", __FILE__, __func__, __LINE__, mtk, buffer + *pos);
+    tree_dump_func(val, __FILE__, __func__, __LINE__, mtk, "Before ret GetP(val) node %s", buffer + *pos);
     return val;
 }
 
-TreeNode_t* GetN(size_t* pos, char* buffer, TreeErr_t* err){
+static TreeNode_t* GetN(size_t* pos, char* buffer){
     if(!isdigit(buffer[*pos])){
         return NULL;
     }
@@ -267,7 +268,7 @@ static bool FindF(size_t* pos, char* buffer, OPERATORS* op);
 
 static size_t FindVar(char dest, metki* mtk);
 
-TreeNode_t* GetV(size_t* pos, char* buffer, metki* mtk, TreeErr_t* err){
+static TreeNode_t* GetV(size_t* pos, char* buffer, metki* mtk, TreeErr_t* err){
     if(!isalpha(buffer[*pos])){
         return NULL;
     }
@@ -334,87 +335,4 @@ static size_t FindVar(char dest, metki* mtk){
         return metka_idx;
     }
     return metki_add_name(mtk, dest);
-}
-
-
-//-----------------------------------------------------------------
-// Output func
-
-static TreeErr_t DumpToFileRecursive(FILE* file, TreeNode_t* node, metki* mtk);
-
-static TreeErr_t OperatorDumpFile(FILE* file, TreeNode_t* node, metki* mtk);
-
-TreeErr_t DumpToFile(FILE* file, TreeNode_t* node, metki* mtk, const size_t var_id){
-    CHECK_AND_RET_TREEERR(DumpToFileRecursive(file, node, mtk));
-    return NO_MISTAKE_T;
-}
-
-TreeErr_t DumpToFileTaylor(FILE* file, Forest_t* forest, Forest_t* forest_diff){
-    for(size_t idx = 0; idx < forest->first_free_place; idx++){
-        if(forest->head_arr[idx]->root->type == CONST && forest->head_arr[idx]->root->data.const_value == 0){
-            continue;
-        }
-        if(forest->head_arr[idx]->root->left && forest->head_arr[idx]->root->left->type == CONST && forest->head_arr[idx]->root->left->data.const_value >= 0){
-            fprintf(file, " + ");
-        }
-        if(forest->head_arr[idx]->root->left && forest->head_arr[idx]->root->left->type == VARIABLE){
-            fprintf(file, " + ");
-        }
-        CHECK_AND_RET_TREEERR(DumpToFileRecursive(file, forest->head_arr[idx]->root, forest_diff->mtk));
-    }
-    return NO_MISTAKE_T;
-}
-
-
-static TreeErr_t DumpToFileRecursive(FILE* file, TreeNode_t* node, metki* mtk){
-    size_t arr_num_of_elem = sizeof(OPERATORS_INFO) / sizeof(op_info);
-    switch(node->type){
-        case CONST:
-            fprintf(file, "%lg" ,node->data.const_value);
-            break;
-        case VARIABLE:
-            if(node->data.var_code >= mtk->num_of_metki){
-                return INCORR_IDX_IN_MTK;
-            }
-            fprintf(file, "%c" , mtk->var_info[node->data.var_code].variable_name);
-            break;
-        case OPERATOR:
-            CHECK_AND_RET_TREEERR(OperatorDumpFile(file, node, mtk));
-            break;
-        default: return INCORR_TYPE;
-    }
-    return NO_MISTAKE_T;
-}
-
-static TreeErr_t DumpSubtree(FILE* file, TreeNode_t* node, metki* mtk);
-
-static TreeErr_t OperatorDumpFile(FILE* file, TreeNode_t* node, metki* mtk){
-    assert(file); assert(node); 
-    size_t arr_num_of_elem = sizeof(OPERATORS_INFO) / sizeof(op_info);
-    if(node->data.op >= arr_num_of_elem){
-        return INCORR_OPERATOR;
-    }
-    
-    CHECK_AND_RET_TREEERR(DumpSubtree(file, node->left, mtk));
-    if(OPERATORS_INFO[node->data.op].dump_cont && OPERATORS_INFO[node->data.op].op != OP_DEG){
-        fprintf(file, "%s", OPERATORS_INFO[node->data.op].op_name); 
-    }
-    else if(OPERATORS_INFO[node->data.op].op == OP_DEG){
-        fprintf(file, "**"); 
-    }
-
-    if(node->right){
-        CHECK_AND_RET_TREEERR(DumpSubtree(file, node->right, mtk));
-    }
-
-    return NO_MISTAKE_T; 
-}
-
-static TreeErr_t DumpSubtree(FILE* file, TreeNode_t* node, metki* mtk){
-    bool staples = false; 
-    CHECK_AND_RET_TREEERR(NeedStaples(node, &staples)); 
-    if (staples) fprintf(file, "("); 
-    CHECK_AND_RET_TREEERR(DumpToFileRecursive(file, node, mtk)); 
-    if (staples) fprintf(file, ")"); 
-    return NO_MISTAKE_T;
 }

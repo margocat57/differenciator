@@ -5,7 +5,7 @@ const char *GenerateRoflMsg(){
     // because need to init once
     static bool initialized = false;
     if(!initialized){
-        srand(time(NULL));
+        srand((unsigned int)time(NULL));
         initialized = true;
     }
 

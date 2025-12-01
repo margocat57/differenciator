@@ -97,8 +97,9 @@ TreeErr_t TreeNodeVerify(const TreeNode_t *node){
 static void PrintNodeConnect(const TreeNode_t* node, const TreeNode_t* node_child, FILE* dot_file, int* rank);
 
 TreeErr_t PrintNode(const TreeNode_t* node, FILE* dot_file, int* rank, metki* mtk){
-    assert(node);
-    assert(rank);
+    if(!node){
+        return NULL_NODE_PTR;
+    }
 
     if(node->left){
         PrintNodeConnect(node, node->left, dot_file, rank);

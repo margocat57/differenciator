@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
-#include "../io/input_output.h"
+#include "../io/output_expr_to_file.h"
 #include "../calculation_optimization/calcul_tree.h"
 #include <assert.h>
 
@@ -106,12 +106,12 @@ static TreeErr_t PrintInfo(Forest_t *forest1, Forest_t *forest2, size_t idx1, si
     "set key height 1\n", svg_filename, min_value_x, max_value_x);  
 
     fprintf(gp_dump, "f(%c) = ", var_name);
-    CHECK_AND_RET_TREEERR(DumpToFile(gp_dump, forest1->head_arr[idx1]->root, forest1->mtk, 0));
+    CHECK_AND_RET_TREEERR(DumpToFile(gp_dump, forest1->head_arr[idx1]->root, forest1->mtk));
     fprintf(gp_dump, "\n");
 
     if(forest1 == forest2){
         fprintf(gp_dump, "df(%c) = ", var_name);
-        CHECK_AND_RET_TREEERR(DumpToFile(gp_dump, forest2->head_arr[idx2]->root, forest1->mtk, 0));
+        CHECK_AND_RET_TREEERR(DumpToFile(gp_dump, forest2->head_arr[idx2]->root, forest1->mtk));
     }
     else{   
         fprintf(gp_dump, "Tf(%c) = ", var_name);
