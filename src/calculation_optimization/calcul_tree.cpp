@@ -6,6 +6,7 @@
 #include "../core/tree_func.h"
 #include "../core/forest.h"
 
+
 const double EPS = 1e-15;
 
 //--------------------------------------------------------------------------------------------
@@ -53,7 +54,7 @@ DEF_OP(Cth, (tanh(RES_L) != 0) ? 1 / tanh(RES_L) : 0);
 
 static TreeErr_t CalcTreeExpressionRecursive(metki* mtk, TreeNode_t* node, double* result);
 
-TreeErr_t CalcTreeExpression(TreeNode_t* node, metki* mtk, double* result, bool is_taylor){
+TreeErr_t CalcTreeExpression(TreeNode_t* node, metki* mtk, double* result, IS_TAYLOR is_taylor){
     assert(result);
 
     TreeErr_t err = NO_MISTAKE_T;

@@ -9,6 +9,8 @@
 #include "dump/latex_dump.h"
 #include "differenciation/differenciator.h"
 #include "core/forest.h"
+#include "differenciation/diff_params.h"
+#include "utils/taylor_enum.h"
 
 TreeErr_t MatanBook(Forest_t* forest_diff, Forest_t* forest_diff_taylor, Forest_t* forest_taylor, const char* book_file);
 

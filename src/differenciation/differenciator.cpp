@@ -8,6 +8,7 @@
 #include "../calculation_optimization/calcul_tree.h"
 #include "../dump/latex_dump.h"
 #include "../utils/rofl_matan.h"
+#include "../utils/taylor_enum.h"
 
 // Need to declare for dsl
 
@@ -108,59 +109,25 @@ static TreeNode_t* DiffDeg(TreeNode_t* node, const size_t var_id, FILE* file, me
 
 static TreeErr_t CreateDiffTree(const size_t var_id, Forest_t *forest, size_t idx, FILE *latex_dump);
 
-static TreeErr_t AskAboutN(size_t *n);
 
-static size_t FindVarCodeToDiff(metki *mtk);
+TreeErr_t CreateDiffForest(Forest_t *forest, FILE *latex_dump, diff_params *params){
+    if(!params){
+        return CANT_FIND_DERIVATIVE_NO_INFO;
+    }
 
-static size_t FindVarByName(char var_name, metki* mtk);
-
-TreeErr_t CreateDiffForest(Forest_t *forest, FILE *latex_dump){
     TreeErr_t err = NO_MISTAKE_T;
     DEBUG_TREE(err = ForestVerify(forest);)
     if (err) return err;
 
-    size_t n = 0;
-    CHECK_AND_RET_TREEERR(AskAboutN(&n));
-
-    size_t var_id = FindVarCodeToDiff(forest->mtk);
-    if(var_id == SIZE_MAX){
-        fprintf(stderr, "Incorr variable to differenciate");
-        return INCORR_VAR_TO_DIFF;
-    }
-
-    for(size_t idx = 0; idx < n; idx++){
-        CHECK_AND_RET_TREEERR(CreateDiffTree(var_id, forest, idx, latex_dump));
+    for(size_t idx = 0; idx < params->num_of_derivative; idx++){
+        CHECK_AND_RET_TREEERR(CreateDiffTree(params->var_id, forest, idx, latex_dump));
     }
 
     DEBUG_TREE(err = ForestVerify(forest);)
     return err;
 }
 
-static TreeErr_t AskAboutN(size_t *n){
-    assert(n);
-    printf("Which derivative do you want to calculate?\n");
-    if(scanf("%zu", n) != 1){
-        return INCORR_USER_INPUT_VALUE;
-    }
-    return NO_MISTAKE_T;
-}
 
-static size_t FindVarByName(char var_name, metki *mtk){
-    assert(var_name);
-    for(size_t metka_idx = 0; metka_idx < mtk->first_free; metka_idx++){
-        if(mtk->var_info[metka_idx].variable_name == var_name){
-            return metka_idx;
-        }
-    }
-    return SIZE_MAX;
-}
-
-static size_t FindVarCodeToDiff(metki* mtk){
-    char var_name = '0';
-    printf("For which variable find the derivative\n");
-    scanf(" %c", &var_name);
-    return FindVarByName(var_name, mtk);
-}
 
 static TreeErr_t CreateDiffTree(const size_t var_id, Forest_t *forest, size_t idx, FILE *latex_dump){
     TreeHead_t* head_new = TreeCtor();
@@ -217,7 +184,7 @@ static void ConnectWithParents(TreeNode_t* node){
 
 static TreeErr_t CreateTaylorTree(size_t idx, Forest_t *forest_taylor, Forest_t *diff_forest);
 
-TreeErr_t CreateTaylorForest(Forest_t *forest_taylor, Forest_t *diff_forest, FILE *latex_dump){
+TreeErr_t CreateTaylorForest(Forest_t *forest_taylor, Forest_t *diff_forest, FILE *latex_dump, diff_params *params){
     assert(forest_taylor); assert(diff_forest); assert(latex_dump);
 
     TreeErr_t err = NO_MISTAKE_T;
@@ -232,9 +199,7 @@ TreeErr_t CreateTaylorForest(Forest_t *forest_taylor, Forest_t *diff_forest, FIL
 
     printf("For Taylor formula at first the derivatives must be calcutated:\t");
     fprintf(latex_dump, "{\\large \\textbf{At first the derivatives must be calcutated:}}\n\n");
-    CHECK_AND_RET_TREEERR(CreateDiffForest(diff_forest, latex_dump));
-
-    metki_add_values(diff_forest->mtk);
+    CHECK_AND_RET_TREEERR(CreateDiffForest(diff_forest, latex_dump, params));
 
     for(size_t idx = 0; idx < diff_forest->first_free_place; idx++){
         CHECK_AND_RET_TREEERR(CreateTaylorTree(idx, forest_taylor, diff_forest));
@@ -248,7 +213,7 @@ TreeErr_t CreateTaylorForest(Forest_t *forest_taylor, Forest_t *diff_forest, FIL
 static TreeErr_t CreateTaylorTree(size_t idx, Forest_t *forest_taylor, Forest_t *diff_forest){
     double result = 0;
     TreeHead_t * head_new = TreeCtor();
-    CHECK_AND_RET_TREEERR(CalcTreeExpression(diff_forest->head_arr[idx]->root, diff_forest->mtk, &result, true));
+    CHECK_AND_RET_TREEERR(CalcTreeExpression(diff_forest->head_arr[idx]->root, diff_forest->mtk, &result, YES));
     head_new->root = MUL_(DIV_(NUM_(result), NUM_(tgammaf(idx + 1))), DEG_(SUB_(VAR_NODE(0), NUM_(diff_forest->mtk->var_info[0].value)), NUM_(idx)));
     ConnectWithParents(head_new->root);
     CHECK_AND_RET_TREEERR(TreeOptimize(&(head_new->root)));
