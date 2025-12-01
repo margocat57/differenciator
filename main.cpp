@@ -2,8 +2,8 @@
 
 
 int main(){
-    Forest_t* forest_diff = MakeDiffForest("tests/htest.txt");
-    Forest_t* forest_for_taylor = MakeDiffForest("tests/etest.txt");
+    Forest_t* forest_diff = ReadAndCreateExpr("tests/htest.txt");
+    Forest_t* forest_for_taylor = ReadAndCreateExpr("tests/etest.txt");
     Forest_t* forest_with_taylor = ForestCtor(10);
     MatanBook(forest_diff, forest_for_taylor, forest_with_taylor, "diff.tex");
     ForestDtor(forest_diff);

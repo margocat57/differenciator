@@ -5,7 +5,6 @@
 #include "../utils/mistakes.h"
 #include <stdio.h>
 
-Forest_t* MakeDiffForest(const char *name_of_file);
-
+Forest_t* ReadAndCreateExpr(const char *name_of_file);
 
 #endif // READ_EXPR_FROM_FILE_H

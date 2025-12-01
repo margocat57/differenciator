@@ -107,10 +107,10 @@ static TreeNode_t* DiffDeg(TreeNode_t* node, const size_t var_id, FILE* file, me
 //---------------------------------------------------------
 // Function that differencates and dumpes
 
-static TreeErr_t CreateDiffTree(const size_t var_id, Forest_t *forest, size_t idx, FILE *latex_dump);
+static TreeErr_t CreateTreeWithDerivative(const size_t var_id, Forest_t *forest, size_t idx, FILE *latex_dump);
 
 
-TreeErr_t CreateDiffForest(Forest_t *forest, FILE *latex_dump, diff_params *params){
+TreeErr_t CreateForestWithNDerivatives(Forest_t *forest, FILE *latex_dump, diff_params *params){
     if(!params){
         return CANT_FIND_DERIVATIVE_NO_INFO;
     }
@@ -120,7 +120,7 @@ TreeErr_t CreateDiffForest(Forest_t *forest, FILE *latex_dump, diff_params *para
     if (err) return err;
 
     for(size_t idx = 0; idx < params->num_of_derivative; idx++){
-        CHECK_AND_RET_TREEERR(CreateDiffTree(params->var_id, forest, idx, latex_dump));
+        CHECK_AND_RET_TREEERR(CreateTreeWithDerivative(params->var_id, forest, idx, latex_dump));
     }
 
     DEBUG_TREE(err = ForestVerify(forest);)
@@ -129,7 +129,7 @@ TreeErr_t CreateDiffForest(Forest_t *forest, FILE *latex_dump, diff_params *para
 
 
 
-static TreeErr_t CreateDiffTree(const size_t var_id, Forest_t *forest, size_t idx, FILE *latex_dump){
+static TreeErr_t CreateTreeWithDerivative(const size_t var_id, Forest_t *forest, size_t idx, FILE *latex_dump){
     TreeHead_t* head_new = TreeCtor();
     CHECK_AND_RET_TREEERR(LatexDump(latex_dump, forest->head_arr[idx]->root, NULL, forest->mtk, "\\textbf{Let's calculate a simple derivative:}\n", var_id));
     head_new->root = Differenciate(forest->head_arr[idx]->root, var_id, latex_dump, forest->mtk);
@@ -184,7 +184,7 @@ static void ConnectWithParents(TreeNode_t* node){
 
 static TreeErr_t CreateTaylorTree(size_t idx, Forest_t *forest_taylor, Forest_t *diff_forest);
 
-TreeErr_t CreateTaylorForest(Forest_t *forest_taylor, Forest_t *diff_forest, FILE *latex_dump, diff_params *params){
+TreeErr_t CreateForestWithTaylorDecompose(Forest_t *forest_taylor, Forest_t *diff_forest, FILE *latex_dump, diff_params *params){
     assert(forest_taylor); assert(diff_forest); assert(latex_dump);
 
     TreeErr_t err = NO_MISTAKE_T;
@@ -199,7 +199,7 @@ TreeErr_t CreateTaylorForest(Forest_t *forest_taylor, Forest_t *diff_forest, FIL
 
     printf("For Taylor formula at first the derivatives must be calcutated:\t");
     fprintf(latex_dump, "{\\large \\textbf{At first the derivatives must be calcutated:}}\n\n");
-    CHECK_AND_RET_TREEERR(CreateDiffForest(diff_forest, latex_dump, params));
+    CHECK_AND_RET_TREEERR(CreateForestWithNDerivatives(diff_forest, latex_dump, params));
 
     for(size_t idx = 0; idx < diff_forest->first_free_place; idx++){
         CHECK_AND_RET_TREEERR(CreateTaylorTree(idx, forest_taylor, diff_forest));
