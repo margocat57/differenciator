@@ -101,7 +101,7 @@ static TreeNode_t* GetExpression(size_t* pos, char* buffer, metki *mtk, TreeErr_
 /* T ::= D{[*,/] D}* */
 static TreeNode_t* GetTerm(size_t* pos, char* buffer, metki *mtk, TreeErr_t* err);
 
-/* D ::= P{[^ P}* */
+/* D ::= P{[^] P}* */
 static TreeNode_t* GetDeg(size_t* pos, char* buffer, metki *mtk, TreeErr_t* err);
 
 /* P ::= (E) | N | V | F */

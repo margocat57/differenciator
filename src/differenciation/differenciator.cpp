@@ -65,10 +65,10 @@ DEF_OP(Sh,  MUL_(DL_, CH_(CL_)))
 DEF_OP(Ch,  MUL_(DL_, SH_(CL_)))
 DEF_OP(Th,  DIV_(DL_, DEG_(CH_(CL_), NUM_(2))))
 DEF_OP(Cth, MUL_(DIV_(DL_, DEG_(SH_(CL_), NUM_(2))), NUM_(-1)))
-DEF_OP(arcsin, MUL_(DL_, DIV_(NUM_(1), DEG_(SUB_(NUM_(1), DEG_(CL_, NUM_(2))), NUM_(0.5)))))
-DEF_OP(arccos, MUL_(NUM_(-1), MUL_(DL_, DIV_(NUM_(1), DEG_(SUB_(NUM_(1), DEG_(CL_, NUM_(2))), NUM_(0.5))))))
-DEF_OP(arctg,  MUL_(DL_, DIV_(NUM_(1), ADD_(NUM_(1), DEG_(CL_, NUM_(2))))))
-DEF_OP(arcctg, MUL_(NUM_(-1),MUL_(DL_, DIV_(NUM_(1), ADD_(NUM_(1), DEG_(CL_, NUM_(2)))))))
+DEF_OP(Arcsin, MUL_(DL_, DIV_(NUM_(1), DEG_(SUB_(NUM_(1), DEG_(CL_, NUM_(2))), NUM_(0.5)))))
+DEF_OP(Arccos, MUL_(NUM_(-1), MUL_(DL_, DIV_(NUM_(1), DEG_(SUB_(NUM_(1), DEG_(CL_, NUM_(2))), NUM_(0.5))))))
+DEF_OP(Arctg,  MUL_(DL_, DIV_(NUM_(1), ADD_(NUM_(1), DEG_(CL_, NUM_(2))))))
+DEF_OP(Arcctg, MUL_(NUM_(-1),MUL_(DL_, DIV_(NUM_(1), ADD_(NUM_(1), DEG_(CL_, NUM_(2)))))))
 
 //---------------------------------------------------------
 // DSL in func. Я очень не хочу это писать в дефайнах, так что будет функция
