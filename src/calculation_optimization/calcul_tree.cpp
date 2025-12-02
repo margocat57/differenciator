@@ -30,7 +30,6 @@ DEF_OP(Deg, pow(RES_L, RES_R));
 /*
 * Унарные операторы со значением в левом узле - снимаем предупреждение
 */
-//! to RES_R
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wunused-parameter"
 DEF_OP(Cos, cos(RES_L));
@@ -42,6 +41,10 @@ DEF_OP(Sh,  sinh(RES_L));
 DEF_OP(Ch,  cosh(RES_L));
 DEF_OP(Th,  tanh(RES_L));
 DEF_OP(Cth, (tanh(RES_L) != 0) ? 1 / tanh(RES_L) : 0);
+DEF_OP(Arcsin,  (-1 <= RES_L && RES_L <= 1) ? asin(RES_L) : 0);
+DEF_OP(Arccos,  (-1 <= RES_L && RES_L <= 1) ? acos(RES_L) : 0);
+DEF_OP(Arctg,   atan(RES_L));
+DEF_OP(Arcctg, M_PI_2 - atan(RES_L));
 #pragma GCC diagnostic pop
 
 #include "../core/operator_func.h"
@@ -56,14 +59,14 @@ TreeErr_t CalcTreeExpression(TreeNode_t* node, metki* mtk, double* result, IS_TA
     assert(result);
 
     TreeErr_t err = NO_MISTAKE_T;
-    DEBUG_TREE(err = TreeVerify(node);)
+    DEBUG_TREE(err = TreeNodeVerify(node);)
     if(err) return err;
     
-    if(!is_taylor) metki_add_values(mtk);
+    if(is_taylor == NO) metki_add_values(mtk);
     CHECK_AND_RET_TREEERR(CalcTreeExpressionRecursive(mtk, node, result));
-    if(!is_taylor) metki_del_values(mtk);
+    if(is_taylor == NO) metki_del_values(mtk);
 
-    DEBUG_TREE(err = TreeVerify(node);)
+    DEBUG_TREE(err = TreeNodeVerify(node);)
     return err;
 }
 

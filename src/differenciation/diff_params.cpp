@@ -20,7 +20,7 @@ TreeErr_t CreateDiffParams(diff_params *params, metki* mtk, IS_TAYLOR is_taylor)
         return INCORR_VAR_TO_DIFF;
     }
 
-    if(is_taylor){
+    if(is_taylor == YES){
         metki_add_values(mtk);
     }
 

@@ -9,7 +9,6 @@
 struct diff_params{
     size_t num_of_derivative;
     size_t var_id;
-    double var_to_count_diff;
 };
 
 TreeErr_t CreateDiffParams(diff_params *params, metki* mtk, IS_TAYLOR is_taylor);

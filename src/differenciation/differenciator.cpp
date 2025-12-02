@@ -58,13 +58,17 @@ DEF_OP(Mul, ADD_(MUL_(DL_, CR_), MUL_(CL_, DR_)))
 DEF_OP(Div, DIV_(SUB_(MUL_(DL_, CR_), MUL_(CL_, DR_)), DEG_(CR_, NUM_(2))))
 DEF_OP(Cos, MUL_(DL_, MUL_(NUM_(-1), SIN_(CL_))))
 DEF_OP(Sin, MUL_(DL_, COS_(CL_)))
-DEF_OP(Ln, MUL_(DL_, DIV_(NUM_(1), CL_)))
-DEF_OP(Tg, DIV_(DL_, DEG_(COS_(CL_), NUM_(2))))
+DEF_OP(Ln,  MUL_(DL_, DIV_(NUM_(1), CL_)))
+DEF_OP(Tg,  DIV_(DL_, DEG_(COS_(CL_), NUM_(2))))
 DEF_OP(Ctg, MUL_(DIV_(DL_, DEG_(SIN_(CL_), NUM_(2))), NUM_(-1)))
-DEF_OP(Sh, MUL_(DL_, CH_(CL_)))
-DEF_OP(Ch, MUL_(DL_, SH_(CL_)))
-DEF_OP(Th, DIV_(DL_, DEG_(CH_(CL_), NUM_(2))))
+DEF_OP(Sh,  MUL_(DL_, CH_(CL_)))
+DEF_OP(Ch,  MUL_(DL_, SH_(CL_)))
+DEF_OP(Th,  DIV_(DL_, DEG_(CH_(CL_), NUM_(2))))
 DEF_OP(Cth, MUL_(DIV_(DL_, DEG_(SH_(CL_), NUM_(2))), NUM_(-1)))
+DEF_OP(arcsin, MUL_(DL_, DIV_(NUM_(1), DEG_(SUB_(NUM_(1), DEG_(CL_, NUM_(2))), NUM_(0.5)))))
+DEF_OP(arccos, MUL_(NUM_(-1), MUL_(DL_, DIV_(NUM_(1), DEG_(SUB_(NUM_(1), DEG_(CL_, NUM_(2))), NUM_(0.5))))))
+DEF_OP(arctg,  MUL_(DL_, DIV_(NUM_(1), ADD_(NUM_(1), DEG_(CL_, NUM_(2))))))
+DEF_OP(arcctg, MUL_(NUM_(-1),MUL_(DL_, DIV_(NUM_(1), ADD_(NUM_(1), DEG_(CL_, NUM_(2)))))))
 
 //---------------------------------------------------------
 // DSL in func. Я очень не хочу это писать в дефайнах, так что будет функция
@@ -85,10 +89,10 @@ static TreeNode_t* DiffDeg(TreeNode_t* node, const size_t var_id, FILE* file, me
     assert(node);
     TreeNode_t* result = NULL;
     if(is_type_not_num(L) && is_type_num(R)){
-        result = MUL_(MUL_(CR_, DEG_(CL_, SUB_(CR_, NUM_(1)))), DL_);
+        result = MUL_(DL_, MUL_(CR_, DEG_(CL_, SUB_(CR_, NUM_(1)))));
     }
     else if(is_type_num(L) && is_type_not_num(R)){
-        result = MUL_(MUL_(LN_(CL_), MUL_(CL_, CR_)), DR_);
+        result = MUL_(DR_, MUL_(LN_(CL_), MUL_(CL_, CR_)));
     }
     else if(is_type_not_num(L) && is_type_not_num(R)){
         result = MUL_(DEG_(CL_, CR_), ADD_(MUL_(DR_, LN_(CL_)), DIV_(MUL_(DL_, CR_), CL_)));
@@ -166,7 +170,7 @@ static TreeNode_t* Differenciate(TreeNode_t* node, const size_t var_id, FILE* fi
 // Connect parents - потому что на момент создания узла там будет кринж если передавать родителя
 
 static void ConnectWithParents(TreeNode_t* node){
-    if (!node) return;
+    if(!node) return;
 
     ConnectWithParents(node->left);
     ConnectWithParents(node->right);

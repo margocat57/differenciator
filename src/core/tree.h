@@ -22,7 +22,11 @@ enum OPERATORS{
     OP_SH,
     OP_CH,
     OP_TH,
-    OP_CTH
+    OP_CTH,
+    OP_ARCSIN,
+    OP_ARCCOS,
+    OP_ARCTG,
+    OP_ARCCTG
 };
 
 union TreeElem_t{
