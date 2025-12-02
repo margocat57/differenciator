@@ -8,13 +8,13 @@
 
 static char* CreateDumpFile(const char* format);
 
-static TreeErr_t PrintInfo(Forest_t *forest1, Forest_t *forest2, size_t idx1, size_t idx2, FILE* gp_dump, const char* svg_filename);
+static TreeErr_t PrintInfo(Forest_t *forest, size_t idx1, size_t idx2, FILE* gp_dump, const char* svg_filename, IS_TAYLOR is_taylor);
 
 static void MakePicture(const char* gp_filename, TreeErr_t* err);
 
-char* DrawGraph(Forest_t *diff_forest, Forest_t *forest_taylor, size_t idx1, size_t idx2, TreeErr_t *err){
-    DEBUG_TREE( *err = TreeNodeVerify(diff_forest->head_arr[idx1]->root);
-                *err = TreeNodeVerify(forest_taylor->head_arr[idx2]->root);)
+char* DrawGraph(Forest_t *forest, size_t idx1, size_t idx2, TreeErr_t *err, IS_TAYLOR is_taylor){
+    DEBUG_TREE( *err = TreeNodeVerify(forest->head_arr[idx1]->root);
+                *err = TreeNodeVerify(forest->head_arr[idx2]->root);)
     if(*err) return NULL;
 
     char* svg_filename = CreateDumpFile("svg");
@@ -32,7 +32,7 @@ char* DrawGraph(Forest_t *diff_forest, Forest_t *forest_taylor, size_t idx1, siz
         return NULL;
     }
 
-    *err = PrintInfo(diff_forest, forest_taylor, idx1, idx2, gp_dump, svg_filename);
+    *err = PrintInfo(forest, idx1, idx2, gp_dump, svg_filename, is_taylor);
     if(*err){
         free(gp_filename);
         free(svg_filename);
@@ -50,8 +50,8 @@ char* DrawGraph(Forest_t *diff_forest, Forest_t *forest_taylor, size_t idx1, siz
 
     free(gp_filename);
 
-    DEBUG_TREE( *err = TreeNodeVerify(diff_forest->head_arr[idx1]->root);
-                *err = TreeNodeVerify(forest_taylor->head_arr[idx2]->root);)
+    DEBUG_TREE( *err = TreeNodeVerify(forest->head_arr[idx1]->root);
+                *err = TreeNodeVerify(forest->head_arr[idx2]->root);)
     return svg_filename;
 }
 
@@ -84,48 +84,69 @@ static char* CreateDumpFile(const char* format){
     return svg_filename;
 }
 
-static TreeErr_t PrintInfo(Forest_t *forest1, Forest_t *forest2, size_t idx1, size_t idx2, FILE* gp_dump, const char* svg_filename){
-    double delta = 10;
-    double min_value_x = forest1->mtk->var_info[0].value - delta;
-    double max_value_x = forest1->mtk->var_info[0].value + delta;
-    char var_name = forest1->mtk->var_info[0].variable_name;
+static TreeErr_t PrintInfo(Forest_t *forest, size_t idx1, size_t idx2, FILE* gp_dump, const char* svg_filename, IS_TAYLOR is_taylor){
+    double delta = 3;
+    double min_value_x = forest->x_y_range.x_min_dump;
+    double max_value_x = forest->x_y_range.x_max_dump;
+    double min_value_y = forest->x_y_range.y_min_dump;
+    double max_value_y = forest->x_y_range.y_max_dump;
+    if(is_taylor == YES && (forest->mtk->var_info[0].value <= min_value_x || forest->mtk->var_info[0].value <= max_value_x)){
+        min_value_x = forest->mtk->var_info[0].value - delta;
+        max_value_x = forest->mtk->var_info[0].value + delta;
+        min_value_y = 0;
+        max_value_y = 0;
+    }
 
     fprintf(gp_dump, 
     "set terminal svg\n"
     "set output '%s'\n"
     "set xlabel \"x\"\n"
     "set ylabel \"y\"\n"
-    "set grid\n"
+    "set grid\n", svg_filename);
 
-    "set xrange [%lg:%lg]\n"
+    // x_min should not equal x_max!
+    if(min_value_x != max_value_x){
+        fprintf(gp_dump, "set xrange [%lg:%lg]\n", min_value_x, max_value_x);
+    } 
+    else{
+        fprintf(gp_dump, "set autoscale x\n");  
+    }
 
+    if(min_value_y != max_value_y){
+        fprintf(gp_dump, "set yrange [%lg:%lg]\n", min_value_y, max_value_y);
+    } 
+    else{
+        fprintf(gp_dump, "set autoscale y\n");  
+    }
+
+    fprintf(gp_dump, 
     "set key top left\n"            
     "set key box\n"               
     "set key spacing 2.5\n"
     "set key width 2.5\n"
-    "set key height 1\n", svg_filename, min_value_x, max_value_x);  
+    "set key height 1\n");  
 
-    fprintf(gp_dump, "f(%c) = ", var_name);
-    CHECK_AND_RET_TREEERR(DumpToFile(gp_dump, forest1->head_arr[idx1]->root, forest1->mtk));
+    fprintf(gp_dump, "f(%c) = ", forest->mtk->var_info[0].variable_name);
+    CHECK_AND_RET_TREEERR(DumpToFile(gp_dump, forest->head_arr[idx1]->root, forest->mtk));
     fprintf(gp_dump, "\n");
 
-    if(forest1 == forest2){
-        fprintf(gp_dump, "df(%c) = ", var_name);
-        CHECK_AND_RET_TREEERR(DumpToFile(gp_dump, forest2->head_arr[idx2]->root, forest1->mtk));
+    if(is_taylor == NO){
+        fprintf(gp_dump, "df(%c) = ", forest->mtk->var_info[0].variable_name);
     }
     else{   
-        fprintf(gp_dump, "Tf(%c) = ", var_name);
-        CHECK_AND_RET_TREEERR(DumpToFileTaylor(gp_dump, forest2, forest1));
+        fprintf(gp_dump, "Tf(%c) = ", forest->mtk->var_info[0].variable_name);
     }
+
+    CHECK_AND_RET_TREEERR(DumpToFile(gp_dump, forest->head_arr[idx2]->root, forest->mtk));
 
     fprintf(gp_dump, "\n");
 
-    fprintf(gp_dump, "plot f(%c) with lines linecolor \"blue\" title \"f(%c)\", \\\n", var_name, var_name);
-    if(forest1 == forest2){
-        fprintf(gp_dump, "df(%c) with lines linecolor \"red\" title \"f'(%c)\" \n", var_name, var_name);
+    fprintf(gp_dump, "plot f(%c) with lines linecolor \"blue\" title \"f(%c)\", \\\n", forest->mtk->var_info[0].variable_name, forest->mtk->var_info[0].variable_name);
+    if(is_taylor == NO){
+        fprintf(gp_dump, "df(%c) with lines linecolor \"red\" title \"f'(%c)\" \n", forest->mtk->var_info[0].variable_name, forest->mtk->var_info[0].variable_name);
     }
     else{
-        fprintf(gp_dump, "Tf(%c) with lines linecolor \"red\" title \"T(%c)\" \n", var_name, var_name);
+        fprintf(gp_dump, "Tf(%c) with lines linecolor \"red\" title \"T(%c)\" \n", forest->mtk->var_info[0].variable_name, forest->mtk->var_info[0].variable_name);
     }
     
     return NO_MISTAKE_T;

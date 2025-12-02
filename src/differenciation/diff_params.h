@@ -5,12 +5,8 @@
 #include "../utils/metki.h"
 #include "../core/tree.h"
 #include "../utils/taylor_enum.h"
+#include "../core/forest.h"
 
-struct diff_params{
-    size_t num_of_derivative;
-    size_t var_id;
-};
-
-TreeErr_t CreateDiffParams(diff_params *params, metki* mtk, IS_TAYLOR is_taylor);
+TreeErr_t CreateDiffParams(Forest_t* forest, IS_TAYLOR is_taylor);
 
 #endif //DIFF_PARAMS_H 

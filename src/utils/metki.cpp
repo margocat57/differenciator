@@ -62,12 +62,14 @@ void metki_add_values(metki* mtk){
         scanf("%lf", &value);
         mtk->var_info[idx].value = value;
     }
+    mtk->has_value = true;
 }
 
 void metki_del_values(metki* mtk){
     for(size_t idx = 0; idx < mtk->first_free; idx++){
         mtk->var_info[idx].value = 0;
     }
+    mtk->has_value = false;
 }
 
 

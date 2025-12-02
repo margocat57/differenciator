@@ -8,23 +8,30 @@ static size_t FindVarCodeToDiff(metki *mtk);
 
 static size_t FindVarByName(char var_name, metki* mtk);
 
-TreeErr_t CreateDiffParams(diff_params *params, metki* mtk, IS_TAYLOR is_taylor){
-    assert(params);
+TreeErr_t CreateDiffParams(Forest_t* forest, IS_TAYLOR is_taylor){
+    TreeErr_t err = NO_MISTAKE_T;
+    DEBUG_TREE( err = ForestVerify(forest_taylor);)
+    if(err) return err;
 
-    CHECK_AND_RET_TREEERR(AskAboutN(&(params->num_of_derivative)));
-
-    params->var_id = FindVarCodeToDiff(mtk);
-    if(params->var_id == SIZE_MAX){
-        fprintf(stderr, "Incorr variable to differenciate");
-        params->num_of_derivative = 0;
-        return INCORR_VAR_TO_DIFF;
+    if(!(forest->params.is_num_derivative_filled)){
+        CHECK_AND_RET_TREEERR(AskAboutN(&(forest->params.num_of_derivative)));
     }
 
-    if(is_taylor == YES){
-        metki_add_values(mtk);
+    if(!(forest->params.is_var_id_filled)){
+        forest->params.var_id = FindVarCodeToDiff(forest->mtk);
+        if(forest->params.var_id == SIZE_MAX){
+            fprintf(stderr, "Incorr variable to differenciate");
+            forest->params.num_of_derivative = 0;
+            return INCORR_VAR_TO_DIFF;
+        }
     }
 
-    return NO_MISTAKE_T;
+    if(is_taylor == YES && !(forest->mtk->has_value)){
+        metki_add_values(forest->mtk);
+    }
+
+    DEBUG_TREE( err = ForestVerify(forest_taylor);)
+    return err;
 }
 
 static TreeErr_t AskAboutN(size_t *n){

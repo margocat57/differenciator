@@ -3,17 +3,18 @@
 #include <stdio.h>
 #include "../core/tree.h"
 #include "../utils/mistakes.h"
+#include "../utils/taylor_enum.h"
 #include "../core/forest.h"
 
 FILE* StartLatexDump(const char* filename);
 
 TreeErr_t NeedStaples(TreeNode_t* node, bool* need_staples);
 
-TreeErr_t LatexDumpTaylor(FILE *file, Forest_t *forest_diff, Forest_t *forest);
+TreeErr_t LatexDumpTaylor(FILE *file, Forest_t *forest);
 
 TreeErr_t LatexDump(FILE* file, TreeNode_t* node, TreeNode_t* result, metki* mtk, const char* comment, const size_t var_id);
 
-TreeErr_t DumpGraphLatex(Forest_t *forest1, Forest_t *forest2, size_t idx1, size_t idx2, FILE* latex_file);
+TreeErr_t DumpGraphLatex(Forest_t *forest, size_t idx1, size_t idx2, FILE* latex_file, IS_TAYLOR is_taylor);
 
 void LatexDumpDecimals(FILE* latex_file);
 

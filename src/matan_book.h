@@ -12,6 +12,6 @@
 #include "differenciation/diff_params.h"
 #include "utils/taylor_enum.h"
 
-TreeErr_t MatanBook(Forest_t* forest_diff, Forest_t* forest_diff_taylor, Forest_t* forest_taylor, const char* book_file);
+TreeErr_t MatanBook(Forest_t* forest_diff, Forest_t* forest_taylor, const char* book_file);
 
 #endif //MATAN_BOOK_H

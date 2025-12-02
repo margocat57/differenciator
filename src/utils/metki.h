@@ -13,6 +13,7 @@ struct metki{
     variables* var_info;
     size_t num_of_metki;
     size_t first_free;
+    bool has_value;
 };
 
 metki* metki_init();

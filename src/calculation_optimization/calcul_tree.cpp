@@ -44,7 +44,7 @@ DEF_OP(Cth, (tanh(RES_L) != 0) ? 1 / tanh(RES_L) : 0);
 DEF_OP(Arcsin,  (-1 <= RES_L && RES_L <= 1) ? asin(RES_L) : 0);
 DEF_OP(Arccos,  (-1 <= RES_L && RES_L <= 1) ? acos(RES_L) : 0);
 DEF_OP(Arctg,   atan(RES_L));
-DEF_OP(Arcctg, M_PI_2 - atan(RES_L));
+DEF_OP(Arcctg,  M_PI_2 - atan(RES_L));
 #pragma GCC diagnostic pop
 
 #include "../core/operator_func.h"
@@ -119,9 +119,6 @@ static TreeErr_t CalcExpWithOperator(TreeNode_t* node, double* result, double* l
 }
 
 static TreeErr_t CalcExpWithConst(TreeNode_t* node, double* result){
-    if(!result){
-        return NULL_RES_PTR;
-    }
     *result = node->data.const_value;
     return NO_MISTAKE_T;
 }

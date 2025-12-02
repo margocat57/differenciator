@@ -167,12 +167,8 @@ void TreeDelNodeRecur(TreeNode_t* node){
         return;
     }
 
-    if(node->left){
-        TreeDelNodeRecur(node->left);
-    }
-    if(node->right){
-        TreeDelNodeRecur(node->right);
-    }
+    TreeDelNodeRecur(node->left);
+    TreeDelNodeRecur(node->right);
 
     NodeDtor(node);
 }

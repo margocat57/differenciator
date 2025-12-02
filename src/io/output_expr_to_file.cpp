@@ -30,22 +30,6 @@ TreeErr_t DumpToFile(FILE* file, TreeNode_t* node, metki* mtk){
     return NO_MISTAKE_T;
 }
 
-TreeErr_t DumpToFileTaylor(FILE* file, Forest_t* forest, Forest_t* forest_diff){
-    for(size_t idx = 0; idx < forest->first_free_place; idx++){
-        if(forest->head_arr[idx]->root->type == CONST && fabs(forest->head_arr[idx]->root->data.const_value) < EPS){
-            continue;
-        }
-        if(forest->head_arr[idx]->root->left && forest->head_arr[idx]->root->left->type == CONST && forest->head_arr[idx]->root->left->data.const_value >= 0){
-            fprintf(file, " + ");
-        }
-        if(forest->head_arr[idx]->root->left && forest->head_arr[idx]->root->left->type == VARIABLE){
-            fprintf(file, " + ");
-        }
-        CHECK_AND_RET_TREEERR(DumpToFileRecursive(file, forest->head_arr[idx]->root, forest_diff->mtk));
-    }
-    return NO_MISTAKE_T;
-}
-
 
 static TreeErr_t DumpToFileRecursive(FILE* file, TreeNode_t* node, metki* mtk){
     switch(node->type){

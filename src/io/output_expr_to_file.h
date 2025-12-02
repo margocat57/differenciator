@@ -7,6 +7,4 @@
 
 TreeErr_t DumpToFile(FILE* file, TreeNode_t* node, metki* mtk);
 
-TreeErr_t DumpToFileTaylor(FILE* file, Forest_t* forest, Forest_t* forest_diff);
-
 #endif // OUTPUT_EXPR_TO_FILE_H

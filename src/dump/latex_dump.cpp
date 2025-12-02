@@ -56,35 +56,22 @@ static TreeErr_t DumpSubtree(FILE* file, TreeNode_t* node, metki* mtk){
 //--------------------------------------------------------------
 // Dump
 
-TreeErr_t LatexDumpTaylor(FILE *file, Forest_t *forest_diff, Forest_t *forest){
+TreeErr_t LatexDumpTaylor(FILE *file, Forest_t *forest){
     TreeErr_t err = NO_MISTAKE_T;
-    DEBUG_TREE( err = ForestVerify(forest_diff);
-                err = ForestVerify(forest);)
+    DEBUG_TREE( err = ForestVerify(forest);)
     if(err) return err;
 
     fprintf(file, "{\\large \\textbf{Taylor Series:}}\n\n");
     fprintf(file, "\\begin{dmath}\n");
     fprintf(file, "T( ");
 
-    CHECK_AND_RET_TREEERR(LatexDumpRecursive(file, forest_diff->head_arr[0]->root, forest_diff->mtk));
+    CHECK_AND_RET_TREEERR(LatexDumpRecursive(file, forest->head_arr[0]->root, forest->mtk));
     fprintf(file, ") = ");
-    for(size_t idx = 0; idx < forest->first_free_place; idx++){
-        if(forest->head_arr[idx]->root->type == CONST && fabs(forest->head_arr[idx]->root->data.const_value) < EPS){
-            continue;
-        }
-        if(forest->head_arr[idx]->root->left && forest->head_arr[idx]->root->left->type == CONST && forest->head_arr[idx]->root->left->data.const_value >= 0){
-            fprintf(file, " + ");
-        }
-        if(forest->head_arr[idx]->root->left && forest->head_arr[idx]->root->left->type == VARIABLE){
-            fprintf(file, " + ");
-        }
-        CHECK_AND_RET_TREEERR(LatexDumpRecursive(file, forest->head_arr[idx]->root, forest_diff->mtk));
-    }
+    CHECK_AND_RET_TREEERR(LatexDumpRecursive(file, forest->head_arr[forest->first_free_place - 1]->root, forest->mtk));
     fprintf(file, "...");
     fprintf(file, "\\end{dmath}\n");
 
-    DEBUG_TREE( err = ForestVerify(forest_diff);
-                err = ForestVerify(forest);)
+    DEBUG_TREE( err = ForestVerify(forest);)
     return err;
 }
 
@@ -152,9 +139,9 @@ TreeErr_t NeedStaples(TreeNode_t* node, bool* need_staples){
     return NO_MISTAKE_T;
 }
 
-TreeErr_t DumpGraphLatex(Forest_t *forest1, Forest_t *forest2, size_t idx1, size_t idx2, FILE* latex_file){
+TreeErr_t DumpGraphLatex(Forest_t *forest, size_t idx1, size_t idx2, FILE* latex_file, IS_TAYLOR is_taylor){
     TreeErr_t err = NO_MISTAKE_T;
-    char* dump_picture = DrawGraph(forest1,forest2, idx1, idx2, &err);
+    char* dump_picture = DrawGraph(forest, idx1, idx2, &err, is_taylor);
     if(err){
         free(dump_picture);
         return err;
@@ -230,12 +217,12 @@ but you don't need this because everything in economics is positive.
 \end{definition}
     
 \begin{definition}
-A number is called \\textit{rational} if it can be represented as 
+A number is called \textit{rational} if it can be represented as 
 something above a line and something below a line.
 \end{definition}
     
 \begin{definition}
-A number is called \\textit{irrational} if it is not rational.
+A number is called \textit{irrational} if it is not rational.
 \end{definition}
     
 \begin{obviousfact}
