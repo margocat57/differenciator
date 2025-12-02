@@ -98,8 +98,11 @@ static TreeNode_t* GetGrammarConstruction(size_t* pos, char* buffer, metki *mtk,
 /* E ::= T{[+,-] T}* */
 static TreeNode_t* GetExpression(size_t* pos, char* buffer, metki *mtk, TreeErr_t* err);
 
-/* T ::= P{[*,/,^] P}* */
+/* T ::= D{[*,/] D}* */
 static TreeNode_t* GetTerm(size_t* pos, char* buffer, metki *mtk, TreeErr_t* err);
+
+/* D ::= P{[^ P}* */
+static TreeNode_t* GetDeg(size_t* pos, char* buffer, metki *mtk, TreeErr_t* err);
 
 /* P ::= (E) | N | V | F */
 static TreeNode_t* GetPrimary(size_t* pos, char* buffer, metki *mtk, TreeErr_t* err);
@@ -136,7 +139,7 @@ Forest_t* ReadAndCreateExpr(const char *name_of_file){
     DEBUG_TREE(
     if(TreeVerify(head)){
         fprintf(stderr, "File is not correct - can't work with created tree\n");
-        TreeDel(head); // потому что добавляем в лес уже после всех проверок
+        TreeDel(head);
         ForestDtor(forest);
         buffer_free(buffer);
         return NULL;
@@ -154,6 +157,11 @@ static TreeNode_t* GetGrammarConstruction(size_t* pos, char* buffer, metki *mtk,
     if(buffer[*pos] != '$'){
         fprintf(stderr, "Syntax error\n");
         *err = INCORR_FILE;
+        TreeDelNodeRecur(head);
+        return NULL;
+    }
+    if(*err){
+        fprintf(stderr, "Syntax error\n");
         TreeDelNodeRecur(head);
         return NULL;
     }
@@ -194,15 +202,15 @@ static TreeNode_t* GetExpression(size_t* pos, char* buffer, metki *mtk, TreeErr_
 
 static TreeNode_t* GetTerm(size_t* pos, char* buffer, metki *mtk, TreeErr_t* err){
     skip_space(buffer, pos); 
-    TreeNode_t* left = GetPrimary(pos, buffer, mtk, err);
+    TreeNode_t* left = GetDeg(pos, buffer, mtk, err);
     skip_space(buffer, pos); 
 
-    while(buffer[*pos] == '*' || buffer[*pos] == '/' || buffer[*pos] == '^'){
+    while(buffer[*pos] == '*' || buffer[*pos] == '/'){
         int op = buffer[*pos];
         (*pos)++;
         skip_space(buffer, pos); 
 
-        TreeNode_t* right = GetPrimary(pos, buffer, mtk, err);
+        TreeNode_t* right = GetDeg(pos, buffer, mtk, err);
         if(*err){
             TreeDelNodeRecur(left);
             return NULL;
@@ -216,14 +224,40 @@ static TreeNode_t* GetTerm(size_t* pos, char* buffer, metki *mtk, TreeErr_t* err
         else if(op == '/'){
             new_node = NodeCtor(OPERATOR, (TreeElem_t){.op = OP_DIV}, NULL, left, right);
         }
-        else if(op == '^'){
+        left->parent = new_node;
+        right->parent = new_node;
+        left = new_node;
+    }
+    tree_dump_func(left, __FILE__, __func__, __LINE__, mtk, "Before ret GetT node %s", buffer + *pos);
+    return left;
+}
+
+static TreeNode_t* GetDeg(size_t* pos, char* buffer, metki *mtk, TreeErr_t* err){
+    skip_space(buffer, pos); 
+    TreeNode_t* left = GetPrimary(pos, buffer, mtk, err);
+    skip_space(buffer, pos); 
+
+    while(buffer[*pos] == '^'){
+        int op = buffer[*pos];
+        (*pos)++;
+        skip_space(buffer, pos); 
+
+        TreeNode_t* right = GetPrimary(pos, buffer, mtk, err);
+        if(*err){
+            TreeDelNodeRecur(left);
+            return NULL;
+        }
+        skip_space(buffer, pos); 
+
+        TreeNode_t *new_node = NULL;
+        if(op == '^'){
             new_node = NodeCtor(OPERATOR, (TreeElem_t){.op = OP_DEG}, NULL, left, right);
         }
         left->parent = new_node;
         right->parent = new_node;
         left = new_node;
     }
-    tree_dump_func(left, __FILE__, __func__, __LINE__, mtk, "Before ret GetT node %s", buffer + *pos);
+    tree_dump_func(left, __FILE__, __func__, __LINE__, mtk, "Before ret GetD node %s", buffer + *pos);
     return left;
 }
 
@@ -240,6 +274,9 @@ static TreeNode_t* GetPrimary(size_t* pos, char* buffer, metki *mtk, TreeErr_t* 
 
         if(buffer[*pos] == ')'){
             (*pos)++;
+        }
+        else{
+            *err = INCORR_FILE;
         }
     }
     else{

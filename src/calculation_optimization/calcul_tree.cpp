@@ -50,22 +50,20 @@ DEF_OP(Cth, (tanh(RES_L) != 0) ? 1 / tanh(RES_L) : 0);
 //--------------------------------------------------------------------------------------------
 // First part of task - tree of expressions and main function for it
 
-//!передавать енам - тейлор / нот тейлор
-
 static TreeErr_t CalcTreeExpressionRecursive(metki* mtk, TreeNode_t* node, double* result);
 
 TreeErr_t CalcTreeExpression(TreeNode_t* node, metki* mtk, double* result, IS_TAYLOR is_taylor){
     assert(result);
 
     TreeErr_t err = NO_MISTAKE_T;
-    DEBUG_TREE(err = TreeVerify(forest->head_arr[num_of_tree]);)
+    DEBUG_TREE(err = TreeVerify(node);)
     if(err) return err;
     
     if(!is_taylor) metki_add_values(mtk);
     CHECK_AND_RET_TREEERR(CalcTreeExpressionRecursive(mtk, node, result));
     if(!is_taylor) metki_del_values(mtk);
 
-    DEBUG_TREE(err = TreeVerify(forest->head_arr[num_of_tree]);)
+    DEBUG_TREE(err = TreeVerify(node);)
     return err;
 }
 

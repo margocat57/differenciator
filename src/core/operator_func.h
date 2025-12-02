@@ -44,7 +44,7 @@ const op_info OPERATORS_INFO[] = {
     {OP_SUB, "-",   1, "OP_SUB", 1,  "" ,       " - ",      "",  DIFFERENCIATOR(DiffSub,) CALCUL(CalcSub)},
     {OP_MUL, "*",   1, "OP_MUL", 2,  "" ,       " \\cdot ", "",  DIFFERENCIATOR(DiffMul,) CALCUL(CalcMul)},
     {OP_DIV, "/",   1, "OP_DIV", 2,  "\\frac{", "}{",       "}", DIFFERENCIATOR(DiffDiv,) CALCUL(CalcDiv)},
-    {OP_DEG, "^",   1, "OP_DEG", 2,  "",        "^{",       "}", DIFFERENCIATOR(DiffDeg,) CALCUL(CalcDeg)},
+    {OP_DEG, "^",   1, "OP_DEG", 3,  "",        "^{",       "}", DIFFERENCIATOR(DiffDeg,) CALCUL(CalcDeg)},
     {OP_SIN, "sin", 3, "OP_SIN", 2,  "\\sin(" , NULL ,      ")", DIFFERENCIATOR(DiffSin,) CALCUL(CalcSin)},
     {OP_COS, "cos", 3, "OP_COS", 2,  "\\cos(" , NULL ,      ")", DIFFERENCIATOR(DiffCos,) CALCUL(CalcCos)},
     {OP_LN,  "ln",  2, "OP_LN",  2,  "\\ln(" ,  NULL ,      ")", DIFFERENCIATOR(DiffLn,)  CALCUL(CalcLn) },

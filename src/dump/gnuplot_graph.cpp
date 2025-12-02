@@ -135,7 +135,7 @@ static void MakePicture(const char* gp_filename, TreeErr_t* err){
     char sys_buffer[300] = {};
 
     strncpy(sys_buffer, "gnuplot ", sizeof("gnuplot "));
-    strncat(sys_buffer, gp_filename, 100);
+    strncat(sys_buffer, gp_filename, 200);
 
     if(system(sys_buffer)){;
         *err = CANT_MAKE_GRAPH;

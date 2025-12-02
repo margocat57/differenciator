@@ -42,7 +42,7 @@ static void ConnectWithParents(TreeNode_t *node);
 
 #define DEF_OP(Op, Result)                                                                \
     static TreeNode_t *Diff##Op(TreeNode_t *node, const size_t var_id, FILE *file, metki *mtk){                                                                                          \
-        assert(node);                                                                          \
+        assert(node); assert(file); assert(mtk);                                                                       \
         TreeNode_t *result = Result;                                                           \
         ConnectWithParents(result);                                                            \
         TreeOptimize(&result);                                                                 \
@@ -197,7 +197,6 @@ TreeErr_t CreateForestWithTaylorDecompose(Forest_t *forest_taylor, Forest_t *dif
         return err;
     }
 
-    printf("For Taylor formula at first the derivatives must be calcutated:\t");
     fprintf(latex_dump, "{\\large \\textbf{At first the derivatives must be calcutated:}}\n\n");
     CHECK_AND_RET_TREEERR(CreateForestWithNDerivatives(diff_forest, latex_dump, params));
 

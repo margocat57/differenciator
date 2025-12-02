@@ -29,7 +29,7 @@ static TreeErr_t OperatorDump(FILE* file, TreeNode_t* node, metki* mtk){
     }
 
     fprintf(file, "%s", OPERATORS_INFO[node->data.op].dump_start); 
-    
+
     CHECK_AND_RET_TREEERR(DumpSubtree(file, node->left, mtk));
     if(OPERATORS_INFO[node->data.op].dump_cont){
         fprintf(file, "%s", OPERATORS_INFO[node->data.op].dump_cont); 
@@ -144,7 +144,7 @@ TreeErr_t NeedStaples(TreeNode_t* node, bool* need_staples){
         *need_staples = true;
         return NO_MISTAKE_T;
     }
-    if(node->parent->data.op == OP_DEG){
+    if(node->parent->data.op == OP_DEG){ //для случая 1 / (x^2^2^2)
         *need_staples = true;
         return NO_MISTAKE_T;
     }
@@ -197,8 +197,6 @@ R"(\documentclass[a4paper,12pt]{report}
 \begin{document}
 \maketitle
 
-\tableofcontents
-
 \chapter*{Preface}
 This textbook is designed to assist economics students studying the basic course of mathematical analysis. 
 It summarizes the entire mathematical analysis course taught to economists in the best undergraduate economics program in Eastern Europe.
@@ -206,6 +204,9 @@ It summarizes the entire mathematical analysis course taught to economists in th
 The lectures include only the essential material, ensuring that students who have achieved top honors in national economics Olympiads are not overburdened and can maintain their sense of superiority over the rest of the world. 
 After all, they likely mastered all this material in kindergarten (or at the latest, by first grade). The division of topics into lectures corresponds well to the actual pace of the course, which spans an entire semester. 
 Almost all statements in the course are self-evident, and their proofs are left to the reader as straightforward exercises. 
+
+\tableofcontents
+
     )");
     return latex_file;
 }
@@ -307,7 +308,7 @@ void EndLatexDump(FILE* latex_file){
 void GeneratePdfFromTex(const char* latex_file){
     assert(latex_file);
     // cd output && pdflatex 
-    char cmd_buffer[MAX_CMD_BUFFER] = "";
+    char cmd_buffer[MAX_CMD_BUFFER] = {};
     size_t len = strlen(latex_file);
     strncat(cmd_buffer, "cd output &&", sizeof("cd output &&"));
     for(int i = 0; i < 2; i++){

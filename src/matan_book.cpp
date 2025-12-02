@@ -30,7 +30,7 @@ TreeErr_t MatanBook(Forest_t* forest_diff, Forest_t* forest_diff_taylor, Forest_
     CHECK_AND_RET_TREEERR(CreateForestWithNDerivatives(forest_diff, latex_dump, &params))
 
     LatexDumpChapterTaylor(latex_dump);
-    CHECK_AND_RET_TREEERR(CreateDiffParams(&params,forest_diff->mtk, YES))
+    CHECK_AND_RET_TREEERR(CreateDiffParams(&params, forest_diff_taylor->mtk, YES))
     CHECK_AND_RET_TREEERR(CreateForestWithTaylorDecompose(forest_taylor, forest_diff_taylor, latex_dump, &params))
     CHECK_AND_RET_TREEERR(LatexDumpTaylor(latex_dump, forest_diff_taylor, forest_taylor))
     CHECK_AND_RET_TREEERR(DumpGraphLatex(forest_diff_taylor, forest_taylor, 0, 0, latex_dump))
