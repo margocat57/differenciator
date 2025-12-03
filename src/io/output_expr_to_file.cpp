@@ -16,8 +16,6 @@
 #include "../core/operator_func.h"
 #include "../dump/latex_dump.h"
 
-const double EPS = 1e-15;
-
 //-----------------------------------------------------------------
 // Output func
 
@@ -51,7 +49,7 @@ static TreeErr_t DumpToFileRecursive(FILE* file, TreeNode_t* node, metki* mtk){
     return NO_MISTAKE_T;
 }
 
-static TreeErr_t DumpSubtree(FILE* file, TreeNode_t* node, metki* mtk);
+static TreeErr_t DumpSubtreeGp(FILE* file, TreeNode_t* node, metki* mtk);
 
 static TreeErr_t OperatorDumpFile(FILE* file, TreeNode_t* node, metki* mtk){
     assert(file); assert(node); 
@@ -60,22 +58,25 @@ static TreeErr_t OperatorDumpFile(FILE* file, TreeNode_t* node, metki* mtk){
         return INCORR_OPERATOR;
     }
     
-    CHECK_AND_RET_TREEERR(DumpSubtree(file, node->left, mtk));
-    if(OPERATORS_INFO[node->data.op].dump_cont && OPERATORS_INFO[node->data.op].op != OP_DEG){
-        fprintf(file, "%s", OPERATORS_INFO[node->data.op].op_name); 
-    }
-    else if(OPERATORS_INFO[node->data.op].op == OP_DEG){
-        fprintf(file, "**"); 
+    fprintf(file, "%s", OPERATORS_INFO[node->data.op].dump_gnuplot_start);
+
+
+    CHECK_AND_RET_TREEERR(DumpSubtreeGp(file, node->left, mtk));
+    if(OPERATORS_INFO[node->data.op].dump_cont){
+        fprintf(file, "%s", OPERATORS_INFO[node->data.op].dump_gnuplot_cont); 
     }
 
     if(node->right){
-        CHECK_AND_RET_TREEERR(DumpSubtree(file, node->right, mtk));
+        CHECK_AND_RET_TREEERR(DumpSubtreeGp(file, node->right, mtk));
     }
+
+    fprintf(file, "%s", OPERATORS_INFO[node->data.op].dump_gnuplot_end); 
 
     return NO_MISTAKE_T; 
 }
 
-static TreeErr_t DumpSubtree(FILE* file, TreeNode_t* node, metki* mtk){
+
+static TreeErr_t DumpSubtreeGp(FILE* file, TreeNode_t* node, metki* mtk){
     bool staples = false; 
     CHECK_AND_RET_TREEERR(NeedStaples(node, &staples)); 
     if (staples) fprintf(file, "("); 

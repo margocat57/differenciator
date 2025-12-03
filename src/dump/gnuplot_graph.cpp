@@ -2,19 +2,20 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
+#include <math.h>
 #include "../io/output_expr_to_file.h"
 #include "../calculation_optimization/calcul_tree.h"
 #include <assert.h>
 
 static char* CreateDumpFile(const char* format);
 
-static TreeErr_t PrintInfo(Forest_t *forest, size_t idx1, size_t idx2, FILE* gp_dump, const char* svg_filename, IS_TAYLOR is_taylor);
+static TreeErr_t PrintInfo(Forest_t *forest, size_t idx1, size_t idx2, FILE* gp_dump, const char* svg_filename, bool is_taylor);
 
 static void MakePicture(const char* gp_filename, TreeErr_t* err);
 
-char* DrawGraph(Forest_t *forest, size_t idx1, size_t idx2, TreeErr_t *err, IS_TAYLOR is_taylor){
-    DEBUG_TREE( *err = TreeNodeVerify(forest->head_arr[idx1]->root);
-                *err = TreeNodeVerify(forest->head_arr[idx2]->root);)
+char* DrawGraph(Forest_t *forest, size_t idx1, TreeErr_t *err, bool is_taylor, size_t idx2){
+    DEBUG_TREE(           *err = TreeNodeVerify(forest->head_arr[idx1]->root);
+    if(is_taylor == YES) *err = TreeNodeVerify(forest->head_arr[idx2]->root);)
     if(*err) return NULL;
 
     char* svg_filename = CreateDumpFile("svg");
@@ -50,8 +51,8 @@ char* DrawGraph(Forest_t *forest, size_t idx1, size_t idx2, TreeErr_t *err, IS_T
 
     free(gp_filename);
 
-    DEBUG_TREE( *err = TreeNodeVerify(forest->head_arr[idx1]->root);
-                *err = TreeNodeVerify(forest->head_arr[idx2]->root);)
+    DEBUG_TREE(           *err = TreeNodeVerify(forest->head_arr[idx1]->root);
+    if(is_taylor == YES) *err = TreeNodeVerify(forest->head_arr[idx2]->root);)
     return svg_filename;
 }
 
@@ -84,13 +85,13 @@ static char* CreateDumpFile(const char* format){
     return svg_filename;
 }
 
-static TreeErr_t PrintInfo(Forest_t *forest, size_t idx1, size_t idx2, FILE* gp_dump, const char* svg_filename, IS_TAYLOR is_taylor){
+static TreeErr_t PrintInfo(Forest_t *forest, size_t idx1, size_t idx2, FILE* gp_dump, const char* svg_filename, bool is_taylor){
     double delta = 3;
     double min_value_x = forest->x_y_range.x_min_dump;
     double max_value_x = forest->x_y_range.x_max_dump;
     double min_value_y = forest->x_y_range.y_min_dump;
     double max_value_y = forest->x_y_range.y_max_dump;
-    if(is_taylor == YES && (forest->mtk->var_info[0].value <= min_value_x || forest->mtk->var_info[0].value <= max_value_x)){
+    if(is_taylor && (forest->mtk->var_info[0].value <= min_value_x || forest->mtk->var_info[0].value <= max_value_x)){
         min_value_x = forest->mtk->var_info[0].value - delta;
         max_value_x = forest->mtk->var_info[0].value + delta;
         min_value_y = 0;
@@ -105,48 +106,42 @@ static TreeErr_t PrintInfo(Forest_t *forest, size_t idx1, size_t idx2, FILE* gp_
     "set grid\n", svg_filename);
 
     // x_min should not equal x_max!
-    if(min_value_x != max_value_x){
+    if(fabs(min_value_x - max_value_x) < EPS){
         fprintf(gp_dump, "set xrange [%lg:%lg]\n", min_value_x, max_value_x);
     } 
     else{
         fprintf(gp_dump, "set autoscale x\n");  
     }
 
-    if(min_value_y != max_value_y){
+    if(fabs(min_value_y - max_value_y) < EPS){
         fprintf(gp_dump, "set yrange [%lg:%lg]\n", min_value_y, max_value_y);
     } 
     else{
         fprintf(gp_dump, "set autoscale y\n");  
     }
+    if(is_taylor){
+        fprintf(gp_dump, 
+        "set key top left\n"          
+        "set key box\n"               
+        "set key spacing 2.5\n"
+        "set key width 2.5\n"
+        "set key height 1\n");  
+    }
+    
 
-    fprintf(gp_dump, 
-    "set key top left\n"            
-    "set key box\n"               
-    "set key spacing 2.5\n"
-    "set key width 2.5\n"
-    "set key height 1\n");  
-
-    fprintf(gp_dump, "f(%c) = ", forest->mtk->var_info[0].variable_name);
+    fprintf(gp_dump, "\nf(%c) = ", forest->mtk->var_info[0].variable_name);
     CHECK_AND_RET_TREEERR(DumpToFile(gp_dump, forest->head_arr[idx1]->root, forest->mtk));
     fprintf(gp_dump, "\n");
 
-    if(is_taylor == NO){
-        fprintf(gp_dump, "df(%c) = ", forest->mtk->var_info[0].variable_name);
-    }
-    else{   
+    if(is_taylor){  
         fprintf(gp_dump, "Tf(%c) = ", forest->mtk->var_info[0].variable_name);
+        CHECK_AND_RET_TREEERR(DumpToFile(gp_dump, forest->head_arr[idx2]->root, forest->mtk));
+        fprintf(gp_dump, "\n");
     }
 
-    CHECK_AND_RET_TREEERR(DumpToFile(gp_dump, forest->head_arr[idx2]->root, forest->mtk));
-
-    fprintf(gp_dump, "\n");
-
-    fprintf(gp_dump, "plot f(%c) with lines linecolor \"blue\" title \"f(%c)\", \\\n", forest->mtk->var_info[0].variable_name, forest->mtk->var_info[0].variable_name);
-    if(is_taylor == NO){
-        fprintf(gp_dump, "df(%c) with lines linecolor \"red\" title \"f'(%c)\" \n", forest->mtk->var_info[0].variable_name, forest->mtk->var_info[0].variable_name);
-    }
-    else{
-        fprintf(gp_dump, "Tf(%c) with lines linecolor \"red\" title \"T(%c)\" \n", forest->mtk->var_info[0].variable_name, forest->mtk->var_info[0].variable_name);
+    fprintf(gp_dump, "plot f(%c) with lines linecolor \"blue\" title \"f(%c)\"", forest->mtk->var_info[0].variable_name, forest->mtk->var_info[0].variable_name);
+    if(is_taylor){
+        fprintf(gp_dump, " \\\n, Tf(%c) with lines linecolor \"red\" title \"T(%c)\" \n", forest->mtk->var_info[0].variable_name, forest->mtk->var_info[0].variable_name);
     }
     
     return NO_MISTAKE_T;
@@ -155,8 +150,7 @@ static TreeErr_t PrintInfo(Forest_t *forest, size_t idx1, size_t idx2, FILE* gp_
 static void MakePicture(const char* gp_filename, TreeErr_t* err){
     char sys_buffer[300] = {};
 
-    strncpy(sys_buffer, "gnuplot ", sizeof("gnuplot "));
-    strncat(sys_buffer, gp_filename, 200);
+    snprintf(sys_buffer, 200, "gnuplot %s", gp_filename);
 
     if(system(sys_buffer)){;
         *err = CANT_MAKE_GRAPH;

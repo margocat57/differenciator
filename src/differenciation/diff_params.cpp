@@ -8,7 +8,7 @@ static size_t FindVarCodeToDiff(metki *mtk);
 
 static size_t FindVarByName(char var_name, metki* mtk);
 
-TreeErr_t CreateDiffParams(Forest_t* forest, IS_TAYLOR is_taylor){
+TreeErr_t CreateDiffParams(Forest_t* forest){
     TreeErr_t err = NO_MISTAKE_T;
     DEBUG_TREE( err = ForestVerify(forest_taylor);)
     if(err) return err;
@@ -24,10 +24,6 @@ TreeErr_t CreateDiffParams(Forest_t* forest, IS_TAYLOR is_taylor){
             forest->params.num_of_derivative = 0;
             return INCORR_VAR_TO_DIFF;
         }
-    }
-
-    if(is_taylor == YES && !(forest->mtk->has_value)){
-        metki_add_values(forest->mtk);
     }
 
     DEBUG_TREE( err = ForestVerify(forest_taylor);)

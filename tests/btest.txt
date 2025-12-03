@@ -1,9 +1,4 @@
-(+
-  (cos
-    (sin (x nil nil) (0 nil nil))
-    (0 nil nil)
-  )
-  (^(x nil nil)
-    (3 nil nil)
-  )
-)
+cos((x + 3)^5) + ( cos(x) + 6 ) * x + ( cos(x) + 5 ) * cos(x)$
+X from -4 to -1
+Y from 28 to 40
+n = 1 var = x

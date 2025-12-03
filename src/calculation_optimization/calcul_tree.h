@@ -3,9 +3,8 @@
 #include "../core/tree.h"
 #include "../utils/mistakes.h"
 #include "../core/forest.h"
-#include "../utils/taylor_enum.h"
 
-TreeErr_t CalcTreeExpression(TreeNode_t* node, metki* mtk, double* result, IS_TAYLOR is_taylor);
+TreeErr_t CalcTreeExpression(TreeNode_t* node, metki* mtk, double* result, bool is_taylor);
 
 TreeErr_t TreeOptimize(TreeNode_t **node);
 

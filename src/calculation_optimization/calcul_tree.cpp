@@ -6,9 +6,6 @@
 #include "../core/tree_func.h"
 #include "../core/forest.h"
 
-
-const double EPS = 1e-15;
-
 //--------------------------------------------------------------------------------------------
 //--------------------------------------------------------------------------------------------
 // DSL for calculating funt
@@ -24,7 +21,7 @@ static void Calc##Op(double* result, double* left_result, double* right_result){
 DEF_OP(Add, RES_L + RES_R);
 DEF_OP(Sub, RES_L - RES_R);
 DEF_OP(Mul, RES_L * RES_R);
-DEF_OP(Div, (RES_R != 0) ? RES_L / RES_R : 0);
+DEF_OP(Div, (fabs(RES_R) > EPS) ? RES_L / RES_R : 0);
 DEF_OP(Deg, pow(RES_L, RES_R));
 
 /*
@@ -55,16 +52,16 @@ DEF_OP(Arcctg,  M_PI_2 - atan(RES_L));
 
 static TreeErr_t CalcTreeExpressionRecursive(metki* mtk, TreeNode_t* node, double* result);
 
-TreeErr_t CalcTreeExpression(TreeNode_t* node, metki* mtk, double* result, IS_TAYLOR is_taylor){
+TreeErr_t CalcTreeExpression(TreeNode_t* node, metki* mtk, double* result, bool is_taylor){
     assert(result);
 
     TreeErr_t err = NO_MISTAKE_T;
     DEBUG_TREE(err = TreeNodeVerify(node);)
     if(err) return err;
     
-    if(is_taylor == NO) metki_add_values(mtk);
+    if(!is_taylor && !mtk->has_value) MetkiAddValues(mtk);
     CHECK_AND_RET_TREEERR(CalcTreeExpressionRecursive(mtk, node, result));
-    if(is_taylor == NO) metki_del_values(mtk);
+    if(!is_taylor && !mtk->has_value) MetkiDelValues(mtk);
 
     DEBUG_TREE(err = TreeNodeVerify(node);)
     return err;
@@ -218,8 +215,9 @@ static TreeErr_t TreeOptimizeNeutral(TreeNode_t **result, TreeNode_t *node, bool
             case OP_MUL:              CHECK_AND_RET_TREEERR(TreeOptimizeNeutralMul(result, node, is_optimized));    break;
             case OP_DIV:              CHECK_AND_RET_TREEERR(TreeOptimizeNeutralDiv(result, node, is_optimized));    break;
             case OP_DEG:              CHECK_AND_RET_TREEERR(TreeOptimizeNeutralDeg(result, node, is_optimized));    break;
-            case OP_SIN: case OP_COS: case OP_TG: case OP_CTG: case OP_LN:
-            case OP_SH:  case OP_CH:  case OP_TH: case OP_CTH:                                                      break;
+            case OP_SIN:    case OP_COS:    case OP_TG:    case OP_CTG:   case OP_LN:
+            case OP_SH:     case OP_CH:     case OP_TH:    case OP_CTH: 
+            case OP_ARCSIN: case OP_ARCCOS: case OP_ARCTG: case OP_ARCCTG:                                          break;
             default:                  return INCORR_OPERATOR;
             }
     }
@@ -227,6 +225,7 @@ static TreeErr_t TreeOptimizeNeutral(TreeNode_t **result, TreeNode_t *node, bool
 }
 
 static void ChangeKidParrentConn(TreeNode_t** result, TreeNode_t* node_for_change, TreeNode_t* new_node, bool* is_optimized){
+    new_node->parent = node_for_change->parent;
     if(node_for_change->parent){
         if(node_for_change == node_for_change->parent->left){
             node_for_change->parent->left = new_node;
@@ -234,7 +233,6 @@ static void ChangeKidParrentConn(TreeNode_t** result, TreeNode_t* node_for_chang
         else{
             node_for_change->parent->right = new_node;
         }
-        new_node->parent = node_for_change->parent;
     }
     else{
         *result = new_node;

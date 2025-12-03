@@ -6,6 +6,7 @@
 
 const char* const TREE_SIGNATURE = "My_tree";
 const int POISON = -6666;
+const double EPS = 1e-15;
 
 enum OPERATORS{
     INCORR,
@@ -49,7 +50,7 @@ union TreeElem_t{
             fprintf(stderr, "err = %llu, %s, %s, %d\n", err_macro, __FILE__, __func__, __LINE__); \
             return err_macro; \
         } \
-    }while(0); \
+    }while(0) \
 
 
 enum VALUE_TYPE{

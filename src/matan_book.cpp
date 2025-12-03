@@ -16,30 +16,30 @@ TreeErr_t MatanBook(Forest_t *forest_diff, Forest_t *forest_taylor, const char *
         return err;
 
     char buffer[300] = {};
-    strncpy(buffer, "output/", sizeof("output/"));
-    strncat(buffer, book_file, strlen(book_file));
+    snprintf(buffer, 300, "output/%s", book_file);
 
-    FILE *latex_dump = StartLatexDump(buffer);
-    if (!latex_dump)
-    {
+    FILE *latex_dump = StartMatanBook(buffer);
+    if (!latex_dump){
         return INCORR_FILE;
     }
-    LatexDumpDecimals(latex_dump);
+    LatexCreateChapterDecimals(latex_dump);
 
-    LatexDumpChapterDiff(latex_dump);
-    CHECK_AND_RET_TREEERR(CreateDiffParams(forest_diff, NO))
-    CHECK_AND_RET_TREEERR(CreateForestWithNDerivatives(forest_diff, latex_dump))
+    LatexCreateChapterDiff(latex_dump); 
+    CHECK_AND_RET_TREEERR_MATAN_BOOK(CreateDiffParams(forest_diff), latex_dump); 
+    CHECK_AND_RET_TREEERR_MATAN_BOOK(CreateForestWithNDerivatives(forest_diff, latex_dump), latex_dump);
+    CHECK_AND_RET_TREEERR_MATAN_BOOK(CreateAndLatexGraphicsDerivatives(forest_diff, latex_dump), latex_dump);
 
-    LatexDumpChapterTaylor(latex_dump);
-    CHECK_AND_RET_TREEERR(CreateDiffParams(forest_taylor, YES))
-    CHECK_AND_RET_TREEERR(CreateForestWithTaylorDecompose(forest_taylor, latex_dump))
-    CHECK_AND_RET_TREEERR(LatexDumpTaylor(latex_dump, forest_taylor))
-    CHECK_AND_RET_TREEERR(DumpGraphLatex(forest_taylor, 0, forest_taylor->first_free_place - 1, latex_dump, YES))
-    metki_del_values(forest_taylor->mtk);
+    LatexCreateChapterTaylor(latex_dump);
+    CHECK_AND_RET_TREEERR_MATAN_BOOK(CreateDiffParams(forest_taylor), latex_dump);
+    MetkiAddValues(forest_taylor->mtk);
+    CHECK_AND_RET_TREEERR_MATAN_BOOK(CreateForestWithTaylorDecompose(forest_taylor, latex_dump), latex_dump);
+    CHECK_AND_RET_TREEERR_MATAN_BOOK(CreateLatexTaylorDecompose(forest_taylor, latex_dump), latex_dump);
+    CHECK_AND_RET_TREEERR_MATAN_BOOK(CreateAndLatexTaylorGraphics(forest_taylor, latex_dump), latex_dump);
+    MetkiDelValues(forest_taylor->mtk);
 
-    LatexDumpAfterWord(latex_dump);
+    LatexCreateAfterWord(latex_dump);
 
-    EndLatexDump(latex_dump);
+    EndMatanBook(latex_dump);
     GeneratePdfFromTex(book_file);
 
     DEBUG_TREE(err = ForestVerify(forest_diff);

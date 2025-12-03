@@ -8,7 +8,6 @@
 #include "../calculation_optimization/calcul_tree.h"
 #include "../dump/latex_dump.h"
 #include "../utils/rofl_matan.h"
-#include "../utils/taylor_enum.h"
 
 // Need to declare for dsl
 
@@ -16,29 +15,33 @@ static TreeNode_t *Differenciate(TreeNode_t *node, const size_t var_id, FILE *fi
 
 static void ConnectWithParents(TreeNode_t *node);
 
+static TreeErr_t ConnectAndOptimize(TreeNode_t** node);
+
 //----------------------------------------------------------
 // DSL define
 #define DIFFERENCIATOR_CPP
-#define DL_ Differenciate(node->left, var_id, file, mtk)
-#define DR_ Differenciate(node->right, var_id, file, mtk)
-#define CL_ NodeCopy(node->left)
-#define CR_ NodeCopy(node->right)
+#define DL_               Differenciate(node->left, var_id, file, mtk)
+#define DR_               Differenciate(node->right, var_id, file, mtk)
+#define CL_               NodeCopy(node->left)
+#define CR_               NodeCopy(node->right)
 #define ADD_(left, right) NodeCtor(OPERATOR, (TreeElem_t){.op = OP_ADD}, NULL, left, right)
 #define SUB_(left, right) NodeCtor(OPERATOR, (TreeElem_t){.op = OP_SUB}, NULL, left, right)
 #define MUL_(left, right) NodeCtor(OPERATOR, (TreeElem_t){.op = OP_MUL}, NULL, left, right)
 #define DIV_(left, right) NodeCtor(OPERATOR, (TreeElem_t){.op = OP_DIV}, NULL, left, right)
 #define DEG_(left, right) NodeCtor(OPERATOR, (TreeElem_t){.op = OP_DEG}, NULL, left, right)
-#define SIN_(left) NodeCtor(OPERATOR, (TreeElem_t){.op = OP_SIN}, NULL, left, NULL)
-#define COS_(left) NodeCtor(OPERATOR, (TreeElem_t){.op = OP_COS}, NULL, left, NULL)
-#define LN_(left) NodeCtor(OPERATOR, (TreeElem_t){.op = OP_LN}, NULL, left, NULL)
-#define SH_(left) NodeCtor(OPERATOR, (TreeElem_t){.op = OP_SH}, NULL, left, NULL)
-#define CH_(left) NodeCtor(OPERATOR, (TreeElem_t){.op = OP_CH}, NULL, left, NULL)
-#define TH_(left) NodeCtor(OPERATOR, (TreeElem_t){.op = OP_TH}, NULL, left, NULL)
-#define CTH_(left) NodeCtor(OPERATOR, (TreeElem_t){.op = OP_CTH}, NULL, left, NULL)
-#define NUM_(num) NodeCtor(CONST, (TreeElem_t){.const_value = num}, NULL, NULL, NULL)
+#define SIN_(left)        NodeCtor(OPERATOR, (TreeElem_t){.op = OP_SIN}, NULL, left, NULL)
+#define COS_(left)        NodeCtor(OPERATOR, (TreeElem_t){.op = OP_COS}, NULL, left, NULL)
+#define LN_(left)         NodeCtor(OPERATOR, (TreeElem_t){.op = OP_LN}, NULL, left, NULL)
+#define SH_(left)         NodeCtor(OPERATOR, (TreeElem_t){.op = OP_SH}, NULL, left, NULL)
+#define CH_(left)         NodeCtor(OPERATOR, (TreeElem_t){.op = OP_CH}, NULL, left, NULL)
+#define TH_(left)         NodeCtor(OPERATOR, (TreeElem_t){.op = OP_TH}, NULL, left, NULL)
+#define CTH_(left)        NodeCtor(OPERATOR, (TreeElem_t){.op = OP_CTH}, NULL, left, NULL)
+#define NUM_(num)         NodeCtor(CONST, (TreeElem_t){.const_value = num}, NULL, NULL, NULL)
 #define L node->left
 #define R node->right
 #define VAR_NODE(var_id) NodeCtor(VARIABLE, (TreeElem_t){.var_code = var_id}, NULL, NULL, NULL)
+#define TAYLOR_VALUE     forest_taylor->mtk->var_info[0].value
+#define MATH_FACT        tgammaf(idx + 1)
 
 #define DEF_OP(Op, Result)                                                                     \
     static TreeNode_t *Diff##Op(TreeNode_t *node, const size_t var_id, FILE *file, metki *mtk) \
@@ -47,29 +50,27 @@ static void ConnectWithParents(TreeNode_t *node);
         assert(file);                                                                          \
         assert(mtk);                                                                           \
         TreeNode_t *result = Result;                                                           \
-        ConnectWithParents(result);                                                            \
-        TreeOptimize(&result);                                                                 \
-        const char *msg = GenerateRoflMsg();                                                   \
-        LatexDump(file, node, result, mtk, msg, var_id);                                       \
+        ConnectAndOptimize(&(result));                                                         \
+        PutDerivativeToLatex(file, node, result, mtk, var_id, "%s", GenerateRoflMsg());        \
         return result;                                                                         \
     }
 
-DEF_OP(Add, ADD_(DL_, DR_))
-DEF_OP(Sub, SUB_(DL_, DR_))
-DEF_OP(Mul, ADD_(MUL_(DL_, CR_), MUL_(CL_, DR_)))
-DEF_OP(Div, DIV_(SUB_(MUL_(DL_, CR_), MUL_(CL_, DR_)), DEG_(CR_, NUM_(2))))
-DEF_OP(Cos, MUL_(DL_, MUL_(NUM_(-1), SIN_(CL_))))
-DEF_OP(Sin, MUL_(DL_, COS_(CL_)))
-DEF_OP(Ln, MUL_(DL_, DIV_(NUM_(1), CL_)))
-DEF_OP(Tg, DIV_(DL_, DEG_(COS_(CL_), NUM_(2))))
-DEF_OP(Ctg, MUL_(DIV_(DL_, DEG_(SIN_(CL_), NUM_(2))), NUM_(-1)))
-DEF_OP(Sh, MUL_(DL_, CH_(CL_)))
-DEF_OP(Ch, MUL_(DL_, SH_(CL_)))
-DEF_OP(Th, DIV_(DL_, DEG_(CH_(CL_), NUM_(2))))
-DEF_OP(Cth, MUL_(DIV_(DL_, DEG_(SH_(CL_), NUM_(2))), NUM_(-1)))
+DEF_OP(Add,    ADD_(DL_, DR_))
+DEF_OP(Sub,    SUB_(DL_, DR_))
+DEF_OP(Mul,    ADD_(MUL_(DL_, CR_), MUL_(CL_, DR_)))
+DEF_OP(Div,    DIV_(SUB_(MUL_(DL_, CR_), MUL_(CL_, DR_)), DEG_(CR_, NUM_(2))))
+DEF_OP(Cos,    MUL_(DL_, MUL_(NUM_(-1), SIN_(CL_))))
+DEF_OP(Sin,    MUL_(DL_, COS_(CL_)))
+DEF_OP(Ln,     MUL_(DL_, DIV_(NUM_(1), CL_)))
+DEF_OP(Tg,     DIV_(DL_, DEG_(COS_(CL_), NUM_(2))))
+DEF_OP(Ctg,    MUL_(DIV_(DL_, DEG_(SIN_(CL_), NUM_(2))), NUM_(-1)))
+DEF_OP(Sh,     MUL_(DL_, CH_(CL_)))
+DEF_OP(Ch,     MUL_(DL_, SH_(CL_)))
+DEF_OP(Th,     DIV_(DL_, DEG_(CH_(CL_), NUM_(2))))
+DEF_OP(Cth,    MUL_(DIV_(DL_, DEG_(SH_(CL_), NUM_(2))), NUM_(-1)))
 DEF_OP(Arcsin, MUL_(DL_, DIV_(NUM_(1), DEG_(SUB_(NUM_(1), DEG_(CL_, NUM_(2))), NUM_(0.5)))))
 DEF_OP(Arccos, MUL_(NUM_(-1), MUL_(DL_, DIV_(NUM_(1), DEG_(SUB_(NUM_(1), DEG_(CL_, NUM_(2))), NUM_(0.5))))))
-DEF_OP(Arctg, MUL_(DL_, DIV_(NUM_(1), ADD_(NUM_(1), DEG_(CL_, NUM_(2))))))
+DEF_OP(Arctg,  MUL_(DL_, DIV_(NUM_(1), ADD_(NUM_(1), DEG_(CL_, NUM_(2))))))
 DEF_OP(Arcctg, MUL_(NUM_(-1), MUL_(DL_, DIV_(NUM_(1), ADD_(NUM_(1), DEG_(CL_, NUM_(2)))))))
 
 //---------------------------------------------------------
@@ -82,11 +83,18 @@ static bool is_type_num(TreeNode_t *node)
 }
 
 // любой другой тип кроме числа
-static bool is_type_not_num(TreeNode_t *node)
-{
+static bool is_type_not_num(TreeNode_t *node){
     assert(node);
     return (node->type == VARIABLE || node->type == OPERATOR);
 }
+
+static TreeErr_t ConnectAndOptimize(TreeNode_t** node){
+    assert(node); assert(*node);
+    ConnectWithParents(*node);
+    CHECK_AND_RET_TREEERR(TreeOptimize(node));
+    return NO_MISTAKE_T;
+}
+
 //--------------------------------------------------
 // And one function that is harder than DSL func
 static TreeNode_t *DiffDeg(TreeNode_t *node, const size_t var_id, FILE *file, metki *mtk)
@@ -105,10 +113,8 @@ static TreeNode_t *DiffDeg(TreeNode_t *node, const size_t var_id, FILE *file, me
     {
         result = MUL_(DEG_(CL_, CR_), ADD_(MUL_(DR_, LN_(CL_)), DIV_(MUL_(DL_, CR_), CL_)));
     }
-    ConnectWithParents(result);
-    TreeOptimize(&result);
-    const char *msg = GenerateRoflMsg();
-    LatexDump(file, node, result, mtk, msg, var_id);
+    ConnectAndOptimize(&node);
+    PutDerivativeToLatex(file, node, result, mtk, var_id, "%s", GenerateRoflMsg());
     return result;
 }
 //----------------------------------------------------
@@ -125,11 +131,9 @@ TreeErr_t CreateForestWithNDerivatives(Forest_t *forest, FILE *latex_dump)
 {
     TreeErr_t err = NO_MISTAKE_T;
     DEBUG_TREE(err = ForestVerify(forest);)
-    if (err)
-        return err;
+    if(err) return err;
 
-    for (size_t idx = 0; idx < forest->params.num_of_derivative; idx++)
-    {
+    for(size_t idx = 0; idx < forest->params.num_of_derivative; idx++){
         CHECK_AND_RET_TREEERR(CreateTreeWithDerivative(forest->params.var_id, forest, idx, latex_dump));
     }
 
@@ -137,16 +141,11 @@ TreeErr_t CreateForestWithNDerivatives(Forest_t *forest, FILE *latex_dump)
     return err;
 }
 
-static TreeErr_t CreateTreeWithDerivative(const size_t var_id, Forest_t *forest, size_t idx, FILE *latex_dump)
-{
+static TreeErr_t CreateTreeWithDerivative(const size_t var_id, Forest_t *forest, size_t idx, FILE *latex_dump){
     TreeHead_t *head_new = TreeCtor();
-    CHECK_AND_RET_TREEERR(LatexDump(latex_dump, forest->head_arr[idx]->root, NULL, forest->mtk, "\\textbf{Let's calculate a simple derivative:}\n", var_id));
+    CHECK_AND_RET_TREEERR(PutDerivativeToLatex(latex_dump, forest->head_arr[idx]->root, NULL, forest->mtk, var_id,  "\\section{Let's calculate %zu derivative:}\n", idx + 1));
     head_new->root = Differenciate(forest->head_arr[idx]->root, var_id, latex_dump, forest->mtk);
     CHECK_AND_RET_TREEERR(ForestAddElem(head_new, forest));
-    if (forest->mtk->first_free == 1)
-    {
-        CHECK_AND_RET_TREEERR(DumpGraphLatex(forest, idx, idx + 1, latex_dump, NO));
-    }
     return NO_MISTAKE_T;
 }
 
@@ -205,49 +204,34 @@ static void ConnectWithParents(TreeNode_t *node)
 
 static TreeNode_t *CreateTaylorTree(size_t idx, Forest_t *forest_taylor);
 
-TreeErr_t CreateForestWithTaylorDecompose(Forest_t *forest_taylor, FILE *latex_dump)
-{
-    assert(forest_taylor);
-    assert(latex_dump);
+TreeErr_t CreateForestWithTaylorDecompose(Forest_t *forest_taylor, FILE *latex_dump){
+    assert(forest_taylor); assert(latex_dump);
+    if(forest_taylor->mtk->first_free != 1) return NO_MISTAKE_T;
 
     TreeErr_t err = NO_MISTAKE_T;
     DEBUG_TREE(err = ForestVerify(forest_taylor);)
-    if (err)
-        return err;
+    if (err) return err;
 
-    if (forest_taylor->mtk->first_free != 1)
-    {
-        fprintf(latex_dump, "\\textbf{Can't create Taylor for two and more var}\n");
-        return err;
-    }
-
-    fprintf(latex_dump, "{\\large \\textbf{At first the derivatives must be calcutated:}}\n\n");
     CHECK_AND_RET_TREEERR(CreateForestWithNDerivatives(forest_taylor, latex_dump));
 
     TreeHead_t *head_new = TreeCtor();
-    head_new->root = CreateTaylorTree(0, forest_taylor);
+    head_new->root = NUM_(0);
 
-    for (size_t idx = 1; idx < forest_taylor->first_free_place; idx++)
-    {
-        TreeNode_t *term = CreateTaylorTree(idx, forest_taylor);
-        head_new->root = ADD_(head_new->root, term);
-        term->parent = head_new->root;
+    for(size_t idx = 0; idx < forest_taylor->first_free_place; idx++){
+        head_new->root = ADD_(head_new->root, CreateTaylorTree(idx, forest_taylor));
     }
-    ConnectWithParents(head_new->root);
-    TreeOptimize(&head_new->root);
+    CHECK_AND_RET_TREEERR(ConnectAndOptimize(&head_new->root));
     CHECK_AND_RET_TREEERR(ForestAddElem(head_new, forest_taylor));
 
     DEBUG_TREE(err = ForestVerify(forest_taylor);)
     return err;
 }
 
-static TreeNode_t *CreateTaylorTree(size_t idx, Forest_t *forest_taylor)
-{
+static TreeNode_t *CreateTaylorTree(size_t idx, Forest_t *forest_taylor){
     double result = 0;
-    CalcTreeExpression(forest_taylor->head_arr[idx]->root, forest_taylor->mtk, &result, YES);
-    TreeNode_t *node = MUL_(DIV_(NUM_(result), NUM_(tgammaf(idx + 1))), DEG_(SUB_(VAR_NODE(0), NUM_(forest_taylor->mtk->var_info[0].value)), NUM_(idx)));
-    ConnectWithParents(node);
-    TreeOptimize(&(node));
+    CalcTreeExpression(forest_taylor->head_arr[idx]->root, forest_taylor->mtk, &result, /*is_taylor*/ true);
+    TreeNode_t *node = MUL_(DIV_(NUM_(result), NUM_(MATH_FACT)), DEG_(SUB_(VAR_NODE(0), NUM_(TAYLOR_VALUE)), NUM_(idx)));
+    ConnectAndOptimize(&node);
     return node;
 }
 
@@ -277,5 +261,7 @@ static TreeNode_t *CreateTaylorTree(size_t idx, Forest_t *forest_taylor)
 #undef NUM_
 #undef DEF_OP
 #undef VAR_NODE
+#undef TAYLOR_VALUE
+#undef MATH_FACT 
 #undef DIFFERENCIATOR_CPP
 //----------------------------------------------------------

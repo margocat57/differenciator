@@ -4,9 +4,8 @@
 #include "../utils/mistakes.h"
 #include "../utils/metki.h"
 #include "../core/tree.h"
-#include "../utils/taylor_enum.h"
 #include "../core/forest.h"
 
-TreeErr_t CreateDiffParams(Forest_t* forest, IS_TAYLOR is_taylor);
+TreeErr_t CreateDiffParams(Forest_t* forest);
 
 #endif //DIFF_PARAMS_H 

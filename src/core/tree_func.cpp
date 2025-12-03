@@ -103,7 +103,7 @@ TreeErr_t PrintNode(const TreeNode_t* node, FILE* dot_file, int* rank, metki* mt
 
     if(node->left){
         PrintNodeConnect(node, node->left, dot_file, rank);
-        CHECK_AND_RET_TREEERR(PrintNode(node->left, dot_file, rank, mtk))
+        CHECK_AND_RET_TREEERR(PrintNode(node->left, dot_file, rank, mtk));
     }
 
     if(node->type == OPERATOR){
@@ -124,7 +124,7 @@ TreeErr_t PrintNode(const TreeNode_t* node, FILE* dot_file, int* rank, metki* mt
 
     if(node->right){
         PrintNodeConnect(node, node->right, dot_file, rank);
-        CHECK_AND_RET_TREEERR(PrintNode(node->right, dot_file, rank, mtk))
+        CHECK_AND_RET_TREEERR(PrintNode(node->right, dot_file, rank, mtk));
     }
     (*rank)--;
     return NO_MISTAKE_T;

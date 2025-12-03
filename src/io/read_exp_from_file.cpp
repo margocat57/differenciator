@@ -16,21 +16,16 @@
 #include "../core/operator_func.h"
 #include "../dump/latex_dump.h"
 
-const double EPS = 1e-15;
-
 //----------------------------------------------------------------------------
 // Helping functions to find spaces
 
-static void skip_space(char *str, size_t *pos)
+static void skip_space(const char *str, size_t *pos)
 {
     assert(str);
     assert(pos);
 
-    char ch = str[(*pos)];
-    while (isspace(ch) && ch != '\0')
-    {
+    while (isspace(str[(*pos)]) && str[(*pos)] != '\0'){
         (*pos)++;
-        ch = str[(*pos)];
     }
 }
 
@@ -87,14 +82,26 @@ static bool is_stat_err(const char *name_of_file, struct stat *all_info_about_fi
     return false;
 }
 
-static void buffer_free(char *buffer)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wcast-qual"
+static void buffer_free(const char *buffer)
 {
-    if (buffer)
-    {
-        memset(buffer, 0, strlen(buffer));
-        free(buffer);
+    if (buffer){
+        /**
+         * Так как free и memset не принимают в качестве аргументов
+         * const char*, выдавая ошибку "no matching function for call и 
+         * candidate function not viable: no known conversion from 'const char * 
+         * to 'void *' for 1st argument", то 
+         * так как программа программа в процессе парсинга в целях безопасности не изменяет 
+         * исходную строчку, то чтобы не снимать const с нее,
+         * но и дать возможность функции освобождать память под буффер в конце работы, 
+         * для которого память была выделена динамически, приходится снимать const здесь
+         */
+        memset((char*)buffer, 0, strlen(buffer));
+        free((char*)buffer);
     }
 }
+#pragma GCC diagnostic pop
 
 //-----------------------------------------------------------------------------------------
 //-----------------------------------------------------------------------------------------
@@ -104,32 +111,32 @@ static void buffer_free(char *buffer)
 // Grammar rules
 
 /* G ::= "E$" */
-static TreeNode_t *GetGrammarConstruction(size_t *pos, char *buffer, metki *mtk, TreeErr_t *err);
+static TreeNode_t *GetGrammarConstruction(size_t *pos, const char *buffer, metki *mtk, TreeErr_t *err);
 
 /* E ::= T{[+,-] T}* */
-static TreeNode_t *GetExpression(size_t *pos, char *buffer, metki *mtk, TreeErr_t *err);
+static TreeNode_t *GetExpression(size_t *pos, const char *buffer, metki *mtk, TreeErr_t *err);
 
 /* T ::= D{[*,/] D}* */
-static TreeNode_t *GetTerm(size_t *pos, char *buffer, metki *mtk, TreeErr_t *err);
+static TreeNode_t *GetTerm(size_t *pos, const char *buffer, metki *mtk, TreeErr_t *err);
 
 /* D ::= P{[^] P}* */
-static TreeNode_t *GetDeg(size_t *pos, char *buffer, metki *mtk, TreeErr_t *err);
+static TreeNode_t *GetDeg(size_t *pos, const char *buffer, metki *mtk, TreeErr_t *err);
 
 /* P ::= (E) | N | V | F */
-static TreeNode_t *GetPrimary(size_t *pos, char *buffer, metki *mtk, TreeErr_t *err);
+static TreeNode_t *GetPrimary(size_t *pos, const char *buffer, metki *mtk, TreeErr_t *err);
 
 /* N ::= ['0' - '9']+ */
-static TreeNode_t *GetNumber(size_t *pos, char *buffer);
+static TreeNode_t *GetNumber(size_t *pos, const char *buffer);
 
 /* V ::= ['a' - 'z'] */
-static TreeNode_t *GetVariable(size_t *pos, char *buffer, metki *mtk, TreeErr_t *err);
+static TreeNode_t *GetVariable(size_t *pos, const char *buffer, metki *mtk, TreeErr_t *err);
 
 /* F ::= ["sin", "cos", ... ] '(' E ')'   comment : (Проверка F зашита в проверку V) */
-static TreeNode_t *GetFunction(size_t *pos, char *buffer, metki *mtk, TreeErr_t *err, OPERATORS op);
+static TreeNode_t *GetFunction(size_t *pos, const char *buffer, metki *mtk, TreeErr_t *err, OPERATORS op);
 
 //-----------------------------------------------------------------------------------------
 
-static void GetAdditionalParams(char *buffer, size_t *pos, Forest_t *forest);
+static void GetAdditionalParams(const char *buffer, size_t *pos, Forest_t *forest);
 
 Forest_t *ReadAndCreateExpr(const char *name_of_file)
 {
@@ -166,7 +173,7 @@ Forest_t *ReadAndCreateExpr(const char *name_of_file)
     return forest;
 }
 
-static TreeNode_t *GetGrammarConstruction(size_t *pos, char *buffer, metki *mtk, TreeErr_t *err)
+static TreeNode_t *GetGrammarConstruction(size_t *pos, const char *buffer, metki *mtk, TreeErr_t *err)
 {
     skip_space(buffer, pos);
     TreeNode_t *head = GetExpression(pos, buffer, mtk, err);
@@ -189,7 +196,7 @@ static TreeNode_t *GetGrammarConstruction(size_t *pos, char *buffer, metki *mtk,
     return head;
 }
 
-static TreeNode_t *GetExpression(size_t *pos, char *buffer, metki *mtk, TreeErr_t *err)
+static TreeNode_t *GetExpression(size_t *pos, const char *buffer, metki *mtk, TreeErr_t *err)
 {
     skip_space(buffer, pos);
     TreeNode_t *left = GetTerm(pos, buffer, mtk, err);
@@ -225,7 +232,7 @@ static TreeNode_t *GetExpression(size_t *pos, char *buffer, metki *mtk, TreeErr_
     return left;
 }
 
-static TreeNode_t *GetTerm(size_t *pos, char *buffer, metki *mtk, TreeErr_t *err)
+static TreeNode_t *GetTerm(size_t *pos, const char *buffer, metki *mtk, TreeErr_t *err)
 {
     skip_space(buffer, pos);
     TreeNode_t *left = GetDeg(pos, buffer, mtk, err);
@@ -262,7 +269,7 @@ static TreeNode_t *GetTerm(size_t *pos, char *buffer, metki *mtk, TreeErr_t *err
     return left;
 }
 
-static TreeNode_t *GetDeg(size_t *pos, char *buffer, metki *mtk, TreeErr_t *err)
+static TreeNode_t *GetDeg(size_t *pos, const char *buffer, metki *mtk, TreeErr_t *err)
 {
     skip_space(buffer, pos);
     TreeNode_t *left = GetPrimary(pos, buffer, mtk, err);
@@ -295,7 +302,7 @@ static TreeNode_t *GetDeg(size_t *pos, char *buffer, metki *mtk, TreeErr_t *err)
     return left;
 }
 
-static TreeNode_t *GetPrimary(size_t *pos, char *buffer, metki *mtk, TreeErr_t *err)
+static TreeNode_t *GetPrimary(size_t *pos, const char *buffer, metki *mtk, TreeErr_t *err)
 {
     TreeNode_t *val = NULL;
     skip_space(buffer, pos);
@@ -333,7 +340,7 @@ static TreeNode_t *GetPrimary(size_t *pos, char *buffer, metki *mtk, TreeErr_t *
     return val;
 }
 
-static TreeNode_t *GetNumber(size_t *pos, char *buffer)
+static TreeNode_t *GetNumber(size_t *pos, const char *buffer)
 {
     if (!isdigit(buffer[*pos]))
     {
@@ -341,15 +348,15 @@ static TreeNode_t *GetNumber(size_t *pos, char *buffer)
     }
     char *endptr = NULL;
     double val = strtod(buffer + *pos, &endptr);
-    *pos += endptr - (buffer + *pos);
+    *pos += (size_t)(endptr - (buffer + *pos));
     return NodeCtor(CONST, (TreeElem_t){.const_value = val}, NULL, NULL, NULL);
 }
 
-static bool FindFunction(size_t *pos, char *buffer, OPERATORS *op);
+static bool FindFunction(size_t *pos, const char *buffer, OPERATORS *op);
 
 static size_t FindVar(char dest, metki *mtk);
 
-static TreeNode_t *GetVariable(size_t *pos, char *buffer, metki *mtk, TreeErr_t *err)
+static TreeNode_t *GetVariable(size_t *pos, const char *buffer, metki *mtk, TreeErr_t *err)
 {
     if (!isalpha(buffer[*pos]))
     {
@@ -368,7 +375,7 @@ static TreeNode_t *GetVariable(size_t *pos, char *buffer, metki *mtk, TreeErr_t 
     return NodeCtor(VARIABLE, (TreeElem_t){.var_code = FindVar(num_of_var, mtk)}, NULL, NULL, NULL);
 }
 
-static bool FindFunction(size_t *pos, char *buffer, OPERATORS *op)
+static bool FindFunction(size_t *pos, const char *buffer, OPERATORS *op)
 {
     size_t num_of_op = sizeof(OPERATORS_INFO) / sizeof(op_info);
     for (size_t idx = 1; idx < num_of_op; idx++)
@@ -387,7 +394,7 @@ static bool FindFunction(size_t *pos, char *buffer, OPERATORS *op)
     return false;
 }
 
-static TreeNode_t *GetFunction(size_t *pos, char *buffer, metki *mtk, TreeErr_t *err, OPERATORS op)
+static TreeNode_t *GetFunction(size_t *pos, const char *buffer, metki *mtk, TreeErr_t *err, OPERATORS op)
 {
     TreeNode_t *val = NULL;
     skip_space(buffer, pos);
@@ -425,12 +432,12 @@ static size_t FindVar(char dest, metki *mtk)
     assert(dest);
     assert(mtk);
 
-    size_t metka_idx = find_var_in_mtk_arr(mtk, dest);
+    size_t metka_idx = FindVarInMtkArr(mtk, dest);
     if (metka_idx != SIZE_MAX)
     {
         return metka_idx;
     }
-    return metki_add_name(mtk, dest);
+    return MetkiAddName(mtk, dest);
 }
 
 //---------------------------------------------------------------
@@ -441,19 +448,19 @@ struct min_max_value
     double max_value;
 };
 
-static void GetX(char *buffer, size_t *pos, Forest_t *forest);
+static void GetX(const char *buffer, size_t *pos, Forest_t *forest);
 
-static void GetY(char *buffer, size_t *pos, Forest_t *forest);
+static void GetY(const char *buffer, size_t *pos, Forest_t *forest);
 
-static min_max_value GetMinMaxValue(char *buffer, size_t *pos);
+static min_max_value GetMinMaxValue(const char *buffer, size_t *pos);
 
-static void GetNumOfDerivative(char *buffer, size_t *pos, Forest_t *forest);
+static void GetNumOfDerivative(const char *buffer, size_t *pos, Forest_t *forest);
 
-static void GetVarToDiff(char *buffer, size_t *pos, Forest_t *forest);
+static void GetVarToDiff(const char *buffer, size_t *pos, Forest_t *forest);
 
-static void GetTaylorPoint(char *buffer, size_t *pos, Forest_t *forest);
+static void GetTaylorPoint(const char *buffer, size_t *pos, Forest_t *forest);
 
-static void GetAdditionalParams(char *buffer, size_t *pos, Forest_t *forest)
+static void GetAdditionalParams(const char *buffer, size_t *pos, Forest_t *forest)
 {
     skip_space(buffer, pos);
     while (buffer[*pos] != '\0' && (buffer[*pos] == 'X' || buffer[*pos] == 'Y' || buffer[*pos] == 'n' || !strncmp(buffer + *pos, "var", 3) || !strncmp(buffer + *pos, "Taylor", 6)))
@@ -475,11 +482,10 @@ static void GetAdditionalParams(char *buffer, size_t *pos, Forest_t *forest)
     }
 }
 
-static void GetX(char *buffer, size_t *pos, Forest_t *forest)
+static void GetX(const char *buffer, size_t *pos, Forest_t *forest)
 {
     if (buffer[*pos] == 'X')
     {
-        fprintf(stderr, "meow");
         (*pos)++;
         min_max_value value_x = GetMinMaxValue(buffer, pos);
         forest->x_y_range.x_min_dump = value_x.min_value;
@@ -487,7 +493,7 @@ static void GetX(char *buffer, size_t *pos, Forest_t *forest)
     }
 }
 
-static void GetY(char *buffer, size_t *pos, Forest_t *forest)
+static void GetY(const char *buffer, size_t *pos, Forest_t *forest)
 {
     if (buffer[*pos] == 'Y')
     {
@@ -498,7 +504,7 @@ static void GetY(char *buffer, size_t *pos, Forest_t *forest)
     }
 }
 
-static min_max_value GetMinMaxValue(char *buffer, size_t *pos)
+static min_max_value GetMinMaxValue(const char *buffer, size_t *pos)
 {
     min_max_value value = {};
     char *endptr = NULL;
@@ -513,7 +519,7 @@ static min_max_value GetMinMaxValue(char *buffer, size_t *pos)
     }
     skip_space(buffer, pos);
     value.min_value = strtod(buffer + *pos, &endptr);
-    *pos += endptr - (buffer + *pos);
+    *pos += (size_t)(endptr - (buffer + *pos));
     skip_space(buffer, pos);
     if (!strncmp(buffer + *pos, "to", 2))
     {
@@ -525,11 +531,11 @@ static min_max_value GetMinMaxValue(char *buffer, size_t *pos)
     }
     skip_space(buffer, pos);
     value.max_value = strtod(buffer + *pos, &endptr);
-    *pos += endptr - (buffer + *pos);
+    *pos += (size_t)(endptr - (buffer + *pos));
     return value;
 }
 
-static void GetNumOfDerivative(char *buffer, size_t *pos, Forest_t *forest)
+static void GetNumOfDerivative(const char *buffer, size_t *pos, Forest_t *forest)
 {
     if (buffer[*pos] == 'n')
     {
@@ -546,13 +552,13 @@ static void GetNumOfDerivative(char *buffer, size_t *pos, Forest_t *forest)
         }
         skip_space(buffer, pos);
         forest->params.num_of_derivative = strtoul(buffer + *pos, &endptr, 10);
-        *pos += endptr - (buffer + *pos);
+        *pos += (size_t)(endptr - (buffer + *pos));
         forest->params.is_num_derivative_filled = true;
         skip_space(buffer, pos);
     }
 }
 
-static void GetVarToDiff(char *buffer, size_t *pos, Forest_t *forest)
+static void GetVarToDiff(const char *buffer, size_t *pos, Forest_t *forest)
 {
     if (!strncmp(buffer + *pos, "var", 3))
     {
@@ -567,7 +573,7 @@ static void GetVarToDiff(char *buffer, size_t *pos, Forest_t *forest)
             return;
         }
         skip_space(buffer, pos);
-        size_t metka_idx = find_var_in_mtk_arr(forest->mtk, buffer[*pos]);
+        size_t metka_idx = FindVarInMtkArr(forest->mtk, buffer[*pos]);
         if (metka_idx == SIZE_MAX)
         {
             return;
@@ -579,7 +585,7 @@ static void GetVarToDiff(char *buffer, size_t *pos, Forest_t *forest)
     }
 }
 
-static void GetTaylorPoint(char *buffer, size_t *pos, Forest_t *forest)
+static void GetTaylorPoint(const char *buffer, size_t *pos, Forest_t *forest)
 {
     if (forest->mtk->first_free != 1)
     {
@@ -592,7 +598,7 @@ static void GetTaylorPoint(char *buffer, size_t *pos, Forest_t *forest)
         char *endptr = NULL;
         forest->mtk->var_info[0].value = strtod(buffer + *pos, &endptr);
         forest->mtk->has_value = true;
-        *pos += endptr - (buffer + *pos);
+        *pos += (size_t)(endptr - (buffer + *pos));
         skip_space(buffer, pos);
     }
 }

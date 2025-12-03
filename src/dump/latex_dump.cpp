@@ -1,6 +1,7 @@
 #include <assert.h>
 #include <math.h>
 #include <stdio.h>
+#include <stdarg.h>
 #include "../differenciation/differenciator.h"
 #include "graphviz_dump.h"
 #include "../core/tree_func.h"
@@ -11,17 +12,15 @@
 
 const size_t MAX_CMD_BUFFER = 2048;
 
-const double EPS = 1e-15;
-
 // Need to declare for dsl
-static TreeErr_t LatexDumpRecursive(FILE* file, TreeNode_t* node, metki* mtk);
+static TreeErr_t LatexPutInfoRecursive(FILE* file, TreeNode_t* node, metki* mtk);
 
 //------------------------------------
 // Dumping operators
 
 static TreeErr_t DumpSubtree(FILE* file, TreeNode_t* node, metki* mtk);
 
-static TreeErr_t OperatorDump(FILE* file, TreeNode_t* node, metki* mtk){
+static TreeErr_t OperatorPutLatex(FILE* file, TreeNode_t* node, metki* mtk){
     assert(file); assert(node); 
     size_t arr_num_of_elem = sizeof(OPERATORS_INFO) / sizeof(op_info);
     if(node->data.op >= arr_num_of_elem){
@@ -47,7 +46,7 @@ static TreeErr_t DumpSubtree(FILE* file, TreeNode_t* node, metki* mtk){
     bool staples = false; 
     CHECK_AND_RET_TREEERR(NeedStaples(node, &staples)); 
     if (staples) fprintf(file, "("); 
-    CHECK_AND_RET_TREEERR(LatexDumpRecursive(file, node, mtk)); 
+    CHECK_AND_RET_TREEERR(LatexPutInfoRecursive(file, node, mtk)); 
     if (staples) fprintf(file, ")"); 
     return NO_MISTAKE_T;
 }
@@ -56,7 +55,7 @@ static TreeErr_t DumpSubtree(FILE* file, TreeNode_t* node, metki* mtk){
 //--------------------------------------------------------------
 // Dump
 
-TreeErr_t LatexDumpTaylor(FILE *file, Forest_t *forest){
+TreeErr_t CreateLatexTaylorDecompose(Forest_t *forest, FILE *file){
     TreeErr_t err = NO_MISTAKE_T;
     DEBUG_TREE( err = ForestVerify(forest);)
     if(err) return err;
@@ -65,9 +64,9 @@ TreeErr_t LatexDumpTaylor(FILE *file, Forest_t *forest){
     fprintf(file, "\\begin{dmath}\n");
     fprintf(file, "T( ");
 
-    CHECK_AND_RET_TREEERR(LatexDumpRecursive(file, forest->head_arr[0]->root, forest->mtk));
+    CHECK_AND_RET_TREEERR(LatexPutInfoRecursive(file, forest->head_arr[0]->root, forest->mtk));
     fprintf(file, ") = ");
-    CHECK_AND_RET_TREEERR(LatexDumpRecursive(file, forest->head_arr[forest->first_free_place - 1]->root, forest->mtk));
+    CHECK_AND_RET_TREEERR(LatexPutInfoRecursive(file, forest->head_arr[forest->first_free_place - 1]->root, forest->mtk));
     fprintf(file, "...");
     fprintf(file, "\\end{dmath}\n");
 
@@ -75,21 +74,26 @@ TreeErr_t LatexDumpTaylor(FILE *file, Forest_t *forest){
     return err;
 }
 
-TreeErr_t LatexDump(FILE* file, TreeNode_t* node, TreeNode_t* result, metki* mtk, const char* comment, const size_t var_id){
-    if(comment) fprintf(file, "%s" ,comment);
+TreeErr_t PutDerivativeToLatex(FILE* file, TreeNode_t* node, TreeNode_t* result, metki* mtk, const size_t var_id, const char* comment, ...){
+    if(comment){
+        va_list args = {};
+        va_start(args, comment);
+        vfprintf(file, comment, args);
+        va_end(args);
+    }
     fprintf(file, "\\begin{dmath}\n");
 
     if(result) fprintf(file, "\\frac{df}{d%c}( \n", mtk->var_info[var_id].variable_name);
-    CHECK_AND_RET_TREEERR(LatexDumpRecursive(file, node, mtk));
+    CHECK_AND_RET_TREEERR(LatexPutInfoRecursive(file, node, mtk));
     if(result) fprintf(file, " ) = ");
 
-    if(result) CHECK_AND_RET_TREEERR(LatexDumpRecursive(file, result, mtk));
+    if(result) CHECK_AND_RET_TREEERR(LatexPutInfoRecursive(file, result, mtk));
     fprintf(file, "\\end{dmath}\n");
 
     return NO_MISTAKE_T;
 }
 
-static TreeErr_t LatexDumpRecursive(FILE* file, TreeNode_t* node, metki* mtk){
+static TreeErr_t LatexPutInfoRecursive(FILE* file, TreeNode_t* node, metki* mtk){
     switch(node->type){
         case INCORR_VAL: return INCORR_TYPE;
         case CONST:
@@ -102,7 +106,7 @@ static TreeErr_t LatexDumpRecursive(FILE* file, TreeNode_t* node, metki* mtk){
             fprintf(file, "%c" , mtk->var_info[node->data.var_code].variable_name);
             break;
         case OPERATOR:
-            CHECK_AND_RET_TREEERR(OperatorDump(file, node, mtk));
+            CHECK_AND_RET_TREEERR(OperatorPutLatex(file, node, mtk));
             break;
         default: return INCORR_TYPE;
     }
@@ -123,11 +127,11 @@ TreeErr_t NeedStaples(TreeNode_t* node, bool* need_staples){
     int node_priority = OPERATORS_INFO[node->data.op].priority;
     int node_parent_priority = OPERATORS_INFO[node->parent->data.op].priority;
 
-    if(node_priority < node_parent_priority){
+    if(node_priority < node_parent_priority && !OPERATORS_INFO[node->parent->data.op].is_unary_op){
         *need_staples = true;
         return NO_MISTAKE_T;
     }
-    if(node->parent->data.op == OP_SUB){
+    if(node->parent->data.op == OP_SUB){ // 1 - (a + b) and 1 - a + b 
         *need_staples = true;
         return NO_MISTAKE_T;
     }
@@ -139,17 +143,43 @@ TreeErr_t NeedStaples(TreeNode_t* node, bool* need_staples){
     return NO_MISTAKE_T;
 }
 
-TreeErr_t DumpGraphLatex(Forest_t *forest, size_t idx1, size_t idx2, FILE* latex_file, IS_TAYLOR is_taylor){
+TreeErr_t CreateAndLatexGraphicsDerivatives(Forest_t *forest, FILE* latex_file){
+    fprintf(latex_file, 
+    "\\newpage\n"
+    "\\section{Graphics of derivatives}\n\n");
+    if(forest->first_free_place != 0){
+        fprintf(latex_file, "{\\large \\textbf{Graphic of function}}\n\n");
+        CHECK_AND_RET_TREEERR(InsertGraphToLatex(forest, 0, latex_file, /*is_taylor*/ false));
+    }
+
+    for(size_t idx = 1; idx < forest->first_free_place; idx++){
+        fprintf(latex_file, "{\\large \\textbf{Graphic of %zu derivative}}\n\n", idx);
+        CHECK_AND_RET_TREEERR(InsertGraphToLatex(forest, idx, latex_file, /*is_taylor*/ false));
+        tree_dump_func(forest->head_arr[idx]->root, __FILE__, __func__, __LINE__, forest->mtk, "%zust derivative",idx);
+    }
+
+    return NO_MISTAKE_T;
+}
+
+TreeErr_t CreateAndLatexTaylorGraphics(Forest_t *forest, FILE* latex_file){
+    fprintf(latex_file, 
+    "\\newpage\n"
+    "\\section{Taylor graphics}\n\n");
+    CHECK_AND_RET_TREEERR(InsertGraphToLatex(forest, 0, latex_file, /*is_taylor*/ true, forest->first_free_place - 1));
+    return NO_MISTAKE_T;
+}
+
+TreeErr_t InsertGraphToLatex(Forest_t *forest, size_t idx1, FILE* latex_file, bool is_taylor, size_t idx2){
     TreeErr_t err = NO_MISTAKE_T;
-    char* dump_picture = DrawGraph(forest, idx1, idx2, &err, is_taylor);
+    char* dump_picture = DrawGraph(forest, idx1, &err, is_taylor, idx2);
     if(err){
         free(dump_picture);
         return err;
     }
     fprintf(latex_file, 
-    "\\begin{figure}\n"
-    "\\includesvg[width=0.6\\textwidth,height=0.3\\textheight]{%s}\n" 
-    "\\end{figure}\n", dump_picture + sizeof("output/") - 1);
+    "\\begin{figure}[H]\n"
+    "\\includesvg[width=0.6\\textwidth,height=0.6\\textheight]{%s}\n" 
+    "\\end{figure}\n\n", dump_picture + sizeof("output/") - 1);
     free(dump_picture);
     return err;
 }
@@ -157,7 +187,7 @@ TreeErr_t DumpGraphLatex(Forest_t *forest, size_t idx1, size_t idx2, FILE* latex
 //---------------------------------------------------------------
 // Dumping chapters
 
-FILE* StartLatexDump(const char* filename){
+FILE* StartMatanBook(const char* filename){
     assert(filename);
     FILE* latex_file = fopen(filename, "w");
     if(!latex_file){
@@ -170,6 +200,7 @@ R"(\documentclass[a4paper,12pt]{report}
 \usepackage{geometry}
 \usepackage[inkscapepath=/Applications/Inkscape.app/Contents/MacOS/]{svg}
 \usepackage{breqn}
+\usepackage{float}
 \usepackage{svg}
 \usepackage{graphicx} 
 \usepackage{hyperref}
@@ -198,9 +229,9 @@ Almost all statements in the course are self-evident, and their proofs are left 
     return latex_file;
 }
 
-void LatexDumpDecimals(FILE* latex_file){
+void LatexCreateChapterDecimals(FILE* latex_file){
     assert(latex_file);
-    fprintf(latex_file, 
+    fprintf(latex_file,     
 R"(\chapter{Numbers}
 \section{Basic Classes of Numbers}
     
@@ -234,7 +265,7 @@ If Vasya had 2 apples and Petya took 1 apple from him, how many apples does Vasy
     )");
 }
 
-void LatexDumpChapterDiff(FILE* latex_file){
+void LatexCreateChapterDiff(FILE* latex_file){
     assert(latex_file);
     fprintf(latex_file, 
 R"(\chapter{Derivative}
@@ -249,7 +280,7 @@ Everything in this chapter is so obvious that no additional explanations will be
     )");
 }
 
-void LatexDumpChapterTaylor(FILE* latex_file){
+void LatexCreateChapterTaylor(FILE* latex_file){
     assert(latex_file);
     fprintf(latex_file, 
 R"(\chapter{Taylor}
@@ -259,10 +290,12 @@ R"(\chapter{Taylor}
 \begin{definition}
 Taylor's formula is obvious, so no additional explanations will be given. Let's start straight with an example.
 \end{definition}
+
+{\large \textbf{At first the derivatives must be calcutated:}}
     )");
 }
 
-void LatexDumpAfterWord(FILE* latex_file){
+void LatexCreateAfterWord(FILE* latex_file){
     fprintf(latex_file,
 R"(\chapter*{Afterword}
 
@@ -286,7 +319,7 @@ The author also expresses great gratitude for the help in preparing this textboo
 
 //--------------------------------------------------------------
 
-void EndLatexDump(FILE* latex_file){
+void EndMatanBook(FILE* latex_file){
     assert(latex_file);
     fprintf(latex_file, "\\end{document}\n");
     fclose(latex_file);
@@ -294,16 +327,7 @@ void EndLatexDump(FILE* latex_file){
 
 void GeneratePdfFromTex(const char* latex_file){
     assert(latex_file);
-    // cd output && pdflatex 
     char cmd_buffer[MAX_CMD_BUFFER] = {};
-    size_t len = strlen(latex_file);
-    strncat(cmd_buffer, "cd output &&", sizeof("cd output &&"));
-    for(int i = 0; i < 2; i++){
-        strncat(cmd_buffer, "pdflatex -shell-escape ", sizeof("pdflatex -shell-escape "));
-        strncat(cmd_buffer, latex_file, len);
-        if(i == 0){
-            strncat(cmd_buffer, " && ", sizeof(" && "));
-        }
-    }
+    snprintf(cmd_buffer, MAX_CMD_BUFFER, "cd output && pdflatex -shell-escape %s && pdflatex -shell-escape %s", latex_file, latex_file);
     system(cmd_buffer);
 }

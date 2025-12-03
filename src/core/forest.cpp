@@ -22,7 +22,7 @@ Forest_t* ForestCtor(size_t num_of_trees){
     }
     forest->head_arr = head_arr;
     forest->num_of_trees = num_of_trees;
-    forest->mtk = metki_init();
+    forest->mtk = MetkiInit();
     forest->first_free_place = 0;
     return forest;
 }
@@ -87,7 +87,7 @@ void ForestDtor(Forest_t* forest){
         return;
     }
 
-    metki_destroy(forest->mtk);
+    MetkiDestroy(forest->mtk);
 
     for(size_t idx = 0; idx < forest->first_free_place; idx++){
         if(!forest->head_arr[idx]){

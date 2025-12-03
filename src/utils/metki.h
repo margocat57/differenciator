@@ -16,18 +16,18 @@ struct metki{
     bool has_value;
 };
 
-metki* metki_init();
+metki* MetkiInit();
 
-size_t metki_add_name(metki* mtk, char num_of_variable);
+size_t MetkiAddName(metki* mtk, char num_of_variable);
 
-void metki_realloc(metki* mtk, size_t num_of_elem);
+void MetkiRealloc(metki* mtk, size_t num_of_elem);
 
-size_t find_var_in_mtk_arr(metki* mtk, char num_of_variable);
+size_t FindVarInMtkArr(metki* mtk, char num_of_variable);
 
-void metki_add_values(metki* mtk);
+void MetkiAddValues(metki* mtk);
 
-void metki_del_values(metki* mtk);
+void MetkiDelValues(metki* mtk);
 
-void metki_destroy(metki* mtk);
+void MetkiDestroy(metki* mtk);
 
 #endif //METKI_H

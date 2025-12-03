@@ -10,7 +10,16 @@
 #include "differenciation/differenciator.h"
 #include "core/forest.h"
 #include "differenciation/diff_params.h"
-#include "utils/taylor_enum.h"
+
+#define CHECK_AND_RET_TREEERR_MATAN_BOOK(bad_condition, file)\
+    do{\
+    TreeErr_t err_macro = (bad_condition);\
+        if(err_macro){ \
+            fprintf(stderr, "err = %llu, %s, %s, %d\n", err_macro, __FILE__, __func__, __LINE__); \
+            fclose(file);     \
+            return err_macro; \
+        } \
+    }while(0) \
 
 TreeErr_t MatanBook(Forest_t* forest_diff, Forest_t* forest_taylor, const char* book_file);
 
