@@ -12,11 +12,10 @@ TreeErr_t MatanBook(Forest_t *forest_diff, Forest_t *forest_taylor, const char *
     TreeErr_t err = NO_MISTAKE_T;
     DEBUG_TREE(err = ForestVerify(forest_diff);
                err = ForestVerify(forest_taylor);)
-    if (err)
-        return err;
+    if(err) return err;
 
-    char buffer[300] = {};
-    snprintf(buffer, 300, "output/%s", book_file);
+    char buffer[300] = "output/";
+    strncat(buffer, book_file, sizeof(buffer) - 1);
 
     FILE *latex_dump = StartMatanBook(buffer);
     if (!latex_dump){

@@ -106,14 +106,14 @@ static TreeErr_t PrintInfo(Forest_t *forest, size_t idx1, size_t idx2, FILE* gp_
     "set grid\n", svg_filename);
 
     // x_min should not equal x_max!
-    if(fabs(min_value_x - max_value_x) < EPS){
+    if(fabs(min_value_x - max_value_x) > EPS){
         fprintf(gp_dump, "set xrange [%lg:%lg]\n", min_value_x, max_value_x);
     } 
     else{
         fprintf(gp_dump, "set autoscale x\n");  
     }
 
-    if(fabs(min_value_y - max_value_y) < EPS){
+    if(fabs(min_value_y - max_value_y) > EPS){
         fprintf(gp_dump, "set yrange [%lg:%lg]\n", min_value_y, max_value_y);
     } 
     else{
@@ -148,9 +148,9 @@ static TreeErr_t PrintInfo(Forest_t *forest, size_t idx1, size_t idx2, FILE* gp_
 }
 
 static void MakePicture(const char* gp_filename, TreeErr_t* err){
-    char sys_buffer[300] = {};
+    char sys_buffer[300] = "gnuplot ";
 
-    snprintf(sys_buffer, 300, "gnuplot %s", gp_filename);
+    strncat(sys_buffer, gp_filename, sizeof(sys_buffer) - 1);
 
     if(system(sys_buffer)){;
         *err = CANT_MAKE_GRAPH;
