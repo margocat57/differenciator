@@ -36,7 +36,7 @@ struct op_info{
     const char* dump_gnuplot_cont;
     const char* dump_gnuplot_end;
     // differenciate
-    DIFFERENCIATOR(TreeNode_t*(*function_diff)(TreeNode_t* node, const size_t var_id, FILE* file, metki* mtk);)
+    DIFFERENCIATOR(TreeNode_t*(*function_diff)(TreeNode_t* node, const size_t var_id, FILE* file, metki* mtk, TreeErr_t *err);)
     // calculate expression
     CALCUL(void(*function_calc)(double* result, double* left_result, double* right_result);)
 };

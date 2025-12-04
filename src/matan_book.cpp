@@ -9,7 +9,7 @@ TreeErr_t MatanBook(Forest_t *forest_diff, Forest_t *forest_taylor, const char *
         return NULL_FOREST_PTR;
     }
 
-    TreeErr_t err = NO_MISTAKE_T;
+    TreeErr_t err = NO_MISTAKE;
     DEBUG_TREE(err = ForestVerify(forest_diff);
                err = ForestVerify(forest_taylor);)
     if(err) return err;
@@ -18,9 +18,7 @@ TreeErr_t MatanBook(Forest_t *forest_diff, Forest_t *forest_taylor, const char *
     strncat(buffer, book_file, sizeof(buffer) - 1);
 
     FILE *latex_dump = StartMatanBook(buffer);
-    if (!latex_dump){
-        return INCORR_FILE;
-    }
+    if(!latex_dump) return INCORR_FILE;
     LatexCreateChapterDecimals(latex_dump);
 
     LatexCreateChapterDiff(latex_dump); 

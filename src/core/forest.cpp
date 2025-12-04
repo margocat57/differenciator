@@ -32,7 +32,7 @@ Forest_t* ForestCtor(size_t num_of_trees){
 // Forest add elem
 
 TreeErr_t ForestAddElem(TreeHead_t *head_add, Forest_t *forest){
-    TreeErr_t err = NO_MISTAKE_T;
+    TreeErr_t err = NO_MISTAKE;
     DEBUG_TREE(err = ForestVerify(forest);)
     if(err) return err;
 
@@ -47,7 +47,7 @@ TreeErr_t ForestAddElem(TreeHead_t *head_add, Forest_t *forest){
 }
 
 TreeErr_t ForestRealloc(Forest_t *forest, size_t num_of_trees){
-    TreeErr_t err = NO_MISTAKE_T;
+    TreeErr_t err = NO_MISTAKE;
     DEBUG_TREE(err = ForestVerify(forest);)
     if (err) return err;
 
@@ -70,7 +70,7 @@ TreeErr_t ForestRealloc(Forest_t *forest, size_t num_of_trees){
 
 TreeErr_t ForestVerify(Forest_t* forest){
     assert(forest);
-    TreeErr_t err = NO_MISTAKE_T;
+    TreeErr_t err = NO_MISTAKE;
     for (size_t idx = 0; idx < forest->num_of_trees; idx++){
         err = TreeVerify(forest->head_arr[idx]);
         if(err) return err;

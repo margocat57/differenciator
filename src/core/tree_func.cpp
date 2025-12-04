@@ -77,17 +77,17 @@ TreeErr_t TreeNodeVerify(const TreeNode_t *node){
     }
 
     if(node->left){
-        TreeErr_t err = NO_MISTAKE_T;
+        TreeErr_t err = NO_MISTAKE;
         DEBUG_TREE(err = TreeNodeVerify(node->left);)
         if (err) return err;
     }
     if(node->right){
-        TreeErr_t err = NO_MISTAKE_T;
+        TreeErr_t err = NO_MISTAKE;
         DEBUG_TREE(err = TreeNodeVerify(node->right);)
         if(err) return err;
     }
 
-    return NO_MISTAKE_T;
+    return NO_MISTAKE;
 }
 
 
@@ -127,7 +127,7 @@ TreeErr_t PrintNode(const TreeNode_t* node, FILE* dot_file, int* rank, metki* mt
         CHECK_AND_RET_TREEERR(PrintNode(node->right, dot_file, rank, mtk));
     }
     (*rank)--;
-    return NO_MISTAKE_T;
+    return NO_MISTAKE;
 }
 
 static void PrintNodeConnect(const TreeNode_t* node, const TreeNode_t* node_child, FILE* dot_file, int* rank){

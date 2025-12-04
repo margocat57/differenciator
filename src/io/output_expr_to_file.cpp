@@ -19,68 +19,85 @@
 //-----------------------------------------------------------------
 // Output func
 
-static TreeErr_t DumpToFileRecursive(FILE* file, TreeNode_t* node, metki* mtk);
+static void DumpToFileRecursive(FILE* file, TreeNode_t* node, metki* mtk, TreeErr_t* err);
 
-static TreeErr_t OperatorDumpFile(FILE* file, TreeNode_t* node, metki* mtk);
+static void OperatorDumpFile(FILE* file, TreeNode_t* node, metki* mtk, TreeErr_t* err);
 
 TreeErr_t DumpToFile(FILE* file, TreeNode_t* node, metki* mtk){
-    CHECK_AND_RET_TREEERR(DumpToFileRecursive(file, node, mtk));
-    return NO_MISTAKE_T;
+    TreeErr_t err = NO_MISTAKE;
+    DEBUG_TREE(err = TreeNodeVerify(node);)
+    if(err) return err;
+
+    CALL_FUNC_AND_CHECK_ERR_VALUE(DumpToFileRecursive(file, node, mtk, &err), err);
+
+    DEBUG_TREE(err = TreeNodeVerify(node);)
+    return err;
 }
 
 
-static TreeErr_t DumpToFileRecursive(FILE* file, TreeNode_t* node, metki* mtk){
+static void DumpToFileRecursive(FILE* file, TreeNode_t* node, metki* mtk, TreeErr_t* err){
+    if(*err) return;
     switch(node->type){
-        case INCORR_VAL: return INCORR_TYPE;
+        case INCORR_VAL: *err = INCORR_TYPE; return;
         case CONST:
             fprintf(file, "%lg" ,node->data.const_value);
             break;
         case VARIABLE:
             if(node->data.var_code >= mtk->num_of_metki){
-                return INCORR_IDX_IN_MTK;
+                *err = INCORR_IDX_IN_MTK;
+                return;
             }
             fprintf(file, "%c" , mtk->var_info[node->data.var_code].variable_name);
             break;
         case OPERATOR:
-            CHECK_AND_RET_TREEERR(OperatorDumpFile(file, node, mtk));
+            OperatorDumpFile(file, node, mtk, err);
+            if(*err) return;
             break;
-        default: return INCORR_TYPE;
+        default: *err = INCORR_TYPE; return;
     }
-    return NO_MISTAKE_T;
 }
 
-static TreeErr_t DumpSubtreeGp(FILE* file, TreeNode_t* node, metki* mtk);
+static void DumpSubtreeGp(FILE* file, TreeNode_t* node, metki* mtk, TreeErr_t* err);
 
-static TreeErr_t OperatorDumpFile(FILE* file, TreeNode_t* node, metki* mtk){
+static void OperatorDumpFile(FILE* file, TreeNode_t* node, metki* mtk, TreeErr_t* err){
+    if(*err) return;
+
     assert(file); assert(node); 
     size_t arr_num_of_elem = sizeof(OPERATORS_INFO) / sizeof(op_info);
     if(node->data.op >= arr_num_of_elem){
-        return INCORR_OPERATOR;
+        *err = INCORR_OPERATOR;
+        return;
     }
     
     fprintf(file, "%s", OPERATORS_INFO[node->data.op].dump_gnuplot_start);
 
+    DumpSubtreeGp(file, node->left, mtk, err);
+    if(*err) return;
 
-    CHECK_AND_RET_TREEERR(DumpSubtreeGp(file, node->left, mtk));
     if(OPERATORS_INFO[node->data.op].dump_cont){
         fprintf(file, "%s", OPERATORS_INFO[node->data.op].dump_gnuplot_cont); 
     }
 
     if(node->right){
-        CHECK_AND_RET_TREEERR(DumpSubtreeGp(file, node->right, mtk));
+        DumpSubtreeGp(file, node->right, mtk, err);
+        if(*err) return;
     }
 
     fprintf(file, "%s", OPERATORS_INFO[node->data.op].dump_gnuplot_end); 
-
-    return NO_MISTAKE_T; 
 }
 
 
-static TreeErr_t DumpSubtreeGp(FILE* file, TreeNode_t* node, metki* mtk){
-    bool staples = false; 
-    CHECK_AND_RET_TREEERR(NeedStaples(node, &staples)); 
+static void DumpSubtreeGp(FILE* file, TreeNode_t* node, metki* mtk, TreeErr_t* err){
+    if(*err) return;
+    bool staples = false;
+
+    NeedStaples(node, &staples, err); 
+    if(*err) return;
+
     if (staples) fprintf(file, "("); 
-    CHECK_AND_RET_TREEERR(DumpToFileRecursive(file, node, mtk)); 
+
+    DumpToFileRecursive(file, node, mtk, err); 
+    if(*err) return;
+
     if (staples) fprintf(file, ")"); 
-    return NO_MISTAKE_T;
 }

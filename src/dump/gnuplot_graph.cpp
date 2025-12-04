@@ -21,6 +21,8 @@ char* DrawGraph(Forest_t *forest, size_t idx1, TreeErr_t *err, bool is_taylor, s
     char* svg_filename = CreateDumpFile("svg");
     char* gp_filename = CreateDumpFile("gp");
     if(!svg_filename || !gp_filename){
+        if(gp_filename)  free(gp_filename);
+        if(svg_filename) free(svg_filename);
         *err = CANT_CREATE_FILE_FOR_GP_DUMP;
         return NULL;
     }
@@ -37,6 +39,7 @@ char* DrawGraph(Forest_t *forest, size_t idx1, TreeErr_t *err, bool is_taylor, s
     if(*err){
         free(gp_filename);
         free(svg_filename);
+        fclose(gp_dump);
         return NULL;
     }
 
@@ -51,8 +54,8 @@ char* DrawGraph(Forest_t *forest, size_t idx1, TreeErr_t *err, bool is_taylor, s
 
     free(gp_filename);
 
-    DEBUG_TREE(          *err = TreeNodeVerify(forest->head_arr[idx1]->root);
-    if(is_taylor)        *err = TreeNodeVerify(forest->head_arr[idx2]->root);)
+    DEBUG_TREE(   *err = TreeNodeVerify(forest->head_arr[idx1]->root);
+    if(is_taylor) *err = TreeNodeVerify(forest->head_arr[idx2]->root);)
     return svg_filename;
 }
 
@@ -65,8 +68,8 @@ static char* CreateDumpFile(const char* format){
         return NULL;
     }
 
-    char* svg_filename = (char*)calloc(200, sizeof(char));
-    if(!svg_filename){
+    char* filename = (char*)calloc(200, sizeof(char));
+    if(!filename){
         fprintf(stderr, "Alloc error");
         return NULL;
     }
@@ -74,15 +77,15 @@ static char* CreateDumpFile(const char* format){
     time_t now = time(NULL); 
     struct tm *t = localtime(&now); 
 
-    if(snprintf(svg_filename, 200, 
+    if(snprintf(filename, 200, 
                 "output/plots_gnuplot/dump%d_%04d%02d%02d_%02d%02d%02d.%s", num,
                 t->tm_year + 1900, t->tm_mon + 1, t->tm_mday,
                 t->tm_hour, t->tm_min, t->tm_sec, format) == -1) {
         fprintf(stderr, "Can't generate svg filename\n");
-        free(svg_filename);
+        free(filename);
         return NULL;
     }
-    return svg_filename;
+    return filename;
 }
 
 static TreeErr_t PrintInfo(Forest_t *forest, size_t idx1, size_t idx2, FILE* gp_dump, const char* svg_filename, bool is_taylor){
@@ -141,10 +144,10 @@ static TreeErr_t PrintInfo(Forest_t *forest, size_t idx1, size_t idx2, FILE* gp_
 
     fprintf(gp_dump, "plot f(%c) with lines linecolor \"blue\" title \"f(%c)\"", forest->mtk->var_info[0].variable_name, forest->mtk->var_info[0].variable_name);
     if(is_taylor){
-        fprintf(gp_dump, " \\\n, Tf(%c) with lines linecolor \"red\" title \"T(%c)\" \n", forest->mtk->var_info[0].variable_name, forest->mtk->var_info[0].variable_name);
+        fprintf(gp_dump, " \\\n, Tf(%c) with lines linewidth 2 linecolor \"red\" title \"T(%c)\" \n", forest->mtk->var_info[0].variable_name, forest->mtk->var_info[0].variable_name);
     }
     
-    return NO_MISTAKE_T;
+    return NO_MISTAKE;
 }
 
 static void MakePicture(const char* gp_filename, TreeErr_t* err){

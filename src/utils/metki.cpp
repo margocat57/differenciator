@@ -57,6 +57,9 @@ size_t FindVarInMtkArr(metki* mtk, char num_of_variable){
 
 void MetkiAddValues(metki* mtk){
     double value = 0;
+    if(mtk->has_value){
+        return;
+    }
     for(size_t idx = 0; idx < mtk->first_free; idx++){
         printf("Input value for %c\n", mtk->var_info[idx].variable_name);
         scanf("%lf", &value);

@@ -5,7 +5,7 @@
 typedef uint64_t TreeErr_t;
 
 enum Err{
-    NO_MISTAKE_T,
+    NO_MISTAKE,
     NULL_NODE_PTR,
     INCORRECT_SIGN,
     INCORR_CONNECT_PARENT_CHILD,

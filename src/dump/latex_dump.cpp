@@ -13,42 +13,49 @@
 const size_t MAX_CMD_BUFFER = 2048;
 
 // Need to declare for dsl
-static TreeErr_t LatexPutInfoRecursive(FILE* file, TreeNode_t* node, metki* mtk);
+static void LatexPutInfoRecursive(FILE* file, TreeNode_t* node, metki* mtk, TreeErr_t* err);
 
 //------------------------------------
 // Dumping operators
 
-static TreeErr_t DumpSubtree(FILE* file, TreeNode_t* node, metki* mtk);
+static void DumpSubtree(FILE* file, TreeNode_t* node, metki* mtk, TreeErr_t* err);
 
-static TreeErr_t OperatorPutLatex(FILE* file, TreeNode_t* node, metki* mtk){
+static void OperatorPutLatex(FILE* file, TreeNode_t* node, metki* mtk, TreeErr_t* err){
     assert(file); assert(node); 
+    if(*err) return;
+
     size_t arr_num_of_elem = sizeof(OPERATORS_INFO) / sizeof(op_info);
     if(node->data.op >= arr_num_of_elem){
-        return INCORR_OPERATOR;
+        *err = INCORR_OPERATOR;
+        return;
     }
 
     fprintf(file, "%s", OPERATORS_INFO[node->data.op].dump_start); 
 
-    CHECK_AND_RET_TREEERR(DumpSubtree(file, node->left, mtk));
+    CALL_FUNC_AND_CHECK_ERR_PTR(DumpSubtree(file, node->left, mtk, err));
+
     if(OPERATORS_INFO[node->data.op].dump_cont){
         fprintf(file, "%s", OPERATORS_INFO[node->data.op].dump_cont); 
     }
 
     if(node->right){
-        CHECK_AND_RET_TREEERR(DumpSubtree(file, node->right, mtk));
+        CALL_FUNC_AND_CHECK_ERR_PTR(DumpSubtree(file, node->right, mtk, err));
     }
 
     fprintf(file, "%s", OPERATORS_INFO[node->data.op].dump_end); 
-    return NO_MISTAKE_T; 
 }
 
-static TreeErr_t DumpSubtree(FILE* file, TreeNode_t* node, metki* mtk){
+static void DumpSubtree(FILE* file, TreeNode_t* node, metki* mtk, TreeErr_t* err){
+    if(*err) return;
     bool staples = false; 
-    CHECK_AND_RET_TREEERR(NeedStaples(node, &staples)); 
-    if (staples) fprintf(file, "("); 
-    CHECK_AND_RET_TREEERR(LatexPutInfoRecursive(file, node, mtk)); 
-    if (staples) fprintf(file, ")"); 
-    return NO_MISTAKE_T;
+
+    CALL_FUNC_AND_CHECK_ERR_PTR(NeedStaples(node, &staples, err)); 
+
+    if(staples) fprintf(file, "("); 
+
+    CALL_FUNC_AND_CHECK_ERR_PTR(LatexPutInfoRecursive(file, node, mtk, err)); 
+
+    if(staples) fprintf(file, ")"); 
 }
 
 //-------------------------------------------------------------
@@ -56,7 +63,7 @@ static TreeErr_t DumpSubtree(FILE* file, TreeNode_t* node, metki* mtk){
 // Dump
 
 TreeErr_t CreateLatexTaylorDecompose(Forest_t *forest, FILE *file){
-    TreeErr_t err = NO_MISTAKE_T;
+    TreeErr_t err = NO_MISTAKE;
     DEBUG_TREE( err = ForestVerify(forest);)
     if(err) return err;
 
@@ -64,9 +71,12 @@ TreeErr_t CreateLatexTaylorDecompose(Forest_t *forest, FILE *file){
     fprintf(file, "\\begin{dmath}\n");
     fprintf(file, "T( ");
 
-    CHECK_AND_RET_TREEERR(LatexPutInfoRecursive(file, forest->head_arr[0]->root, forest->mtk));
+    CALL_FUNC_AND_CHECK_ERR_VALUE(LatexPutInfoRecursive(file, forest->head_arr[0]->root, forest->mtk, &err));
+
     fprintf(file, ") = ");
-    CHECK_AND_RET_TREEERR(LatexPutInfoRecursive(file, forest->head_arr[forest->first_free_place - 1]->root, forest->mtk));
+
+    CALL_FUNC_AND_CHECK_ERR_VALUE(LatexPutInfoRecursive(file, forest->head_arr[forest->first_free_place - 1]->root, forest->mtk, &err));
+
     fprintf(file, "...");
     fprintf(file, "\\end{dmath}\n");
 
@@ -75,6 +85,11 @@ TreeErr_t CreateLatexTaylorDecompose(Forest_t *forest, FILE *file){
 }
 
 TreeErr_t PutDerivativeToLatex(FILE* file, TreeNode_t* node, TreeNode_t* result, metki* mtk, const size_t var_id, const char* comment, ...){
+    TreeErr_t err = NO_MISTAKE;
+    DEBUG_TREE( err = TreeNodeVerify(node);
+    if(result)  err = TreeNodeVerify(result););
+    if(err) return err;
+
     if(comment){
         va_list args = {};
         va_start(args, comment);
@@ -84,63 +99,70 @@ TreeErr_t PutDerivativeToLatex(FILE* file, TreeNode_t* node, TreeNode_t* result,
     fprintf(file, "\\begin{dmath}\n");
 
     if(result) fprintf(file, "\\frac{df}{d%c}( \n", mtk->var_info[var_id].variable_name);
-    CHECK_AND_RET_TREEERR(LatexPutInfoRecursive(file, node, mtk));
+
+    CALL_FUNC_AND_CHECK_ERR_VALUE(LatexPutInfoRecursive(file, node, mtk, &err)); 
+
     if(result) fprintf(file, " ) = ");
 
-    if(result) CHECK_AND_RET_TREEERR(LatexPutInfoRecursive(file, result, mtk));
+    if(result) CALL_FUNC_AND_CHECK_ERR_VALUE(LatexPutInfoRecursive(file, result, mtk, &err), err);
+
     fprintf(file, "\\end{dmath}\n");
 
-    return NO_MISTAKE_T;
+    DEBUG_TREE( err = TreeNodeVerify(node);
+    if(result)  err = TreeNodeVerify(result););
+    return err;
 }
 
-static TreeErr_t LatexPutInfoRecursive(FILE* file, TreeNode_t* node, metki* mtk){
+static void LatexPutInfoRecursive(FILE* file, TreeNode_t* node, metki* mtk, TreeErr_t* err){
+    if(*err) return;
     switch(node->type){
-        case INCORR_VAL: return INCORR_TYPE;
+        case INCORR_VAL: *err = INCORR_TYPE; break;
         case CONST:
             fprintf(file, "%lg" ,node->data.const_value);
             break;
         case VARIABLE:
             if(node->data.var_code >= mtk->num_of_metki){
-                return INCORR_IDX_IN_MTK;
+                *err = INCORR_IDX_IN_MTK;
+                return;
             }
             fprintf(file, "%c" , mtk->var_info[node->data.var_code].variable_name);
             break;
         case OPERATOR:
-            CHECK_AND_RET_TREEERR(OperatorPutLatex(file, node, mtk));
+            OperatorPutLatex(file, node, mtk, err);
             break;
-        default: return INCORR_TYPE;
+        default: *err = INCORR_TYPE; break;
     }
-    return NO_MISTAKE_T;
 }
 
-TreeErr_t NeedStaples(TreeNode_t* node, bool* need_staples){
+void NeedStaples(TreeNode_t* node, bool* need_staples, TreeErr_t* err){
     assert(need_staples);
+    if(*err) return;
     if(!node || node->type != OPERATOR || !node->parent || node->parent->type != OPERATOR){
         *need_staples = false;
-        return NO_MISTAKE_T;
+        return;
     }
 
     size_t arr_num_of_elem = sizeof(OPERATORS_INFO) / sizeof(op_info);
     if(node->data.op >= arr_num_of_elem || node->parent->data.op >= arr_num_of_elem || node->data.op == INCORR || node->parent->data.op == INCORR){
-        return INCORR_OPERATOR;
+        *err = INCORR_OPERATOR;
+        return;
     }
     int node_priority = OPERATORS_INFO[node->data.op].priority;
     int node_parent_priority = OPERATORS_INFO[node->parent->data.op].priority;
 
     if(node_priority < node_parent_priority && !OPERATORS_INFO[node->parent->data.op].is_unary_op){
         *need_staples = true;
-        return NO_MISTAKE_T;
+        return;
     }
     if(node->parent->data.op == OP_SUB){ // 1 - (a + b) and 1 - a + b 
         *need_staples = true;
-        return NO_MISTAKE_T;
+        return;
     }
     if(node->parent->data.op == OP_DEG){ //для случая 1 / (x^2^2^2)
         *need_staples = true;
-        return NO_MISTAKE_T;
+        return;
     }
     *need_staples = false;
-    return NO_MISTAKE_T;
 }
 
 TreeErr_t CreateAndLatexGraphicsDerivatives(Forest_t *forest, FILE* latex_file){
@@ -157,7 +179,7 @@ TreeErr_t CreateAndLatexGraphicsDerivatives(Forest_t *forest, FILE* latex_file){
         CHECK_AND_RET_TREEERR(InsertGraphToLatex(forest, idx, latex_file, /*is_taylor*/ false));
     }
 
-    return NO_MISTAKE_T;
+    return NO_MISTAKE;
 }
 
 TreeErr_t CreateAndLatexTaylorGraphics(Forest_t *forest, FILE* latex_file){
@@ -165,11 +187,11 @@ TreeErr_t CreateAndLatexTaylorGraphics(Forest_t *forest, FILE* latex_file){
     "\\newpage\n"
     "\\section{Taylor graphics}\n\n");
     CHECK_AND_RET_TREEERR(InsertGraphToLatex(forest, 0, latex_file, /*is_taylor*/ true, forest->first_free_place - 1));
-    return NO_MISTAKE_T;
+    return NO_MISTAKE;
 }
 
 TreeErr_t InsertGraphToLatex(Forest_t *forest, size_t idx1, FILE* latex_file, bool is_taylor, size_t idx2){
-    TreeErr_t err = NO_MISTAKE_T;
+    TreeErr_t err = NO_MISTAKE;
     char* dump_picture = DrawGraph(forest, idx1, &err, is_taylor, idx2);
     if(err){
         free(dump_picture);
@@ -177,7 +199,7 @@ TreeErr_t InsertGraphToLatex(Forest_t *forest, size_t idx1, FILE* latex_file, bo
     }
     fprintf(latex_file, 
     "\\begin{figure}[H]\n"
-    "\\includesvg[width=0.6\\textwidth,height=0.6\\textheight]{%s}\n" 
+    "\\includesvg[width=1.0\\textwidth,height=1.0\\textheight]{%s}\n" 
     "\\end{figure}\n\n", dump_picture + sizeof("output/") - 1);
     free(dump_picture);
     return err;

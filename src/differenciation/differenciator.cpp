@@ -11,7 +11,7 @@
 
 // Need to declare for dsl
 
-static TreeNode_t *Differenciate(TreeNode_t *node, const size_t var_id, FILE *file, metki *mtk);
+static TreeNode_t* Differenciate(TreeNode_t *node, const size_t var_id, FILE *file, metki *mtk, TreeErr_t *err);
 
 static void ConnectWithParents(TreeNode_t *node);
 
@@ -20,8 +20,8 @@ static TreeErr_t ConnectAndOptimize(TreeNode_t** node);
 //----------------------------------------------------------
 // DSL define
 #define DIFFERENCIATOR_CPP
-#define DL_               Differenciate(node->left, var_id, file, mtk)
-#define DR_               Differenciate(node->right, var_id, file, mtk)
+#define DL_               Differenciate(node->left, var_id, file, mtk, err)
+#define DR_               Differenciate(node->right, var_id, file, mtk, err)
 #define CL_               NodeCopy(node->left)
 #define CR_               NodeCopy(node->right)
 #define ADD_(left, right) NodeCtor(OPERATOR, (TreeElem_t){.op = OP_ADD}, NULL, left, right)
@@ -44,14 +44,19 @@ static TreeErr_t ConnectAndOptimize(TreeNode_t** node);
 #define MATH_FACT        tgammaf(idx + 1)
 
 #define DEF_OP(Op, Result)                                                                     \
-    static TreeNode_t *Diff##Op(TreeNode_t *node, const size_t var_id, FILE *file, metki *mtk) \
+    static TreeNode_t *Diff##Op(TreeNode_t *node, const size_t var_id, FILE *file, metki *mtk, TreeErr_t *err) \
     {                                                                                          \
+        if(*err){                                                                              \
+            return node;                                                                       \
+        }                                                                                      \            
         assert(node);                                                                          \
         assert(file);                                                                          \
         assert(mtk);                                                                           \
         TreeNode_t *result = Result;                                                           \
-        ConnectAndOptimize(&(result));                                                         \
-        PutDerivativeToLatex(file, node, result, mtk, var_id, "%s", GenerateRoflMsg());        \
+        *err = ConnectAndOptimize(&(result));                                                  \
+        if(*err) return node;                                                                  \
+        *err =  PutDerivativeToLatex(file, node, result, mtk, var_id, "%s", GenerateRoflMsg());\
+        if(*err) return node;                                                                  \
         return result;                                                                         \
     }
 
@@ -92,13 +97,14 @@ static TreeErr_t ConnectAndOptimize(TreeNode_t** node){
     assert(node); assert(*node);
     ConnectWithParents(*node);
     CHECK_AND_RET_TREEERR(TreeOptimize(node));
-    return NO_MISTAKE_T;
+    return NO_MISTAKE;
 }
 
 //--------------------------------------------------
 // And one function that is harder than DSL func
-static TreeNode_t *DiffDeg(TreeNode_t *node, const size_t var_id, FILE *file, metki *mtk)
-{
+static TreeNode_t *DiffDeg(TreeNode_t *node, const size_t var_id, FILE *file, metki *mtk, TreeErr_t *err)
+{   
+    if(*err) return node;
     assert(node);
     TreeNode_t *result = NULL;
     if (is_type_not_num(L) && is_type_num(R))
@@ -113,8 +119,12 @@ static TreeNode_t *DiffDeg(TreeNode_t *node, const size_t var_id, FILE *file, me
     {
         result = MUL_(DEG_(CL_, CR_), ADD_(MUL_(DR_, LN_(CL_)), DIV_(MUL_(DL_, CR_), CL_)));
     }
-    ConnectAndOptimize(&node);
-    PutDerivativeToLatex(file, node, result, mtk, var_id, "%s", GenerateRoflMsg());
+    *err = ConnectAndOptimize(&result);
+    if(*err) return node;
+
+    *err = PutDerivativeToLatex(file, node, result, mtk, var_id, "%s", GenerateRoflMsg());
+    if(*err) return node;
+
     return result;
 }
 //----------------------------------------------------
@@ -129,7 +139,7 @@ static TreeErr_t CreateTreeWithDerivative(const size_t var_id, Forest_t *forest,
 
 TreeErr_t CreateForestWithNDerivatives(Forest_t *forest, FILE *latex_dump)
 {
-    TreeErr_t err = NO_MISTAKE_T;
+    TreeErr_t err = NO_MISTAKE;
     DEBUG_TREE(err = ForestVerify(forest);)
     if(err) return err;
 
@@ -142,40 +152,38 @@ TreeErr_t CreateForestWithNDerivatives(Forest_t *forest, FILE *latex_dump)
 }
 
 static TreeErr_t CreateTreeWithDerivative(const size_t var_id, Forest_t *forest, size_t idx, FILE *latex_dump){
+    TreeErr_t err = NO_MISTAKE;
+
     TreeHead_t *head_new = TreeCtor();
     CHECK_AND_RET_TREEERR(PutDerivativeToLatex(latex_dump, forest->head_arr[idx]->root, NULL, forest->mtk, var_id,  "\\section{Let's calculate %zu derivative:}\n", idx + 1));
-    head_new->root = Differenciate(forest->head_arr[idx]->root, var_id, latex_dump, forest->mtk);
+    head_new->root = Differenciate(forest->head_arr[idx]->root, var_id, latex_dump, forest->mtk, &err);
     CHECK_AND_RET_TREEERR(ForestAddElem(head_new, forest));
-    return NO_MISTAKE_T;
+    return err;
 }
 
 //--------------------------------------------------------------
 //--------------------------------------------------------------
 // differenciate
 
-static TreeNode_t *Differenciate(TreeNode_t *node, const size_t var_id, FILE *file, metki *mtk)
-{
-    assert(node);
-    assert(file);
-    assert(mtk);
-    if (node->type == INCORR_VAL)
-    {
-        return NULL;
+static TreeNode_t *Differenciate(TreeNode_t *node, const size_t var_id, FILE *file, metki *mtk, TreeErr_t *err){
+    assert(node); assert(file); assert(mtk);
+    if(*err) return node;
+    if(node->type == INCORR_VAL){
+        *err = INCORR_TYPE;
+        return node;
     }
-    if (node->type == CONST || (node->type == VARIABLE && node->data.var_code != var_id))
-    {
+    if(node->type == CONST || (node->type == VARIABLE && node->data.var_code != var_id)){
         return NUM_(0);
     }
-    if (node->type == VARIABLE && node->data.var_code == var_id)
-    {
+    if(node->type == VARIABLE && node->data.var_code == var_id){
         return NUM_(1);
     }
     size_t arr_num_of_elem = sizeof(OPERATORS_INFO) / sizeof(op_info);
-    if (node->data.op >= arr_num_of_elem || OPERATORS_INFO[node->data.op].function_diff == NULL)
-    {
-        return NULL;
+    if(node->data.op >= arr_num_of_elem || OPERATORS_INFO[node->data.op].function_diff == NULL){
+        *err = INCORR_OPERATOR;
+        return node;
     }
-    return OPERATORS_INFO[node->data.op].function_diff(node, var_id, file, mtk);
+    return OPERATORS_INFO[node->data.op].function_diff(node, var_id, file, mtk, err);
 }
 
 //-------------------------------------------------------
@@ -183,18 +191,15 @@ static TreeNode_t *Differenciate(TreeNode_t *node, const size_t var_id, FILE *fi
 
 static void ConnectWithParents(TreeNode_t *node)
 {
-    if (!node)
-        return;
+    if(!node) return;
 
     ConnectWithParents(node->left);
     ConnectWithParents(node->right);
 
-    if (node->left != NULL)
-    {
+    if(node->left){
         node->left->parent = node;
     }
-    if (node->right != NULL)
-    {
+    if(node->right){
         node->right->parent = node;
     }
 }
@@ -206,11 +211,11 @@ static TreeNode_t *CreateTaylorTree(size_t idx, Forest_t *forest_taylor);
 
 TreeErr_t CreateForestWithTaylorDecompose(Forest_t *forest_taylor, FILE *latex_dump){
     assert(forest_taylor); assert(latex_dump);
-    if(forest_taylor->mtk->first_free != 1) return NO_MISTAKE_T;
+    if(forest_taylor->mtk->first_free != 1) return NO_MISTAKE;
 
-    TreeErr_t err = NO_MISTAKE_T;
+    TreeErr_t err = NO_MISTAKE;
     DEBUG_TREE(err = ForestVerify(forest_taylor);)
-    if (err) return err;
+    if(err) return err;
 
     CHECK_AND_RET_TREEERR(CreateForestWithNDerivatives(forest_taylor, latex_dump));
 

@@ -8,7 +8,7 @@
 
 FILE* StartMatanBook(const char* filename);
 
-TreeErr_t NeedStaples(TreeNode_t* node, bool* need_staples);
+void NeedStaples(TreeNode_t* node, bool* need_staples, TreeErr_t *err);
 
 TreeErr_t CreateLatexTaylorDecompose(Forest_t *forest, FILE *file);
 

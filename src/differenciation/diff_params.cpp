@@ -9,8 +9,8 @@ static size_t FindVarCodeToDiff(metki *mtk);
 static size_t FindVarByName(char var_name, metki* mtk);
 
 TreeErr_t CreateDiffParams(Forest_t* forest){
-    TreeErr_t err = NO_MISTAKE_T;
-    DEBUG_TREE( err = ForestVerify(forest_taylor);)
+    TreeErr_t err = NO_MISTAKE;
+    DEBUG_TREE( err = ForestVerify(forest);)
     if(err) return err;
 
     if(!(forest->params.is_num_derivative_filled)){
@@ -26,7 +26,7 @@ TreeErr_t CreateDiffParams(Forest_t* forest){
         }
     }
 
-    DEBUG_TREE( err = ForestVerify(forest_taylor);)
+    DEBUG_TREE( err = ForestVerify(forest);)
     return err;
 }
 
@@ -36,7 +36,7 @@ static TreeErr_t AskAboutN(size_t *n){
     if(scanf("%zu", n) != 1){
         return INCORR_USER_INPUT_VALUE;
     }
-    return NO_MISTAKE_T;
+    return NO_MISTAKE;
 }
 
 static size_t FindVarByName(char var_name, metki *mtk){

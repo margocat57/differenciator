@@ -150,7 +150,7 @@ Forest_t *ReadAndCreateExpr(const char *name_of_file)
     TreeHead_t *head = TreeCtor();
     Forest_t *forest = ForestCtor(10);
     size_t pos = 0;
-    TreeErr_t err = NO_MISTAKE_T;
+    TreeErr_t err = NO_MISTAKE;
     head->root = GetGrammarConstruction(&pos, buffer, forest->mtk, &err);
     if (!head->root)
     {
