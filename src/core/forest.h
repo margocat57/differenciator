@@ -3,14 +3,14 @@
 #include "tree.h"
 #include "../utils/mistakes.h"
 
-struct diff_params{
+struct Diff_params{
     size_t num_of_derivative;
     bool is_num_derivative_filled;
     size_t var_id;
     bool is_var_id_filled;
 };
 
-struct gnuplot_dump{
+struct Gnuplot_dump{
     double x_min_dump;
     double x_max_dump;
     double y_min_dump;
@@ -22,8 +22,8 @@ struct Forest_t{
     metki* mtk;
     size_t num_of_trees;
     size_t first_free_place;
-    struct diff_params params;
-    struct gnuplot_dump x_y_range;
+    struct Diff_params params;
+    struct Gnuplot_dump x_y_range;
 };
 
 Forest_t* ForestCtor(size_t num_of_trees);

@@ -121,12 +121,7 @@ static TreeErr_t CalcExpWithConst(TreeNode_t* node, double* result){
 }
 
 static TreeErr_t CalcExpWithVar(metki* mtk, TreeNode_t* node, double* result){
-    if(!result){
-        return NULL_RES_PTR;
-    }
-    if(!mtk){
-        return NULL_PTR_TO_MTK;
-    }
+    assert(mtk); assert(result);
     if(node->data.var_code >= mtk->num_of_metki){
         return INCORR_IDX_IN_MTK;
     }

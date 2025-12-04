@@ -15,7 +15,7 @@ static void MakePicture(const char* gp_filename, TreeErr_t* err);
 
 char* DrawGraph(Forest_t *forest, size_t idx1, TreeErr_t *err, bool is_taylor, size_t idx2){
     DEBUG_TREE(           *err = TreeNodeVerify(forest->head_arr[idx1]->root);
-    if(is_taylor == YES) *err = TreeNodeVerify(forest->head_arr[idx2]->root);)
+    if(is_taylor)         *err = TreeNodeVerify(forest->head_arr[idx2]->root);)
     if(*err) return NULL;
 
     char* svg_filename = CreateDumpFile("svg");
@@ -51,8 +51,8 @@ char* DrawGraph(Forest_t *forest, size_t idx1, TreeErr_t *err, bool is_taylor, s
 
     free(gp_filename);
 
-    DEBUG_TREE(           *err = TreeNodeVerify(forest->head_arr[idx1]->root);
-    if(is_taylor == YES) *err = TreeNodeVerify(forest->head_arr[idx2]->root);)
+    DEBUG_TREE(          *err = TreeNodeVerify(forest->head_arr[idx1]->root);
+    if(is_taylor)        *err = TreeNodeVerify(forest->head_arr[idx2]->root);)
     return svg_filename;
 }
 
@@ -91,7 +91,7 @@ static TreeErr_t PrintInfo(Forest_t *forest, size_t idx1, size_t idx2, FILE* gp_
     double max_value_x = forest->x_y_range.x_max_dump;
     double min_value_y = forest->x_y_range.y_min_dump;
     double max_value_y = forest->x_y_range.y_max_dump;
-    if(is_taylor && (forest->mtk->var_info[0].value <= min_value_x || forest->mtk->var_info[0].value <= max_value_x)){
+    if(is_taylor && (forest->mtk->var_info[0].value <= min_value_x || forest->mtk->var_info[0].value >= max_value_x)){
         min_value_x = forest->mtk->var_info[0].value - delta;
         max_value_x = forest->mtk->var_info[0].value + delta;
         min_value_y = 0;
@@ -150,7 +150,7 @@ static TreeErr_t PrintInfo(Forest_t *forest, size_t idx1, size_t idx2, FILE* gp_
 static void MakePicture(const char* gp_filename, TreeErr_t* err){
     char sys_buffer[300] = {};
 
-    snprintf(sys_buffer, 200, "gnuplot %s", gp_filename);
+    snprintf(sys_buffer, 300, "gnuplot %s", gp_filename);
 
     if(system(sys_buffer)){;
         *err = CANT_MAKE_GRAPH;

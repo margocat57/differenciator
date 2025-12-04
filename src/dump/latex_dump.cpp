@@ -155,7 +155,6 @@ TreeErr_t CreateAndLatexGraphicsDerivatives(Forest_t *forest, FILE* latex_file){
     for(size_t idx = 1; idx < forest->first_free_place; idx++){
         fprintf(latex_file, "{\\large \\textbf{Graphic of %zu derivative}}\n\n", idx);
         CHECK_AND_RET_TREEERR(InsertGraphToLatex(forest, idx, latex_file, /*is_taylor*/ false));
-        tree_dump_func(forest->head_arr[idx]->root, __FILE__, __func__, __LINE__, forest->mtk, "%zust derivative",idx);
     }
 
     return NO_MISTAKE_T;
