@@ -1,3 +1,4 @@
 cos( sin(x^2) ) $
 X from -10 to 10
-n = 1 var = x
+n = 1 
+var = x

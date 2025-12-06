@@ -6,6 +6,6 @@
 #include "../core/tree.h"
 #include "../core/forest.h"
 
-TreeErr_t CreateDiffParams(Forest_t* forest);
+void CreateDiffParams(Forest_t* forest, TreeErr_t* err);
 
 #endif //DIFF_PARAMS_H 

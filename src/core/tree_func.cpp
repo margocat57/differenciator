@@ -6,6 +6,16 @@
 #include "../utils/mistakes.h"
 #include "operator_func.h"
 
+
+#define CHECK_AND_RET_TREEERR(bad_condition)\
+    do{\
+    TreeErr_t err_macro = (bad_condition);\
+        if(err_macro){ \
+            fprintf(stderr, "err = %llu, %s, %s, %d\n", err_macro, __FILE__, __func__, __LINE__); \
+            return err_macro; \
+        } \
+    }while(0) \
+
 //----------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------
 // Tree and node constructors

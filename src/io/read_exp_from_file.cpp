@@ -24,7 +24,7 @@ static void skip_space(const char *str, size_t *pos)
     assert(str);
     assert(pos);
 
-    while (isspace(str[(*pos)]) && str[(*pos)] != '\0'){
+    while(str[(*pos)] != '\0' && isspace(str[(*pos)])){
         (*pos)++;
     }
 }
@@ -504,101 +504,51 @@ static void GetY(const char *buffer, size_t *pos, Forest_t *forest)
     }
 }
 
-static min_max_value GetMinMaxValue(const char *buffer, size_t *pos)
-{
+static min_max_value GetMinMaxValue(const char *buffer, size_t *pos){
     min_max_value value = {};
-    char *endptr = NULL;
-    skip_space(buffer, pos);
-    if (!strncmp(buffer + *pos, "from", 4))
-    {
-        (*pos) += 4;
-    }
-    else
-    {
-        return {};
-    }
-    skip_space(buffer, pos);
-    value.min_value = strtod(buffer + *pos, &endptr);
-    *pos += (size_t)(endptr - (buffer + *pos));
-    skip_space(buffer, pos);
-    if (!strncmp(buffer + *pos, "to", 2))
-    {
-        (*pos) += 2;
-    }
-    else
-    {
-        return {};
-    }
-    skip_space(buffer, pos);
-    value.max_value = strtod(buffer + *pos, &endptr);
-    *pos += (size_t)(endptr - (buffer + *pos));
+    size_t chars_read = 0;
+    sscanf(buffer + *pos, " from %lg to %lg%n", &value.min_value, &value.max_value, &chars_read);
+    *pos += chars_read;
     return value;
 }
 
-static void GetNumOfDerivative(const char *buffer, size_t *pos, Forest_t *forest)
-{
-    if (buffer[*pos] == 'n')
-    {
-        char *endptr = NULL;
-        (*pos)++;
-        skip_space(buffer, pos);
-        if (buffer[*pos] == '=')
-        {
-            (*pos)++;
-        }
-        else
-        {
-            return;
-        }
-        skip_space(buffer, pos);
-        forest->params.num_of_derivative = strtoul(buffer + *pos, &endptr, 10);
-        *pos += (size_t)(endptr - (buffer + *pos));
+static void GetNumOfDerivative(const char *buffer, size_t *pos, Forest_t *forest){
+    size_t chars_read = 0;
+    if(buffer[*pos] == 'n'){
+        sscanf(buffer + *pos, "n = %zu%n",  &(forest->params.num_of_derivative), &chars_read);
         forest->params.is_num_derivative_filled = true;
-        skip_space(buffer, pos);
+        *pos += chars_read;
     }
 }
 
-static void GetVarToDiff(const char *buffer, size_t *pos, Forest_t *forest)
-{
-    if (!strncmp(buffer + *pos, "var", 3))
-    {
-        (*pos) += 3;
-        skip_space(buffer, pos);
-        if (buffer[*pos] == '=')
-        {
-            (*pos)++;
-        }
-        else
-        {
-            return;
-        }
-        skip_space(buffer, pos);
-        size_t metka_idx = FindVarInMtkArr(forest->mtk, buffer[*pos]);
-        if (metka_idx == SIZE_MAX)
-        {
+static void GetVarToDiff(const char *buffer, size_t *pos, Forest_t *forest){
+    char var_name = '\0';
+    size_t chars_read = 0;
+    
+    if(!strncmp(buffer + *pos, "var", 3)){
+        sscanf(buffer + *pos, " var = %c%n", &var_name, &chars_read);
+        *pos += chars_read;
+
+        size_t metka_idx = FindVarInMtkArr(forest->mtk, var_name);
+        if(metka_idx == SIZE_MAX){
             return;
         }
         forest->params.var_id = metka_idx;
         forest->params.is_var_id_filled = true;
-        (*pos)++;
         skip_space(buffer, pos);
     }
 }
 
 static void GetTaylorPoint(const char *buffer, size_t *pos, Forest_t *forest)
 {
-    if (forest->mtk->first_free != 1)
-    {
+    if (forest->mtk->first_free != 1){
         return;
     }
+    size_t chars_read = 0;
     if (!strncmp(buffer + *pos, "Taylor", 6))
     {
-        (*pos) += 6;
-        skip_space(buffer, pos);
-        char *endptr = NULL;
-        forest->mtk->var_info[0].value = strtod(buffer + *pos, &endptr);
+        sscanf(buffer + *pos, "Taylor %lg%n", &(forest->mtk->var_info[0].value), &chars_read);
+        *pos += chars_read;
         forest->mtk->has_value = true;
-        *pos += (size_t)(endptr - (buffer + *pos));
-        skip_space(buffer, pos);
     }
 }

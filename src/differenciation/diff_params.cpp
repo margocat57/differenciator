@@ -2,19 +2,27 @@
 #include <assert.h>
 #include "diff_params.h"
 
-static TreeErr_t AskAboutN(size_t *n);
+
+#define CALL_FUNC_AND_CHECK_ERR(function)\
+    do{\
+        function;\
+        if(*err){ \
+            fprintf(stderr, "err = %llu, %s, %s, %d\n", *err, __FILE__, __func__, __LINE__); \
+            return;                                                         \
+        } \
+    }while(0)
+
+static void AskAboutN(size_t *n, TreeErr_t *err);
 
 static size_t FindVarCodeToDiff(metki *mtk);
 
 static size_t FindVarByName(char var_name, metki* mtk);
 
-TreeErr_t CreateDiffParams(Forest_t* forest){
-    TreeErr_t err = NO_MISTAKE;
-    DEBUG_TREE( err = ForestVerify(forest);)
-    if(err) return err;
+void CreateDiffParams(Forest_t* forest, TreeErr_t *err){
+    DEBUG_TREE(CALL_FUNC_AND_CHECK_ERR( *err = ForestVerify(forest));)
 
     if(!(forest->params.is_num_derivative_filled)){
-        CHECK_AND_RET_TREEERR(AskAboutN(&(forest->params.num_of_derivative)));
+        CALL_FUNC_AND_CHECK_ERR(AskAboutN(&(forest->params.num_of_derivative), err));
     }
 
     if(!(forest->params.is_var_id_filled)){
@@ -22,21 +30,20 @@ TreeErr_t CreateDiffParams(Forest_t* forest){
         if(forest->params.var_id == SIZE_MAX){
             fprintf(stderr, "Incorr variable to differenciate");
             forest->params.num_of_derivative = 0;
-            return INCORR_VAR_TO_DIFF;
+            *err = INCORR_VAR_TO_DIFF;
+            return;
         }
     }
 
-    DEBUG_TREE( err = ForestVerify(forest);)
-    return err;
+    DEBUG_TREE(CALL_FUNC_AND_CHECK_ERR(*err = ForestVerify(forest));)
 }
 
-static TreeErr_t AskAboutN(size_t *n){
+static void AskAboutN(size_t *n, TreeErr_t *err){
     assert(n);
     printf("Which derivative do you want to calculate?\n");
     if(scanf("%zu", n) != 1){
-        return INCORR_USER_INPUT_VALUE;
+        *err = INCORR_USER_INPUT_VALUE;
     }
-    return NO_MISTAKE;
 }
 
 static size_t FindVarByName(char var_name, metki *mtk){

@@ -4,8 +4,8 @@
 #include "../utils/mistakes.h"
 #include "../core/forest.h"
 
-TreeErr_t CalcTreeExpression(TreeNode_t* node, metki* mtk, double* result, bool is_taylor);
+void CalcTreeExpression(TreeNode_t* node, metki* mtk, double* result, bool is_taylor, TreeErr_t* err);
 
-TreeErr_t TreeOptimize(TreeNode_t **node);
+void TreeOptimize(TreeNode_t **node, TreeErr_t* err);
 
 #endif //CALCUL_TREE_H

@@ -5,8 +5,8 @@
 #include "../core/forest.h"
 #include "diff_params.h"
 
-TreeErr_t CreateForestWithNDerivatives(Forest_t *forest, FILE *latex_dump);
+void CreateForestWithNDerivatives(Forest_t *forest, FILE *latex_dump, TreeErr_t* err);
 
-TreeErr_t CreateForestWithTaylorDecompose(Forest_t *forest_taylor, FILE *latex_dump);
+void CreateForestWithTaylorDecompose(Forest_t *forest_taylor, FILE *latex_dump, TreeErr_t* err);
 
 #endif // DIFFERENCIATOR_H

@@ -7,9 +7,18 @@
 #include "../calculation_optimization/calcul_tree.h"
 #include <assert.h>
 
+#define CALL_FUNC_AND_CHECK_ERR(function)\
+    do{\
+        function;\
+        if(*err){ \
+            fprintf(stderr, "err = %llu, %s, %s, %d\n", *err, __FILE__, __func__, __LINE__); \
+            return;                                                         \
+        } \
+    }while(0)
+
 static char* CreateDumpFile(const char* format);
 
-static TreeErr_t PrintInfo(Forest_t *forest, size_t idx1, size_t idx2, FILE* gp_dump, const char* svg_filename, bool is_taylor);
+static void PrintInfo(Forest_t *forest, size_t idx1, size_t idx2, FILE* gp_dump, const char* svg_filename, bool is_taylor, TreeErr_t *err);
 
 static void MakePicture(const char* gp_filename, TreeErr_t* err);
 
@@ -35,7 +44,7 @@ char* DrawGraph(Forest_t *forest, size_t idx1, TreeErr_t *err, bool is_taylor, s
         return NULL;
     }
 
-    *err = PrintInfo(forest, idx1, idx2, gp_dump, svg_filename, is_taylor);
+    PrintInfo(forest, idx1, idx2, gp_dump, svg_filename, is_taylor, err);
     if(*err){
         free(gp_filename);
         free(svg_filename);
@@ -88,7 +97,7 @@ static char* CreateDumpFile(const char* format){
     return filename;
 }
 
-static TreeErr_t PrintInfo(Forest_t *forest, size_t idx1, size_t idx2, FILE* gp_dump, const char* svg_filename, bool is_taylor){
+static void PrintInfo(Forest_t *forest, size_t idx1, size_t idx2, FILE* gp_dump, const char* svg_filename, bool is_taylor, TreeErr_t *err){
     double delta = 3;
     double min_value_x = forest->x_y_range.x_min_dump;
     double max_value_x = forest->x_y_range.x_max_dump;
@@ -133,12 +142,12 @@ static TreeErr_t PrintInfo(Forest_t *forest, size_t idx1, size_t idx2, FILE* gp_
     
 
     fprintf(gp_dump, "\nf(%c) = ", forest->mtk->var_info[0].variable_name);
-    CHECK_AND_RET_TREEERR(DumpToFile(gp_dump, forest->head_arr[idx1]->root, forest->mtk));
+    CALL_FUNC_AND_CHECK_ERR(DumpToFileGp(gp_dump, forest->head_arr[idx1]->root, forest->mtk, err));
     fprintf(gp_dump, "\n");
 
     if(is_taylor){  
         fprintf(gp_dump, "Tf(%c) = ", forest->mtk->var_info[0].variable_name);
-        CHECK_AND_RET_TREEERR(DumpToFile(gp_dump, forest->head_arr[idx2]->root, forest->mtk));
+        CALL_FUNC_AND_CHECK_ERR(DumpToFileGp(gp_dump, forest->head_arr[idx2]->root, forest->mtk, err));
         fprintf(gp_dump, "\n");
     }
 
@@ -146,8 +155,7 @@ static TreeErr_t PrintInfo(Forest_t *forest, size_t idx1, size_t idx2, FILE* gp_
     if(is_taylor){
         fprintf(gp_dump, " \\\n, Tf(%c) with lines linewidth 2 linecolor \"red\" title \"T(%c)\" \n", forest->mtk->var_info[0].variable_name, forest->mtk->var_info[0].variable_name);
     }
-    
-    return NO_MISTAKE;
+
 }
 
 static void MakePicture(const char* gp_filename, TreeErr_t* err){

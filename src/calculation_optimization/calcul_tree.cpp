@@ -1,15 +1,27 @@
 #include <assert.h>
 #include <math.h>
 #include <stdio.h>
+
+#define CALCUL_TREE_CPP
+
 #include "../differenciation/differenciator.h"
 #include "../dump/graphviz_dump.h"
 #include "../core/tree_func.h"
 #include "../core/forest.h"
 
+#define CALL_FUNC_AND_CHECK_ERR(function)\
+    do{\
+        function;\
+        if(*err){ \
+            fprintf(stderr, "err = %llu, %s, %s, %d\n", *err, __FILE__, __func__, __LINE__); \
+            return;                                                         \
+        } \
+    }while(0)
+
 //--------------------------------------------------------------------------------------------
 //--------------------------------------------------------------------------------------------
 // DSL for calculating funt
-#define CALCUL_TREE_CPP
+
 #define RES_L *left_result
 #define RES_R *right_result
 #define DEF_OP(Op, Result) \
@@ -52,20 +64,16 @@ DEF_OP(Arcctg,  M_PI_2 - atan(RES_L));
 
 static void CalcTreeExpressionRecursive(metki* mtk, TreeNode_t* node, double* result, TreeErr_t* err);
 
-TreeErr_t CalcTreeExpression(TreeNode_t* node, metki* mtk, double* result, bool is_taylor){
+void CalcTreeExpression(TreeNode_t* node, metki* mtk, double* result, bool is_taylor, TreeErr_t* err){
+    if(*err) return;
     assert(result);
-
-    TreeErr_t err = NO_MISTAKE;
-    DEBUG_TREE(err = TreeNodeVerify(node);)
-    if(err) return err;
+    DEBUG_TREE(CALL_FUNC_AND_CHECK_ERR( *err = TreeNodeVerify(node);));
     
     if(!is_taylor && !mtk->has_value) MetkiAddValues(mtk);
-    CalcTreeExpressionRecursive(mtk, node, result, &err);
-    if(err) return err;
+    CALL_FUNC_AND_CHECK_ERR(CalcTreeExpressionRecursive(mtk, node, result, err));
     if(!is_taylor && !mtk->has_value) MetkiDelValues(mtk);
 
-    DEBUG_TREE(err = TreeNodeVerify(node);)
-    return err;
+    DEBUG_TREE(CALL_FUNC_AND_CHECK_ERR(*err = TreeNodeVerify(node);))
 }
 
 //--------------------------------------------------------------------------------------------
@@ -88,17 +96,14 @@ static void CalcTreeExpressionRecursive(metki* mtk, TreeNode_t* node, double* re
     if(!node) return;
 
     if(node->type == OPERATOR){
-        CalcTreeExpressionRecursive(mtk, node->left, &left_result, err);
-        if(*err) return;
-
-        CalcTreeExpressionRecursive(mtk, node->right, &right_result, err);
-        if(*err) return;
+        CALL_FUNC_AND_CHECK_ERR(CalcTreeExpressionRecursive(mtk, node->left, &left_result, err));
+        CALL_FUNC_AND_CHECK_ERR(CalcTreeExpressionRecursive(mtk, node->right, &right_result, err));
     }
     switch(node->type){
         case INCORR_VAL: *err = INCORR_TYPE; return;
-        case OPERATOR: CalcExpWithOperator(node, result, &left_result, &right_result, err); if(*err) return; break;
-        case CONST:    CalcExpWithConst(node, result);                                                       break;
-        case VARIABLE: CalcExpWithVar(mtk, node, result, err);                              if(*err) return; break;
+        case OPERATOR: CALL_FUNC_AND_CHECK_ERR(CalcExpWithOperator(node, result, &left_result, &right_result, err)); break;
+        case CONST:                            CalcExpWithConst(node, result);                                                                   break;
+        case VARIABLE: CALL_FUNC_AND_CHECK_ERR(CalcExpWithVar(mtk, node, result, err));                              break;
         default:         *err = INCORR_TYPE; return;
     }
 
@@ -147,26 +152,20 @@ static void TreeOptimizeConst(TreeNode_t *node, bool *is_optimized, TreeErr_t* e
 
 static void TreeOptimizeNeutral(TreeNode_t **result, TreeNode_t *node, bool *is_optimized, TreeErr_t* err);
 
-TreeErr_t TreeOptimize(TreeNode_t **node){
+void TreeOptimize(TreeNode_t **node, TreeErr_t* err){
     assert(node);
+    if(*err) return;
 
-    TreeErr_t err = NO_MISTAKE;
-    DEBUG_TREE(err = TreeNodeVerify(node);)
-    if(err) return err;
+    DEBUG_TREE(CALL_FUNC_AND_CHECK_ERR(*err = TreeNodeVerify(node));)
 
     bool is_optimized = false;
     do{
         is_optimized = false; 
-
-        TreeOptimizeConst(*node, &is_optimized, &err);
-        if(err) return err;
-
-        TreeOptimizeNeutral(node, *node, &is_optimized, &err);
-        if(err) return err;
+        CALL_FUNC_AND_CHECK_ERR(TreeOptimizeConst(*node, &is_optimized, err));
+        CALL_FUNC_AND_CHECK_ERR(TreeOptimizeNeutral(node, *node, &is_optimized, err));
     }while(is_optimized);
 
-    DEBUG_TREE(err = TreeNodeVerify(node);)
-    return err;
+    DEBUG_TREE(CALL_FUNC_AND_CHECK_ERR(*err = TreeNodeVerify(node));)
 }
 
 static void TreeOptimizeConst(TreeNode_t *node, bool *is_optimized, TreeErr_t* err){
@@ -174,12 +173,10 @@ static void TreeOptimizeConst(TreeNode_t *node, bool *is_optimized, TreeErr_t* e
 
     assert(node); 
     if(node->left){
-        TreeOptimizeConst(node->left, is_optimized, err);
-        if(*err) return;
+        CALL_FUNC_AND_CHECK_ERR(TreeOptimizeConst(node->left, is_optimized, err));
     }
     if(node->right){
-        TreeOptimizeConst(node->right, is_optimized, err);
-        if(*err) return;
+        CALL_FUNC_AND_CHECK_ERR(TreeOptimizeConst(node->right, is_optimized, err));
     }
     if(node->left && node->right && node->left->type == CONST && node->right->type == CONST && node->type == OPERATOR){
         size_t arr_num_of_elem = sizeof(OPERATORS_INFO) / sizeof(op_info);
@@ -220,21 +217,19 @@ static void TreeOptimizeNeutral(TreeNode_t **result, TreeNode_t *node, bool *is_
     if(*err) return;
 
     if(node->left){
-        TreeOptimizeNeutral(result, node->left, is_optimized, err);
-        if(*err) return;
+        CALL_FUNC_AND_CHECK_ERR(TreeOptimizeNeutral(result, node->left, is_optimized, err));
     }
     if(node->right){
-        TreeOptimizeNeutral(result, node->right, is_optimized, err);
-        if(*err) return;
+        CALL_FUNC_AND_CHECK_ERR(TreeOptimizeNeutral(result, node->right, is_optimized, err));
     }
 
     if(node->type == OPERATOR){
         switch(node->data.op){
             case INCORR:              *err = INCORR_OPERATOR; return;
-            case OP_ADD: case OP_SUB: TreeOptimizeNeutralAddSub(result, node, is_optimized, err); if(*err) return; break;
-            case OP_MUL:              TreeOptimizeNeutralMul(result, node, is_optimized, err);    if(*err) return; break;
-            case OP_DIV:              TreeOptimizeNeutralDiv(result, node, is_optimized, err);    if(*err) return; break;
-            case OP_DEG:              TreeOptimizeNeutralDeg(result, node, is_optimized, err);    if(*err) return; break;
+            case OP_ADD: case OP_SUB: CALL_FUNC_AND_CHECK_ERR(TreeOptimizeNeutralAddSub(result, node, is_optimized, err));  break;
+            case OP_MUL:              CALL_FUNC_AND_CHECK_ERR(TreeOptimizeNeutralMul(result, node, is_optimized, err));     break;
+            case OP_DIV:              CALL_FUNC_AND_CHECK_ERR(TreeOptimizeNeutralDiv(result, node, is_optimized, err));     break;
+            case OP_DEG:              CALL_FUNC_AND_CHECK_ERR(TreeOptimizeNeutralDeg(result, node, is_optimized, err));     break;
             case OP_SIN:    case OP_COS:    case OP_TG:    case OP_CTG:   case OP_LN:
             case OP_SH:     case OP_CH:     case OP_TH:    case OP_CTH: 
             case OP_ARCSIN: case OP_ARCCOS: case OP_ARCTG: case OP_ARCCTG:                                          break;
@@ -339,4 +334,5 @@ static void TreeOptimizeNeutralDeg(TreeNode_t** result, TreeNode_t* node, bool* 
 #undef RES_L
 #undef RES_R
 #undef DEF_OP
+#undef CALL_FUNC_AND_CHECK_ERR
 #undef CALCUL_TREE_CPP

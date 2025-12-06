@@ -19,9 +19,6 @@ endif
 main.o: main.cpp
 	$(COMP) -c $< -o $@ $(CFLAGS)
 
-src/differenciation/differenciator.o: src/differenciation/differenciator.cpp
-	$(COMP) -c $< -o $@ $(CFLAGS)
-
 src/differenciation/diff_params.o: src/differenciation/diff_params.cpp
 	$(COMP) -c $< -o $@ $(CFLAGS)
 
@@ -38,6 +35,9 @@ src/io/read_exp_from_file.o: src/io/read_exp_from_file.cpp
 	$(COMP) -c $< -o $@ $(CFLAGS)
 
 src/core/tree_func.o: src/core/tree_func.cpp
+	$(COMP) -c $< -o $@ $(CFLAGS)
+
+src/differenciation/differenciator.o: src/differenciation/differenciator.cpp
 	$(COMP) -c $< -o $@ $(CFLAGS)
 
 src/calculation_optimization/calcul_tree.o: src/calculation_optimization/calcul_tree.cpp

@@ -4,21 +4,22 @@
 #include "../core/tree.h"
 #include "../utils/mistakes.h"
 #include "../core/forest.h"
+#include "../io/output_expr_to_file.h"
 #include <string.h>
 
 FILE* StartMatanBook(const char* filename);
 
 void NeedStaples(TreeNode_t* node, bool* need_staples, TreeErr_t *err);
 
-TreeErr_t CreateLatexTaylorDecompose(Forest_t *forest, FILE *file);
+void CreateLatexTaylorDecompose(Forest_t *forest, FILE *file, TreeErr_t *err);
 
-TreeErr_t PutDerivativeToLatex(FILE* file, TreeNode_t* node, TreeNode_t* result, metki* mtk, const size_t var_id, const char* comment, ...)  __attribute__ ((format (printf, 6, 7)));
+void PutDerivativeToLatex(FILE* file, TreeNode_t* node, TreeNode_t* result, metki* mtk, const size_t var_id, TreeErr_t *err, const char* comment, ...)  __attribute__ ((format (printf, 7, 8)));
 
-TreeErr_t CreateAndLatexGraphicsDerivatives(Forest_t *forest, FILE* latex_file);
+void CreateAndLatexGraphicsDerivatives(Forest_t *forest, FILE* latex_file, TreeErr_t *err);
 
-TreeErr_t CreateAndLatexTaylorGraphics(Forest_t *forest, FILE* latex_file);
+void CreateAndLatexTaylorGraphics(Forest_t *forest, FILE* latex_file, TreeErr_t *err);
 
-TreeErr_t InsertGraphToLatex(Forest_t *forest, size_t idx1, FILE* latex_file, bool is_taylor, size_t idx2 = 0);
+void InsertGraphToLatex(Forest_t *forest, size_t idx1, FILE* latex_file, TreeErr_t *err, bool is_taylor, size_t idx2 = 0);
 
 void LatexCreateChapterDecimals(FILE* latex_file);
 

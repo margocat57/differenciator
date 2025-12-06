@@ -43,34 +43,6 @@ union TreeElem_t{
 #endif //_DEBUG_SMALL_TREE
 
 
-#define CHECK_AND_RET_TREEERR(bad_condition)\
-    do{\
-    TreeErr_t err_macro = (bad_condition);\
-        if(err_macro){ \
-            fprintf(stderr, "err = %llu, %s, %s, %d\n", err_macro, __FILE__, __func__, __LINE__); \
-            return err_macro; \
-        } \
-    }while(0) \
-
-#define CALL_FUNC_AND_CHECK_ERR_PTR(function, ...)\
-    do{\
-        function;\
-        if(*err){ \
-            fprintf(stderr, "err = %llu, %s, %s, %d\n", *err, __FILE__, __func__, __LINE__); \
-            return  __VA_ARGS__; \
-        } \
-    }while(0) \
-
-#define CALL_FUNC_AND_CHECK_ERR_VALUE(function, ...)\
-    do{\
-        function;\
-        if(err){ \
-            fprintf(stderr, "err = %llu, %s, %s, %d\n", err, __FILE__, __func__, __LINE__); \
-            return  __VA_ARGS__; \
-        } \
-    }while(0) \
-
-
 enum VALUE_TYPE{
     INCORR_VAL,
     OPERATOR,

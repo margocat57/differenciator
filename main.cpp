@@ -1,7 +1,5 @@
 #include "src/matan_book.h"
 
-// финально - наладить возврат ошибок и идти сдавать
-
 int main()
 {
     Forest_t *forest_diff   = ReadAndCreateExpr("tests/ptest.txt");

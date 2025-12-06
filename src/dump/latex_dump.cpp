@@ -10,85 +10,47 @@
 #include "gnuplot_graph.h"
 #include "latex_dump.h"
 
+#define CALL_FUNC_AND_CHECK_ERR(function)\
+    do{\
+        function;\
+        if(*err){ \
+            fprintf(stderr, "err = %llu, %s, %s, %d\n", *err, __FILE__, __func__, __LINE__); \
+            return;                                                         \
+        } \
+    }while(0)
+
 const size_t MAX_CMD_BUFFER = 2048;
-
-// Need to declare for dsl
-static void LatexPutInfoRecursive(FILE* file, TreeNode_t* node, metki* mtk, TreeErr_t* err);
-
-//------------------------------------
-// Dumping operators
-
-static void DumpSubtree(FILE* file, TreeNode_t* node, metki* mtk, TreeErr_t* err);
-
-static void OperatorPutLatex(FILE* file, TreeNode_t* node, metki* mtk, TreeErr_t* err){
-    assert(file); assert(node); 
-    if(*err) return;
-
-    size_t arr_num_of_elem = sizeof(OPERATORS_INFO) / sizeof(op_info);
-    if(node->data.op >= arr_num_of_elem){
-        *err = INCORR_OPERATOR;
-        return;
-    }
-
-    fprintf(file, "%s", OPERATORS_INFO[node->data.op].dump_start); 
-
-    CALL_FUNC_AND_CHECK_ERR_PTR(DumpSubtree(file, node->left, mtk, err));
-
-    if(OPERATORS_INFO[node->data.op].dump_cont){
-        fprintf(file, "%s", OPERATORS_INFO[node->data.op].dump_cont); 
-    }
-
-    if(node->right){
-        CALL_FUNC_AND_CHECK_ERR_PTR(DumpSubtree(file, node->right, mtk, err));
-    }
-
-    fprintf(file, "%s", OPERATORS_INFO[node->data.op].dump_end); 
-}
-
-static void DumpSubtree(FILE* file, TreeNode_t* node, metki* mtk, TreeErr_t* err){
-    if(*err) return;
-    bool staples = false; 
-
-    CALL_FUNC_AND_CHECK_ERR_PTR(NeedStaples(node, &staples, err)); 
-
-    if(staples) fprintf(file, "("); 
-
-    CALL_FUNC_AND_CHECK_ERR_PTR(LatexPutInfoRecursive(file, node, mtk, err)); 
-
-    if(staples) fprintf(file, ")"); 
-}
 
 //-------------------------------------------------------------
 //--------------------------------------------------------------
 // Dump
 
-TreeErr_t CreateLatexTaylorDecompose(Forest_t *forest, FILE *file){
-    TreeErr_t err = NO_MISTAKE;
-    DEBUG_TREE( err = ForestVerify(forest);)
-    if(err) return err;
+void CreateLatexTaylorDecompose(Forest_t *forest, FILE *file, TreeErr_t *err){
+    if(*err) return;
 
-    fprintf(file, "{\\large \\textbf{Taylor Series:}}\n\n");
+    DEBUG_TREE(CALL_FUNC_AND_CHECK_ERR(*err = ForestVerify(forest);))
+
+    fprintf(file, "{\\large \\textbf{Разложение Тейлора:}}\n\n");
     fprintf(file, "\\begin{dmath}\n");
     fprintf(file, "T( ");
 
-    CALL_FUNC_AND_CHECK_ERR_VALUE(LatexPutInfoRecursive(file, forest->head_arr[0]->root, forest->mtk, &err));
+    CALL_FUNC_AND_CHECK_ERR(PutInfoRecursive(file, forest->head_arr[0]->root, forest->mtk, err, DUMP_LATEX));
 
     fprintf(file, ") = ");
 
-    CALL_FUNC_AND_CHECK_ERR_VALUE(LatexPutInfoRecursive(file, forest->head_arr[forest->first_free_place - 1]->root, forest->mtk, &err));
+    CALL_FUNC_AND_CHECK_ERR(PutInfoRecursive(file, forest->head_arr[forest->first_free_place - 1]->root, forest->mtk, err, DUMP_LATEX));
 
     fprintf(file, "...");
     fprintf(file, "\\end{dmath}\n");
 
-    DEBUG_TREE( err = ForestVerify(forest);)
-    return err;
+    DEBUG_TREE(CALL_FUNC_AND_CHECK_ERR(*err = ForestVerify(forest);))
 }
 
-TreeErr_t PutDerivativeToLatex(FILE* file, TreeNode_t* node, TreeNode_t* result, metki* mtk, const size_t var_id, const char* comment, ...){
-    TreeErr_t err = NO_MISTAKE;
-    DEBUG_TREE( err = TreeNodeVerify(node);
-    if(result)  err = TreeNodeVerify(result););
-    if(err) return err;
+void PutDerivativeToLatex(FILE* file, TreeNode_t* node, TreeNode_t* result, metki* mtk, const size_t var_id, TreeErr_t *err, const char* comment, ...){
+    if(*err) return;
+
+    DEBUG_TREE( CALL_FUNC_AND_CHECK_ERR(*err = TreeNodeVerify(node));
+    if(result)  CALL_FUNC_AND_CHECK_ERR(*err = TreeNodeVerify(result)););
 
     if(comment){
         va_list args = {};
@@ -100,109 +62,51 @@ TreeErr_t PutDerivativeToLatex(FILE* file, TreeNode_t* node, TreeNode_t* result,
 
     if(result) fprintf(file, "\\frac{df}{d%c}( \n", mtk->var_info[var_id].variable_name);
 
-    CALL_FUNC_AND_CHECK_ERR_VALUE(LatexPutInfoRecursive(file, node, mtk, &err)); 
+    CALL_FUNC_AND_CHECK_ERR(PutInfoRecursive(file, node, mtk, err, DUMP_LATEX)); 
 
     if(result) fprintf(file, " ) = ");
 
-    if(result) CALL_FUNC_AND_CHECK_ERR_VALUE(LatexPutInfoRecursive(file, result, mtk, &err), err);
+    if(result) CALL_FUNC_AND_CHECK_ERR(PutInfoRecursive(file, result, mtk, err, DUMP_LATEX));
 
     fprintf(file, "\\end{dmath}\n");
 
-    DEBUG_TREE( err = TreeNodeVerify(node);
-    if(result)  err = TreeNodeVerify(result););
-    return err;
+    DEBUG_TREE( CALL_FUNC_AND_CHECK_ERR(*err = TreeNodeVerify(node));
+    if(result)  CALL_FUNC_AND_CHECK_ERR(*err = TreeNodeVerify(result)););
 }
 
-static void LatexPutInfoRecursive(FILE* file, TreeNode_t* node, metki* mtk, TreeErr_t* err){
-    if(*err) return;
-    switch(node->type){
-        case INCORR_VAL: *err = INCORR_TYPE; break;
-        case CONST:
-            fprintf(file, "%lg" ,node->data.const_value);
-            break;
-        case VARIABLE:
-            if(node->data.var_code >= mtk->num_of_metki){
-                *err = INCORR_IDX_IN_MTK;
-                return;
-            }
-            fprintf(file, "%c" , mtk->var_info[node->data.var_code].variable_name);
-            break;
-        case OPERATOR:
-            OperatorPutLatex(file, node, mtk, err);
-            break;
-        default: *err = INCORR_TYPE; break;
-    }
-}
 
-void NeedStaples(TreeNode_t* node, bool* need_staples, TreeErr_t* err){
-    assert(need_staples);
-    if(*err) return;
-    if(!node || node->type != OPERATOR || !node->parent || node->parent->type != OPERATOR){
-        *need_staples = false;
-        return;
-    }
-
-    size_t arr_num_of_elem = sizeof(OPERATORS_INFO) / sizeof(op_info);
-    if(node->data.op >= arr_num_of_elem || node->parent->data.op >= arr_num_of_elem || node->data.op == INCORR || node->parent->data.op == INCORR){
-        *err = INCORR_OPERATOR;
-        return;
-    }
-    int node_priority = OPERATORS_INFO[node->data.op].priority;
-    int node_parent_priority = OPERATORS_INFO[node->parent->data.op].priority;
-
-    if(node_priority < node_parent_priority && !OPERATORS_INFO[node->parent->data.op].is_unary_op){
-        *need_staples = true;
-        return;
-    }
-    if(node->parent->data.op == OP_SUB){ // 1 - (a + b) and 1 - a + b 
-        *need_staples = true;
-        return;
-    }
-    if(node->parent->data.op == OP_DEG){ //для случая 1 / (x^2^2^2)
-        *need_staples = true;
-        return;
-    }
-    *need_staples = false;
-}
-
-TreeErr_t CreateAndLatexGraphicsDerivatives(Forest_t *forest, FILE* latex_file){
+void CreateAndLatexGraphicsDerivatives(Forest_t *forest, FILE* latex_file, TreeErr_t *err){
     fprintf(latex_file, 
     "\\newpage\n"
-    "\\section{Graphics of derivatives}\n\n");
+    "\\section{Графики производных}\n\n");
     if(forest->first_free_place != 0){
-        fprintf(latex_file, "{\\large \\textbf{Graphic of function}}\n\n");
-        CHECK_AND_RET_TREEERR(InsertGraphToLatex(forest, 0, latex_file, /*is_taylor*/ false));
+        fprintf(latex_file, "{\\large \\textbf{График функции}}\n\n");
+        CALL_FUNC_AND_CHECK_ERR(InsertGraphToLatex(forest, 0, latex_file, err, /*is_taylor*/ false));
     }
 
     for(size_t idx = 1; idx < forest->first_free_place; idx++){
-        fprintf(latex_file, "{\\large \\textbf{Graphic of %zu derivative}}\n\n", idx);
-        CHECK_AND_RET_TREEERR(InsertGraphToLatex(forest, idx, latex_file, /*is_taylor*/ false));
+        fprintf(latex_file, "{\\large \\textbf{График %zu производной}}\n\n", idx);
+        CALL_FUNC_AND_CHECK_ERR(InsertGraphToLatex(forest, idx, latex_file, err, /*is_taylor*/ false));
     }
-
-    return NO_MISTAKE;
 }
 
-TreeErr_t CreateAndLatexTaylorGraphics(Forest_t *forest, FILE* latex_file){
+void CreateAndLatexTaylorGraphics(Forest_t *forest, FILE* latex_file, TreeErr_t *err){
     fprintf(latex_file, 
     "\\newpage\n"
-    "\\section{Taylor graphics}\n\n");
-    CHECK_AND_RET_TREEERR(InsertGraphToLatex(forest, 0, latex_file, /*is_taylor*/ true, forest->first_free_place - 1));
-    return NO_MISTAKE;
+    "\\section{График разложения Тейлора}\n\n");
+    CALL_FUNC_AND_CHECK_ERR(InsertGraphToLatex(forest, 0, latex_file, err, /*is_taylor*/ true, forest->first_free_place - 1));
 }
 
-TreeErr_t InsertGraphToLatex(Forest_t *forest, size_t idx1, FILE* latex_file, bool is_taylor, size_t idx2){
-    TreeErr_t err = NO_MISTAKE;
-    char* dump_picture = DrawGraph(forest, idx1, &err, is_taylor, idx2);
-    if(err){
+void InsertGraphToLatex(Forest_t *forest, size_t idx1, FILE* latex_file, TreeErr_t *err, bool is_taylor, size_t idx2){
+    char* dump_picture = DrawGraph(forest, idx1, err, is_taylor, idx2);
+    if(*err){
         free(dump_picture);
-        return err;
     }
     fprintf(latex_file, 
     "\\begin{figure}[H]\n"
     "\\includesvg[width=1.0\\textwidth,height=1.0\\textheight]{%s}\n" 
     "\\end{figure}\n\n", dump_picture + sizeof("output/") - 1);
     free(dump_picture);
-    return err;
 }
 
 //---------------------------------------------------------------
@@ -219,6 +123,9 @@ R"(\documentclass[a4paper,12pt]{report}
 \usepackage[utf8]{inputenc}
 \usepackage{amsmath,amssymb}
 \usepackage{geometry}
+\usepackage[main=russian, english]{babel} 
+\usepackage[utf8]{inputenc} 
+\usepackage{fontspec} 
 \usepackage[inkscapepath=/Applications/Inkscape.app/Contents/MacOS/]{svg}
 \usepackage{breqn}
 \usepackage{float}
@@ -226,23 +133,21 @@ R"(\documentclass[a4paper,12pt]{report}
 \usepackage{graphicx} 
 \usepackage{hyperref}
 \usepackage{bookmark}
+\setmainfont{Times New Roman} 
 
-\newtheorem{definition}{Definition}
-\newtheorem{obviousfact}{Obvious Fact}
+\newtheorem{definition}{Определение}
+\newtheorem{obviousfact}{Очевидный факт}
 
-\title{MatematiCAL anal for economists}
-\author{Anonymus fan of mat.anal}
+\title{Математический АНАЛиз для экономистов}
+\author{Анонимный фанат матАНАЛа}
 
 \begin{document}
 \maketitle
 
-\chapter*{Preface}
-This textbook is designed to assist economics students studying the basic course of mathematical analysis. 
-It summarizes the entire mathematical analysis course taught to economists in the best undergraduate economics program in Eastern Europe.
+\chapter*{Предисловие}
+Данное пособие написано в помощь студентам-экономистам, изучающим базовый курс математического анализа. Оно обобщает весь курс математического анализа читаемого экономистам на лучшем бакалавриате по экономике в восточной Европе. 
 
-The lectures include only the essential material, ensuring that students who have achieved top honors in national economics Olympiads are not overburdened and can maintain their sense of superiority over the rest of the world. 
-After all, they likely mastered all this material in kindergarten (or at the latest, by first grade). The division of topics into lectures corresponds well to the actual pace of the course, which spans an entire semester. 
-Almost all statements in the course are self-evident, and their proofs are left to the reader as straightforward exercises. 
+Лекции включают в себя только необходимый материал, чтобы ребята, получившие несколько всероссов по экономике ни в коем случае не перетруждались и чтобы они чувствовали превосходство себя над остальным миром, ведь все это они успели заботать в детском саду( ну максимум в первом классе). Разбиение по лекциям в пособии достаточно хорошо соответствует реальной скорости чтения курса, который идет целый семестр. Почти все утверждения в курсе очевидны и их доказательство представляется читателю в качестве несложного упражнения.
 
 \tableofcontents
 
@@ -253,88 +158,85 @@ Almost all statements in the course are self-evident, and their proofs are left 
 void LatexCreateChapterDecimals(FILE* latex_file){
     assert(latex_file);
     fprintf(latex_file,     
-R"(\chapter{Numbers}
-\section{Basic Classes of Numbers}
+R"(\chapter{Циферки}
+\section{Основные классы циферок}
     
-First, let's introduce the definitions of the basic classes of numbers that we will constantly work with throughout the course.
+Cначала введем определения основных классов циферок, с которыми мы будем постоянно работать на курсе.
     
 \begin{definition}
-Numbers 1, 2, 3, \ldots are called \textit{natural numbers}. 
-The notation for the set of all natural numbers is $\mathbb{N}$.
+Натуральными называются циферки 1, 2, 3, . . . Обозначение для множества всех натуральных чисел: $\mathbb{N}$.
 \end{definition}
     
 \begin{definition}
-A number is called an \textit{integer} if it is equal to\ldots 
-but you don't need this because everything in economics is positive.
+Циферка называется целой, если оно равно … а вам это и не надо потому что все в экономике положительное.
 \end{definition}
     
 \begin{definition}
-A number is called \textit{rational} if it can be represented as 
-something above a line and something below a line.
+Циферка называется \textit{рациональным}, если оно может быть представлено в виде чего-то над палочкой и еще чего-то под палочкой. 
 \end{definition}
     
 \begin{definition}
-A number is called \textit{irrational} if it is not rational.
+Циферка называется \textit{иррациональным} если оно не является рациональным. 
 \end{definition}
     
 \begin{obviousfact}
-The sum of all natural numbers equals $-1/12$.
+Сумма всех натуральных циферок равна $-1/12$.
 \end{obviousfact}
 
-\textbf{Kindergarten Example:}
-If Vasya had 2 apples and Petya took 1 apple from him, how many apples does Vasya have left? The answer is obviously $-1/12$, as any advanced mathematician knows.
+\textbf{Пример из детского сада:}
+Если у Васи было 2 яблока, а Петя взял у него 1 яблоко, сколько яблок осталось у Васи? Ответ, очевидно, $-1/12$, как известно любому продвинутому математику.
     )");
 }
 
 void LatexCreateChapterDiff(FILE* latex_file){
     assert(latex_file);
     fprintf(latex_file, 
-R"(\chapter{Derivative}
+R"(\chapter{Производная}
 
 \section{Basic derivatives}
 
 \begin{definition}
-The definition of derivative is omitted because it is obvious.
+Определение производной опущено, так как оно очевидно.
 \end{definition}
 
-Everything in this chapter is so obvious that no additional explanations will be provided - we'll immediately proceed to analyze an example from kindergarten.
+Всё в этой главе настолько очевидно, что дополнительные объяснения не потребуются — мы сразу перейдём к разбору примера из детского сада.
     )");
 }
 
 void LatexCreateChapterTaylor(FILE* latex_file){
     assert(latex_file);
     fprintf(latex_file, 
-R"(\chapter{Taylor}
+R"(\chapter{Формула Тейлора}
 
-\section{Taylor's formula with the remainder term (and why is it needed? Without it, everything is obvious)}
+\section{Формула Тейлора с остаточным членом (а зачем он нужен? Без него, все очевидно)}
 
 \begin{definition}
-Taylor's formula is obvious, so no additional explanations will be given. Let's start straight with an example.
+Формула Тейлора очевидна, поэтому дополнительные объяснения не будут даны. Начнём сразу с примера.
 \end{definition}
 
-{\large \textbf{At first the derivatives must be calcutated:}}
+{\large \textbf{Сначала необходимо вычислить производные:}}
     )");
 }
 
 void LatexCreateAfterWord(FILE* latex_file){
     fprintf(latex_file,
-R"(\chapter*{Afterword}
+R"(\chapter*{Послесловие}
 
-Dear readers, I hope you have been able to spare a moment of your attention for this textbook and to realize its incredible obviousness. You will now excel in your exam, and if not, good luck next year.
+Дорогие читатели, надеюсь вы смогли уделить минуточку внимания данному пособию и осознать его неимоверную очевидность. Теперь вы отлично сдадите экзамен, а если нет, то удачи в следующем году.
 
-The author also expresses great gratitude for the help in preparing this textbook to the students and professors of MIPT, namely to DED, mentor Kolya, and co-mentor Artyom, for actively seeking out the cringe in the code, which undoubtedly improved the quality of the materials. For this important work, the author wholeheartedly thanks all the assistants.
+Также автор выражает большую благодарность в помощи с подготовкой данного пособия студентам и преподавателям Мфти, а именно DEDу, ментору Коле, соментору Артему за то, что вы активно искали кринж в коде, что несомненно улучшило качество материалов. За эту важную работу автор от всего сердца благодарит всех помощников. 
 
-\section*{Bibliography:}
+\section*{Список Литературы:}
 
-- Textbooks by G.I. Arkhipov, V.A. Sadovnichy, and V.N. Chubarikov
+- Учебники Г.И. Архипова, В.А. Садовничего и В.Н. Чубарикова 
 
-- Textbook by J. Stewart
+- Учебник Дж. Стюарта 
 
-- Textbook by an unknown author, "The Obviousness of Math"
+- Учебник неизвестного автора «очевидность матана»
 
-- Lectures by A.L. Lukashov on Bipkas
+- Лекции А.Л.Лукашова о Бипках
 
-- Lectures by D.A. Dagaev on the poetry of the Mechanics and Mathematics Faculty
+- Лекции Д.А.Дагаева о поэзии мехмата
 )");
 }
 
@@ -349,6 +251,10 @@ void EndMatanBook(FILE* latex_file){
 void GeneratePdfFromTex(const char* latex_file){
     assert(latex_file);
     char cmd_buffer[MAX_CMD_BUFFER] = {};
-    snprintf(cmd_buffer, MAX_CMD_BUFFER, "cd output && pdflatex -shell-escape %s && pdflatex -shell-escape %s", latex_file, latex_file);
+    snprintf(cmd_buffer, MAX_CMD_BUFFER, "cd output && xelatex -shell-escape %s && xelatex -shell-escape %s", latex_file, latex_file);
     system(cmd_buffer);
 }
+
+//check_sys
+
+#undef CALL_FUNC_AND_CHECK_ERR
