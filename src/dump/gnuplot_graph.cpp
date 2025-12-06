@@ -5,7 +5,12 @@
 #include <math.h>
 #include "../io/output_expr_to_file.h"
 #include "../calculation_optimization/calcul_tree.h"
+#include "../utils/check_sys.h"
 #include <assert.h>
+
+const char* const ALLOWED = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_\t\n /.";
+
+const size_t MAX_FILE_NAME = 200;
 
 #define CALL_FUNC_AND_CHECK_ERR(function)\
     do{\
@@ -77,7 +82,7 @@ static char* CreateDumpFile(const char* format){
         return NULL;
     }
 
-    char* filename = (char*)calloc(200, sizeof(char));
+    char* filename = (char*)calloc(MAX_FILE_NAME, sizeof(char));
     if(!filename){
         fprintf(stderr, "Alloc error");
         return NULL;
@@ -86,7 +91,7 @@ static char* CreateDumpFile(const char* format){
     time_t now = time(NULL); 
     struct tm *t = localtime(&now); 
 
-    if(snprintf(filename, 200, 
+    if(snprintf(filename, MAX_FILE_NAME, 
                 "output/plots_gnuplot/dump%d_%04d%02d%02d_%02d%02d%02d.%s", num,
                 t->tm_year + 1900, t->tm_mon + 1, t->tm_mday,
                 t->tm_hour, t->tm_min, t->tm_sec, format) == -1) {
@@ -149,11 +154,20 @@ static void PrintInfo(Forest_t *forest, size_t idx1, size_t idx2, FILE* gp_dump,
         fprintf(gp_dump, "Tf(%c) = ", forest->mtk->var_info[0].variable_name);
         CALL_FUNC_AND_CHECK_ERR(DumpToFileGp(gp_dump, forest->head_arr[idx2]->root, forest->mtk, err));
         fprintf(gp_dump, "\n");
+
+        double result = 0;
+        CALL_FUNC_AND_CHECK_ERR(CalcTreeExpression(forest->head_arr[1]->root, forest->mtk, &result, is_taylor, err));
+        fprintf(gp_dump, 
+            "x0 = %lg\n"          
+            "y0 = f(x0)\n"            
+            "k = %lg\n"
+            "Tng(x) = (x - x0) * k + y0\n", forest->mtk->var_info[0].value, result);
     }
 
     fprintf(gp_dump, "plot f(%c) with lines linecolor \"blue\" title \"f(%c)\"", forest->mtk->var_info[0].variable_name, forest->mtk->var_info[0].variable_name);
     if(is_taylor){
-        fprintf(gp_dump, " \\\n, Tf(%c) with lines linewidth 2 linecolor \"red\" title \"T(%c)\" \n", forest->mtk->var_info[0].variable_name, forest->mtk->var_info[0].variable_name);
+        fprintf(gp_dump, " \\\n, Tf(%c) with lines linecolor \"red\" title \"T(%c)\"", forest->mtk->var_info[0].variable_name, forest->mtk->var_info[0].variable_name); // linewidth 2
+        fprintf(gp_dump, " \\\n, Tng(%c) with lines linecolor \"green\" title \"Tng(%c)\" \n", forest->mtk->var_info[0].variable_name, forest->mtk->var_info[0].variable_name);
     }
 
 }
@@ -162,6 +176,10 @@ static void MakePicture(const char* gp_filename, TreeErr_t* err){
     char sys_buffer[300] = "gnuplot ";
 
     strncat(sys_buffer, gp_filename, sizeof(sys_buffer) - 1);
+
+    if(!is_cmd_for_sys_correct(sys_buffer, ALLOWED)){
+        return;
+    }
 
     if(system(sys_buffer)){;
         *err = CANT_MAKE_GRAPH;

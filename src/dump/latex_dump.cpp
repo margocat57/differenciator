@@ -7,8 +7,11 @@
 #include "../core/tree_func.h"
 #include "../core/forest.h"
 #include "../core/operator_func.h"
+#include "../utils/check_sys.h"
 #include "gnuplot_graph.h"
 #include "latex_dump.h"
+
+const char* const ALLOWED = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789&-_\t\n .";
 
 #define CALL_FUNC_AND_CHECK_ERR(function)\
     do{\
@@ -101,6 +104,7 @@ void InsertGraphToLatex(Forest_t *forest, size_t idx1, FILE* latex_file, TreeErr
     char* dump_picture = DrawGraph(forest, idx1, err, is_taylor, idx2);
     if(*err){
         free(dump_picture);
+        return;
     }
     fprintf(latex_file, 
     "\\begin{figure}[H]\n"
@@ -252,6 +256,11 @@ void GeneratePdfFromTex(const char* latex_file){
     assert(latex_file);
     char cmd_buffer[MAX_CMD_BUFFER] = {};
     snprintf(cmd_buffer, MAX_CMD_BUFFER, "cd output && xelatex -shell-escape %s && xelatex -shell-escape %s", latex_file, latex_file);
+
+    if(!is_cmd_for_sys_correct(latex_file, ALLOWED)){
+        return;
+    }
+
     system(cmd_buffer);
 }
 

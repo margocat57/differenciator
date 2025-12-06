@@ -58,7 +58,10 @@ src/core/forest.o: src/core/forest.cpp
 src/utils/rofl_matan.o: src/utils/rofl_matan.cpp
 	$(COMP) -c $< -o $@ $(CFLAGS)
 
-diff: main.o src/differenciation/differenciator.o src/differenciation/diff_params.o src/dump/graphviz_dump.o src/utils/metki.o src/io/output_expr_to_file.o src/io/read_exp_from_file.o src/core/tree_func.o src/calculation_optimization/calcul_tree.o src/dump/latex_dump.o src/matan_book.o src/core/forest.o src/utils/rofl_matan.o src/dump/gnuplot_graph.o
+src/utils/check_sys.o: src/utils/check_sys.cpp
+	$(COMP) -c $< -o $@ $(CFLAGS)
+
+diff: main.o src/differenciation/differenciator.o src/differenciation/diff_params.o src/dump/graphviz_dump.o src/utils/metki.o src/io/output_expr_to_file.o src/io/read_exp_from_file.o src/core/tree_func.o src/calculation_optimization/calcul_tree.o src/dump/latex_dump.o src/matan_book.o src/core/forest.o src/utils/rofl_matan.o src/dump/gnuplot_graph.o src/utils/check_sys.o
 	$(COMP) -o $@ $^ $(LDFLAGS)
 
 # $@ имя цели
