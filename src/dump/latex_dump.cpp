@@ -127,8 +127,7 @@ R"(\documentclass[a4paper,12pt]{report}
 \usepackage[utf8]{inputenc}
 \usepackage{amsmath,amssymb}
 \usepackage{geometry}
-\usepackage[main=russian, english]{babel} 
-\usepackage[utf8]{inputenc} 
+\usepackage[russian]{babel} 
 \usepackage{fontspec} 
 \usepackage[inkscapepath=/Applications/Inkscape.app/Contents/MacOS/]{svg}
 \usepackage{breqn}
@@ -136,7 +135,6 @@ R"(\documentclass[a4paper,12pt]{report}
 \usepackage{svg}
 \usepackage{graphicx} 
 \usepackage{hyperref}
-\usepackage{bookmark}
 \setmainfont{Times New Roman} 
 
 \newtheorem{definition}{Определение}

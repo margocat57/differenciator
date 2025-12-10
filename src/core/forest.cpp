@@ -67,6 +67,9 @@ TreeErr_t ForestRealloc(Forest_t *forest, size_t num_of_trees){
         ForestDtor(forest);
         return ALLOC_ERR;
     }
+    for(size_t idx = forest->first_free_place; idx < num_of_trees; idx++){
+        head_arr[idx] = NULL;
+    }
     forest->head_arr = head_arr;
     forest->num_of_trees = num_of_trees;
 
